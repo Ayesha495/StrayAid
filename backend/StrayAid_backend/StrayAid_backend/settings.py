@@ -27,6 +27,11 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+#Custom Authentication backend
+AUTHENTICATION_BACKENDS = [
+    "accounts.backends.UsernameOrEmailBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
 #Custom User Model
 AUTH_USER_MODEL = 'accounts.User'
 
@@ -48,8 +53,21 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'accounts',
     'rest_framework',
+    'django.contrib.sites',
+    'djoser',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
 ]
 
+SITE_ID = 1
+
+DJOSER = {
+    "LOGIN_FIELD": "email",
+    "USER_CREATE_PASSWORD_RETYPE": True,
+    "SEND_ACTIVATION_EMAIL": False,
+}
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
