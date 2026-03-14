@@ -11,7 +11,7 @@ export default function Index() {
       const token = await SecureStore.getItemAsync("accessToken");
 
       if (token) {
-        router.replace("/(tabs)/home/page");
+        router.replace("/(tabs)/home");
       } else {
         router.replace("/(auth)/login/page");
       }

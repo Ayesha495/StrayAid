@@ -2,7 +2,7 @@ import { RegisterData, LoginData, TokenResponse } from "../types/auth";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store'
 import { router } from "expo-router";
-export const API_URL = 'http://192.168.1.21:8000';
+export const API_URL = 'http://192.168.1.12:8000';
 
 export const registerUser = async (data: RegisterData) => {
     const res = await fetch(`${API_URL}/auth/users/`, {

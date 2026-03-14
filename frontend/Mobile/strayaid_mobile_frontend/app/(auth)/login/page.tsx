@@ -1,7 +1,7 @@
-import { View, Text, TextInput, Button, Alert } from 'react-native';
+import { View, Text, TextInput, Button, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { useState, useEffect } from 'react';
 import { loginUser } from '../../../services/authService';
-
+import { router } from "expo-router";
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
 
@@ -11,10 +11,25 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  // Google Auth Request
-  const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
-    clientId: 'YOUR_GOOGLE_CLIENT_ID',   // replace this
-  });
+const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
+  clientId: "998658289609-9afrhr6aesljjbf2o9kdbc10k6vlq1ac.apps.googleusercontent.com",
+});
+
+useEffect(() => {
+  if (response?.type === "success") {
+    const idToken = response.params.id_token;
+
+    console.log("Google ID Token:", idToken);
+
+    // send token to Django backend here
+  }
+}, [response]);
+
+<Button
+  title="Login with Google"
+  disabled={!request}
+  onPress={() => promptAsync()}
+/>
 
   const handleLogin = async () => {
     try {
@@ -43,6 +58,8 @@ export default function LoginPage() {
   }, [response]);
 
   return (
+  <KeyboardAvoidingView style={{ flex: 1}}
+  behavior={Platform.OS === "ios" ? "padding" : "height" }>
     <View>
       <Text>Login</Text>
 
@@ -66,6 +83,12 @@ export default function LoginPage() {
         disabled={!request}
         onPress={() => promptAsync()}
       />
+      <Text>New to StrayAid? </Text>
+      <Button
+  title="Create an account"
+  onPress={() => router.push("/(auth)/register/page")}
+/>
     </View>
+    </KeyboardAvoidingView>
   );
 }
