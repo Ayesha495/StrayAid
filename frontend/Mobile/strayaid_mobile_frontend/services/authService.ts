@@ -2,10 +2,10 @@ import { RegisterData, LoginData, TokenResponse } from "../types/auth";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store'
 import { router } from "expo-router";
-export const API_URL = 'http://192.168.1.13:8000';
+const API_BASE = process.env.IP || 'http://192.168.1.14:8000';
 
 export const registerUser = async (data: RegisterData) => {
-    const res = await fetch(`${API_URL}/auth/users/`, {
+    const res = await fetch(`${API_BASE}/auth/users/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -14,7 +14,7 @@ export const registerUser = async (data: RegisterData) => {
 };
 
 export const loginUser = async (data: LoginData): Promise<TokenResponse> => {
-    const res = await fetch(`${API_URL}/auth/jwt/create/`, {
+    const res = await fetch(`${API_BASE}/auth/jwt/create/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -23,7 +23,7 @@ export const loginUser = async (data: LoginData): Promise<TokenResponse> => {
     if(res.ok) {
         await AsyncStorage.setItem('access_token', result.access);
         await AsyncStorage.setItem('refresh_token', result.refresh);
-        await SecureStore.setItemAsync("accessToken", result.access);
+        await SecureStore.setItemAsync("access", result.access);
         return result;
     } else {
         throw new Error(result.detail || 'Login failed');

@@ -13,6 +13,7 @@ export default function LoginPage() {
     try {
       await loginUser({ email, password });
       Alert.alert('Success', 'Logged in!');
+      router.replace("/(tabs)/home");
     } catch (err: any) {
       Alert.alert('Error', err.message);
     }
