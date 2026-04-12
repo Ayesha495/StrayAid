@@ -1,0 +1,116 @@
+import React, { useState, useEffect } from "react";
+import { View, Button, Alert, StyleSheet, Text } from "react-native";
+import MapView, { Marker } from "react-native-maps";
+import * as Location from "expo-location";
+import { router } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+export default function SelectLocationScreen() {
+  const [location, setLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+  const [markerPosition, setMarkerPosition] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+
+  useEffect(() => {
+    getInitialLocation();
+  }, []);
+
+  const getInitialLocation = async () => {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Permission denied", "Location permission is required.");
+      return;
+    }
+
+    const loc = await Location.getCurrentPositionAsync({});
+    setLocation({
+      latitude: loc.coords.latitude,
+      longitude: loc.coords.longitude,
+    });
+    setMarkerPosition({
+      latitude: loc.coords.latitude,
+      longitude: loc.coords.longitude,
+    });
+  };
+
+  const handleMapPress = (e: any) => {
+    const { latitude, longitude } = e.nativeEvent.coordinate;
+    setMarkerPosition({ latitude, longitude });
+  };
+
+  const confirmLocation = async () => {
+    if (!markerPosition) {
+      Alert.alert("Error", "Please select a location on the map.");
+      return;
+    }
+
+    // Store the selected location in AsyncStorage
+    await AsyncStorage.setItem(
+      "selectedLocation",
+      JSON.stringify(markerPosition)
+    );
+    
+    Alert.alert("Success", "Location selected!");
+    router.back();
+  };
+
+  return (
+    <View style={styles.container}>
+      {location && (
+        <MapView
+          style={styles.map}
+          initialRegion={{
+            latitude: location.latitude,
+            longitude: location.longitude,
+            latitudeDelta: 0.0922,
+            longitudeDelta: 0.0421,
+          }}
+          onPress={handleMapPress}
+        >
+          {markerPosition && (
+            <Marker
+              coordinate={markerPosition}
+              title="Selected Location"
+              description={`${markerPosition.latitude.toFixed(4)}, ${markerPosition.longitude.toFixed(4)}`}
+            />
+          )}
+        </MapView>
+      )}
+
+      <View style={styles.bottomPanel}>
+        {markerPosition && (
+          <Text style={styles.coordinatesText}>
+            {markerPosition.latitude.toFixed(4)}, {markerPosition.longitude.toFixed(4)}
+          </Text>
+        )}
+        <Button title="Cancel" onPress={() => router.back()} />
+        <Button title="Confirm Location" onPress={confirmLocation} />
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  map: {
+    flex: 1,
+  },
+  bottomPanel: {
+    padding: 20,
+    backgroundColor: "white",
+    borderTopWidth: 1,
+    borderTopColor: "#ddd",
+  },
+  coordinatesText: {
+    fontSize: 14,
+    textAlign: "center",
+    marginBottom: 10,
+    fontWeight: "bold",
+  },
+});

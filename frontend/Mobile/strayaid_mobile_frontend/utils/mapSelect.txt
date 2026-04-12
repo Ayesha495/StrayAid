@@ -1,0 +1,18 @@
+// This utility helps manage map location selection across the app
+import { create } from "zustand";
+
+interface LocationState {
+  selectedLocation: { latitude: number; longitude: number } | null;
+  setSelectedLocation: (
+    location: { latitude: number; longitude: number } | null
+  ) => void;
+  clearLocation: () => void;
+}
+
+// Simple store for location state
+// If you prefer, you can use Redux, Context API, or other state management
+export const useLocationStore = create<LocationState>((set) => ({
+  selectedLocation: null,
+  setSelectedLocation: (location) => set({ selectedLocation: location }),
+  clearLocation: () => set({ selectedLocation: null }),
+}));

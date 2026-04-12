@@ -1,0 +1,21 @@
+mapSelect component usage for Select Location
+
+1) component file: app/map/select-location.tsx
+2) home file: app/(tabs)/home/index.tsx
+
+How it works:
+- User taps map icon from home screen
+- `router.push('/map/select-location')` opens map screen
+- User taps map to place marker
+- User taps "Confirm Location" (stores location in AsyncStorage key `selectedLocation`)
+- router.back() returns to home screen
+- home screen `useFocusEffect` reads `selectedLocation`, applies to state, and clears storage
+- location TextInput displays chosen coordinates
+
+Code for home screen: `location ? `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}` : ''`
+
+Code for map confirm:
+```
+await AsyncStorage.setItem('selectedLocation', JSON.stringify(markerPosition));
+router.back();
+```
