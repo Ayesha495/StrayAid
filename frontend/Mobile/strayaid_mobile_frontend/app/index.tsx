@@ -1,19 +1,18 @@
 import { useEffect } from "react";
 import { View, ActivityIndicator } from "react-native";
 import { router } from "expo-router";
-import * as SecureStore from "expo-secure-store";
+import { getToken } from "../utils/tokenStorage";
 
 export default function Index() {
 
   useEffect(() => {
     const checkAuth = async () => {
-
-      const token = await SecureStore.getItemAsync("accessToken");
+      const token = await getToken();
 
       if (token) {
-        router.replace("/(tabs)/home");
+        router.replace("/feed/index");
       } else {
-        router.replace("/(auth)/login/page");
+        router.replace("/login/index");
       }
 
     };
@@ -22,8 +21,8 @@ export default function Index() {
   }, []);
 
   return (
-    <View style={{flex:1,justifyContent:"center",alignItems:"center"}}>
-      <ActivityIndicator />
+    <View style={{flex:1,justifyContent:"center",alignItems:"center", backgroundColor: "#ffffff"}}>
+      <ActivityIndicator color="#0f766e" />
     </View>
   );
 }

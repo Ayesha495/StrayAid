@@ -1,13 +1,13 @@
-import { RegisterData, LoginData, TokenResponse } from "../types/auth";
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as SecureStore from 'expo-secure-store'
+import { CurrentUser, RegisterData, LoginData, TokenResponse } from "../types/auth";
 import { router } from "expo-router";
-const API_BASE = process.env.IP || 'http://192.168.1.8:8000';
+import { clearSession, getToken, saveSession } from "../utils/tokenStorage";
+
+const API_BASE = process.env.IP || "http://192.168.1.8:8000";
 
 export const registerUser = async (data: RegisterData) => {
     const res = await fetch(`${API_BASE}/auth/users/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
     });
     return res.json();
@@ -15,24 +15,70 @@ export const registerUser = async (data: RegisterData) => {
 
 export const loginUser = async (data: LoginData): Promise<TokenResponse> => {
     const res = await fetch(`${API_BASE}/auth/jwt/create/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
     });
     const result = await res.json();
-    if(res.ok) {
-        await AsyncStorage.setItem('access_token', result.access);
-        await AsyncStorage.setItem('refresh_token', result.refresh);
-        await SecureStore.setItemAsync("access", result.access);
+    if (res.ok) {
+        const user = await getCurrentUser(result.access);
+        await saveSession(result.access, result.refresh, JSON.stringify(user));
         return result;
-    } else {
-        throw new Error(result.detail || 'Login failed');
     }
+    throw new Error(result.detail || "Login failed");
 };
 
 export const logoutUser = async () => {
-    await AsyncStorage.removeItem('access_token');
-    await AsyncStorage.removeItem('refresh_token');
-    await SecureStore.deleteItemAsync("accessToken");
-    router.replace("/(auth)/login/page");
+    await clearSession();
+    router.replace("/login/index");
+};
+
+export const getCurrentUser = async (accessToken?: string): Promise<CurrentUser> => {
+    const token = accessToken ?? await getToken();
+    const response = await fetch(`${API_BASE}/auth/me/`, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+
+    const result = await response.json();
+    if (!response.ok) {
+        throw new Error(result.detail || "Could not load user.");
+    }
+
+    return result;
+};
+
+export const getMyReports = async () => {
+    const token = await getToken();
+    const response = await fetch(`${API_BASE}/api/cases/my-reports/`, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+
+    const result = await response.json();
+    if (!response.ok) {
+        throw new Error(result.detail || "Could not load reports.");
+    }
+
+    return result;
+};
+
+export const getPublicAnimals = async () => {
+    const response = await fetch(`${API_BASE}/api/animals/public/`);
+    const result = await response.json();
+    if (!response.ok) {
+        throw new Error(result.detail || "Could not load animals.");
+    }
+    return result;
+};
+
+export const getPublicFeed = async () => {
+    const response = await fetch(`${API_BASE}/api/posts/public-feed/`);
+    const result = await response.json();
+    if (!response.ok) {
+        throw new Error(result.detail || "Could not load feed.");
+    }
+    return result;
 };
