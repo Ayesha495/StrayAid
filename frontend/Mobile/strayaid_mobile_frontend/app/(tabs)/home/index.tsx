@@ -23,14 +23,13 @@ type LatLng = {
 };
 
 export default function ReportScreen() {
-  const API_BASE = process.env.IP || "http://192.168.1.11:8000";
+  const API_BASE = process.env.IP || "http://192.168.1.8:8000";
 
   const [image, setImage] = useState<ImagePicker.ImagePickerAsset | null>(null);
   const [location, setLocation] = useState<LatLng | null>(null);
   const [locationText, setLocationText] = useState("");
   const [description, setDescription] = useState("");
 
-  // Load selected location from map when screen focuses
   useFocusEffect(
     useCallback(() => {
       const loadSelectedLocation = async () => {
@@ -79,7 +78,6 @@ export default function ReportScreen() {
     }
   };
 
-  // PHOTO PICKER
   const pickImage = async () => {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
 
@@ -117,7 +115,6 @@ export default function ReportScreen() {
     ]);
   };
 
-  // CURRENT LOCATION
   const getLocation = async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
 
@@ -133,12 +130,10 @@ export default function ReportScreen() {
     });
   };
 
-  // MAP SELECT (redirects to map page)
   const openMap = () => {
     router.push("/map/select-location");
   };
 
-  // SUBMIT REPORT
   const submitReport = async () => {
     if (!image) {
       Alert.alert("Missing Image", "Please add a photo.");
@@ -207,12 +202,10 @@ else {
 
   return (
     <View style={styles.container}>
-      {/* PHOTO BUTTON */}
       <Button title="Take / Select Photo" onPress={pickImage} />
 
       {image && <Image source={{ uri: image.uri }} style={styles.image} />}
 
-      {/* LOCATION FIELD */}
       <View style={styles.locationContainer}>
         <TextInput
           style={styles.locationInput}
@@ -232,7 +225,6 @@ else {
         <Button title="Use Current Location" onPress={getLocation} />
       </View>
 
-      {/* DESCRIPTION */}
       <TextInput
         style={styles.description}
         placeholder="Describe the situation..."
@@ -242,7 +234,6 @@ else {
         onChangeText={setDescription}
       />
 
-      {/* SUBMIT BUTTON */}
       <Button title="Submit Report" onPress={submitReport} />
     </View>
   );

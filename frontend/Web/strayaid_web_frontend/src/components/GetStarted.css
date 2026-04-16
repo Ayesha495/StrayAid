@@ -1,0 +1,105 @@
+.getstarted-section {
+  padding: 6rem 2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.getstarted-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.getstarted-content {
+  color: white;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.getstarted-content h2 {
+  font-size: 2.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.getstarted-content p {
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+  line-height: 1.6;
+  opacity: 0.95;
+}
+
+.getstarted-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 3rem;
+}
+
+.btn-getstarted,
+.btn-contact {
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-getstarted {
+  background: white;
+  color: #667eea;
+  border: none;
+}
+
+.btn-getstarted:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.btn-contact {
+  background: transparent;
+  color: white;
+  border: 2px solid white;
+}
+
+.btn-contact:hover {
+  background: white;
+  color: #667eea;
+  transform: translateY(-2px);
+}
+
+.stats {
+  display: flex;
+  justify-content: space-around;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.stat h3 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.stat p {
+  font-size: 1rem;
+  margin-bottom: 0;
+}
+
+@media (max-width: 768px) {
+  .getstarted-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .btn-getstarted,
+  .btn-contact {
+    width: 100%;
+    max-width: 250px;
+  }
+  
+  .stats {
+    flex-direction: column;
+    align-items: center;
+  }
+}

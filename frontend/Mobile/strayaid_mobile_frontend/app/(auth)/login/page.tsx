@@ -7,7 +7,7 @@ import { useGoogleAuth } from '../../../services/googleAuthService';
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { request, promptAsync } = useGoogleAuth(); // 👈 changed from { signIn }
+  const { request, promptAsync } = useGoogleAuth(); // ?? changed from { signIn }
 
   const handleLogin = async () => {
     try {
@@ -44,8 +44,8 @@ export default function LoginPage() {
 
         <Button
           title="Login with Google"
-          disabled={!request} // 👈 disable until request is ready
-          onPress={() => promptAsync()} // 👈 changed from signIn
+          disabled={!request} // ?? disable until request is ready
+          onPress={() => promptAsync()} // ?? changed from signIn
         />
 
         <Text>New to StrayAid? </Text>

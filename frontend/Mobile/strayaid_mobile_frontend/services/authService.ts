@@ -2,7 +2,7 @@ import { RegisterData, LoginData, TokenResponse } from "../types/auth";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store'
 import { router } from "expo-router";
-const API_BASE = process.env.IP || 'http://192.168.1.11:8000';
+const API_BASE = process.env.IP || 'http://192.168.1.8:8000';
 
 export const registerUser = async (data: RegisterData) => {
     const res = await fetch(`${API_BASE}/auth/users/`, {

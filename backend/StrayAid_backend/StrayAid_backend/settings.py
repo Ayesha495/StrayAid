@@ -34,6 +34,7 @@ ALLOWED_HOSTS = ['*']
 AUTHENTICATION_BACKENDS = [
     "accounts.backends.UsernameOrEmailBackend",
     "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend",
 ]
 #Custom User Model
 AUTH_USER_MODEL = 'accounts.User'
@@ -57,6 +58,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'accounts',
     'rescue',
+    'organizations',
+    'animals',
+    'posts',
     'rest_framework',
     'django.contrib.sites',
     'djoser',
@@ -88,6 +92,21 @@ SOCIALACCOUNT_PROVIDERS = {
         }
     }
 }
+
+GOOGLE_OAUTH_CLIENT_IDS = [
+    client_id.strip()
+    for client_id in os.getenv(
+        "GOOGLE_OAUTH_CLIENT_IDS",
+        ",".join(
+            [
+                "998658289609-u4an6pas5lcpg578tb3c1rhdre8g5eji.apps.googleusercontent.com",
+                "998658289609-1g2mm1bre24hlccle05gmon0c416h44v.apps.googleusercontent.com",
+                "998658289609-9afrhr6aesljjbf2o9kdbc10k6vlq1ac.apps.googleusercontent.com",
+            ]
+        ),
+    ).split(",")
+    if client_id.strip()
+]
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',

@@ -1,0 +1,118 @@
+.features-section {
+  padding: 6rem 2rem;
+  background: white;
+}
+
+.features-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.features-header {
+  text-align: center;
+  margin-bottom: 4rem;
+}
+
+.features-header h2 {
+  font-size: 2.5rem;
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+.features-header p {
+  font-size: 1.2rem;
+  color: #666;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 2rem;
+}
+
+.feature-card {
+  padding: 2rem;
+  text-align: center;
+  border-radius: 15px;
+  transition: all 0.3s ease;
+  background: #f8f9fa;
+}
+
+.feature-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.feature-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}import React from 'react';
+import './Features.css';
+
+const Features: React.FC = () => {
+  const features = [
+    {
+      icon: '📍',
+      title: 'Report Stray Animals',
+      description: 'Easily report stray animals in your area with location tracking and photos.'
+    },
+    {
+      icon: '🏥',
+      title: 'Medical Assistance',
+      description: 'Connect with nearby vets and animal hospitals for emergency care.'
+    },
+    {
+      icon: '🏠',
+      title: 'Adoption Services',
+      description: 'Find loving homes for stray animals through our adoption network.'
+    },
+    {
+      icon: '👥',
+      title: 'Volunteer Network',
+      description: 'Join our volunteer community and help make a difference.'
+    },
+    {
+      icon: '💰',
+      title: 'Donation Platform',
+      description: 'Support animal shelters and rescue organizations directly.'
+    },
+    {
+      icon: '📱',
+      title: 'Mobile App',
+      description: 'Access all features on the go with our mobile application.'
+    }
+  ];
+
+  return (
+    <section id="features" className="features-section">
+      <div className="features-container">
+        <div className="features-header">
+          <h2>Powerful Features</h2>
+          <p>Everything you need to help stray animals in one place</p>
+        </div>
+        <div className="features-grid">
+          {features.map((feature, index) => (
+            <div key={index} className="feature-card">
+              <div className="feature-icon">{feature.icon}</div>
+              <h3>{feature.title}</h3>
+              <p>{feature.description}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default Features;
+
+.feature-card h3 {
+  font-size: 1.3rem;
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+.feature-card p {
+  color: #666;
+  line-height: 1.6;
+}

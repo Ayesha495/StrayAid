@@ -4,9 +4,9 @@ def calculate_distance(lat1, lon1, lat2, lon2):
     R = 6371
 
     lat1 = math.radians(float(lat1))
-    lat1 = math.radians(float(lat2))
-    lat1 = math.radians(float(lon1))
-    lat1 = math.radians(float(lon2))
+    lat2 = math.radians(float(lat2))
+    lon1 = math.radians(float(lon1))
+    lon2 = math.radians(float(lon2))
 
     dlon = lon2 - lon1
     dlat = lat2 - lat1
