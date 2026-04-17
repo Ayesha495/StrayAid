@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { View, Button, Alert, StyleSheet, Text } from "react-native";
+import { View, Alert, Text, Pressable } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import { router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { mapSelectStyles as styles } from "../../styles/MapSelectStyles";
 
 export default function SelectLocationScreen() {
   const [location, setLocation] = useState<{
@@ -82,35 +83,22 @@ export default function SelectLocationScreen() {
       )}
 
       <View style={styles.bottomPanel}>
+        <Text style={styles.title}>Pin The Exact Location</Text>
+        <Text style={styles.helper}>Tap the map to reposition the marker, then confirm when it matches the animal&apos;s location.</Text>
         {markerPosition && (
           <Text style={styles.coordinatesText}>
             {markerPosition.latitude.toFixed(4)}, {markerPosition.longitude.toFixed(4)}
           </Text>
         )}
-        <Button title="Cancel" onPress={() => router.back()} />
-        <Button title="Confirm Location" onPress={confirmLocation} />
+        <View style={styles.buttonRow}>
+          <Pressable style={styles.secondaryButton} onPress={() => router.back()}>
+            <Text style={styles.secondaryButtonText}>Cancel</Text>
+          </Pressable>
+          <Pressable style={styles.primaryButton} onPress={confirmLocation}>
+            <Text style={styles.primaryButtonText}>Confirm</Text>
+          </Pressable>
+        </View>
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  map: {
-    flex: 1,
-  },
-  bottomPanel: {
-    padding: 20,
-    backgroundColor: "white",
-    borderTopWidth: 1,
-    borderTopColor: "#ddd",
-  },
-  coordinatesText: {
-    fontSize: 14,
-    textAlign: "center",
-    marginBottom: 10,
-    fontWeight: "bold",
-  },
-});

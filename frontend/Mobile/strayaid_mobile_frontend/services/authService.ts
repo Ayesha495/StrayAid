@@ -2,7 +2,7 @@ import { RegisterData, LoginData, TokenResponse } from "../types/auth";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store'
 import { router } from "expo-router";
-const API_BASE = process.env.IP || 'http://192.168.1.8:8000';
+const API_BASE = process.env.IP || 'http://192.168.1.16:8000';
 
 export const registerUser = async (data: RegisterData) => {
     const res = await fetch(`${API_BASE}/auth/users/`, {
@@ -23,6 +23,7 @@ export const loginUser = async (data: LoginData): Promise<TokenResponse> => {
     if(res.ok) {
         await AsyncStorage.setItem('access_token', result.access);
         await AsyncStorage.setItem('refresh_token', result.refresh);
+        await AsyncStorage.setItem('user_email', data.email);
         await SecureStore.setItemAsync("access", result.access);
         return result;
     } else {
@@ -33,6 +34,7 @@ export const loginUser = async (data: LoginData): Promise<TokenResponse> => {
 export const logoutUser = async () => {
     await AsyncStorage.removeItem('access_token');
     await AsyncStorage.removeItem('refresh_token');
-    await SecureStore.deleteItemAsync("accessToken");
+    await AsyncStorage.removeItem('user_email');
+    await SecureStore.deleteItemAsync("access");
     router.replace("/(auth)/login/page");
 };

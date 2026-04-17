@@ -1,0 +1,32 @@
+import { StyleSheet } from "react-native";
+import { mobileTheme as theme } from "./mobileTheme";
+
+export const animalDetailStyles = StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: theme.colors.surfaceMuted },
+  scrollContent: { padding: theme.spacing.lg, gap: theme.spacing.lg, paddingBottom: 48 },
+  topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  topBarButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: theme.colors.surface, alignItems: "center", justifyContent: "center" },
+  topBarSpacer: { width: 44, height: 44 },
+  pageTitle: { color: theme.colors.ink, fontSize: 26, fontWeight: "800" },
+  heroCard: { backgroundColor: theme.colors.surface, borderRadius: theme.radius.lg, padding: theme.spacing.md, gap: theme.spacing.md, shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: 16, shadowOffset: { width: 0, height: 8 }, elevation: 3 },
+  image: { width: "100%", height: 260, borderRadius: theme.radius.md, backgroundColor: theme.colors.primarySoft },
+  badge: { alignSelf: "flex-start", backgroundColor: theme.colors.primarySoft, borderRadius: theme.radius.pill, paddingHorizontal: 10, paddingVertical: 6 },
+  badgeText: { color: theme.colors.primary, fontWeight: "700", fontSize: 11, textTransform: "uppercase" },
+  title: { color: theme.colors.ink, fontSize: 24, fontWeight: "800" },
+  subtitle: { color: theme.colors.inkMuted, fontSize: 14 },
+  bodyText: { color: theme.colors.inkSoft, lineHeight: 22 },
+  sponsorButton: { backgroundColor: theme.colors.primary, borderRadius: theme.radius.sm, paddingVertical: 14, alignItems: "center" },
+  sponsorButtonText: { color: theme.colors.surface, fontWeight: "700" },
+  sectionCard: { backgroundColor: theme.colors.surface, borderRadius: theme.radius.lg, padding: theme.spacing.lg, gap: theme.spacing.md, shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: 16, shadowOffset: { width: 0, height: 8 }, elevation: 3 },
+  sectionTitle: { color: theme.colors.ink, fontSize: 20, fontWeight: "800" },
+  updateCard: { borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.md, padding: theme.spacing.md, gap: theme.spacing.sm, backgroundColor: theme.colors.surfaceMuted },
+  updateImage: { width: "100%", height: 180, borderRadius: theme.radius.md, backgroundColor: theme.colors.primarySoft },
+  metaText: { color: theme.colors.inkMuted, fontSize: 13 },
+  modalBackdrop: { flex: 1, backgroundColor: "rgba(9,24,34,0.55)", justifyContent: "center", padding: theme.spacing.lg },
+  modalCard: { backgroundColor: theme.colors.surface, borderRadius: theme.radius.lg, padding: theme.spacing.xl, gap: theme.spacing.md },
+  modalEyebrow: { color: theme.colors.inkMuted, textTransform: "uppercase", fontWeight: "700", fontSize: 12, letterSpacing: 1 },
+  modalTitle: { color: theme.colors.ink, fontSize: 22, fontWeight: "800" },
+  modalText: { color: theme.colors.inkSoft, lineHeight: 23 },
+  modalClose: { alignSelf: "flex-end", backgroundColor: theme.colors.primary, borderRadius: theme.radius.pill, paddingHorizontal: 18, paddingVertical: 10 },
+  modalCloseText: { color: theme.colors.surface, fontWeight: "700" },
+});

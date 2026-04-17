@@ -4,18 +4,15 @@ import { router } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 
 export default function Index() {
-
   useEffect(() => {
     const checkAuth = async () => {
-
-      const token = await SecureStore.getItemAsync("accessToken");
+      const token = await SecureStore.getItemAsync("access");
 
       if (token) {
-        router.replace("/(tabs)/home");
+        router.replace("/(tabs)/feed");
       } else {
         router.replace("/(auth)/login/page");
       }
-
     };
 
     checkAuth();

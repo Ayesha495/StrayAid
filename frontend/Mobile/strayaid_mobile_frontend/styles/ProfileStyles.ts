@@ -1,0 +1,30 @@
+import { StyleSheet } from "react-native";
+import { mobileTheme as theme } from "./mobileTheme";
+
+export const profileStyles = StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: theme.colors.surfaceMuted },
+  scrollContent: { padding: theme.spacing.lg, gap: theme.spacing.lg, paddingBottom: 120 },
+  topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  pageTitle: { color: theme.colors.ink, fontSize: 28, fontWeight: "800" },
+  profileCard: { backgroundColor: theme.colors.surface, borderRadius: theme.radius.lg, padding: theme.spacing.lg, gap: theme.spacing.md, shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: 16, shadowOffset: { width: 0, height: 8 }, elevation: 3 },
+  profileHeader: { flexDirection: "row", alignItems: "center", gap: theme.spacing.md },
+  avatar: { width: 74, height: 74, borderRadius: 37, backgroundColor: theme.colors.primaryDeep, alignItems: "center", justifyContent: "center" },
+  avatarText: { color: theme.colors.surface, fontSize: 28, fontWeight: "800" },
+  profileTitle: { color: theme.colors.ink, fontSize: 24, fontWeight: "800" },
+  profileSubtitle: { color: theme.colors.inkMuted, lineHeight: 22 },
+  infoGrid: { gap: theme.spacing.sm },
+  infoRow: { borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.md, padding: theme.spacing.md, backgroundColor: theme.colors.surfaceMuted },
+  infoLabel: { color: theme.colors.inkMuted, fontSize: 12, textTransform: "uppercase", fontWeight: "700", marginBottom: 4 },
+  infoValue: { color: theme.colors.ink, fontSize: 15, fontWeight: "600" },
+  sectionCard: { backgroundColor: theme.colors.surface, borderRadius: theme.radius.lg, padding: theme.spacing.lg, gap: theme.spacing.md, shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: 16, shadowOffset: { width: 0, height: 8 }, elevation: 3 },
+  sectionTitle: { color: theme.colors.ink, fontSize: 22, fontWeight: "700" },
+  sectionText: { color: theme.colors.inkMuted },
+  reportCard: { borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.md, padding: theme.spacing.md, gap: theme.spacing.xs, backgroundColor: theme.colors.surfaceMuted },
+  reportTitle: { color: theme.colors.ink, fontSize: 16, fontWeight: "700" },
+  badge: { alignSelf: "flex-start", backgroundColor: theme.colors.primarySoft, borderRadius: theme.radius.pill, paddingHorizontal: 10, paddingVertical: 6 },
+  badgeText: { color: theme.colors.primary, fontWeight: "700", fontSize: 11, textTransform: "uppercase" },
+  metaText: { color: theme.colors.inkMuted, fontSize: 13 },
+  logoutButton: { backgroundColor: theme.colors.primary, borderRadius: theme.radius.sm, paddingVertical: 16, alignItems: "center" },
+  logoutButtonText: { color: theme.colors.surface, fontWeight: "700", fontSize: 15 },
+  emptyText: { color: theme.colors.inkMuted, textAlign: "center", lineHeight: 22 },
+});

@@ -84,6 +84,24 @@ def report_case(request):
     )
 
 
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def my_reports(request):
+    queryset = (
+        Case.objects.select_related(
+            "reported_by",
+            "assigned_to",
+            "organization",
+            "organization__user",
+        )
+        .prefetch_related("reports")
+        .filter(reports__user=request.user)
+        .distinct()
+    )
+    serializer = CaseSerializer(queryset, many=True, context={"request": request})
+    return Response(serializer.data)
+
+
 class CaseViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Case.objects.select_related(
         "reported_by",

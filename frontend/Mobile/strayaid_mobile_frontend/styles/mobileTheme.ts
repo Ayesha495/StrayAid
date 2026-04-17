@@ -1,0 +1,30 @@
+export const mobileTheme = {
+  colors: {
+    ink: "#143b52",
+    inkSoft: "#335466",
+    inkMuted: "#6d8594",
+    primary: "#1e6f9f",
+    primaryDeep: "#12344a",
+    primarySoft: "#d7ebf5",
+    surface: "#ffffff",
+    surfaceMuted: "#f4f8fb",
+    border: "#c9d9e3",
+    success: "#2d8a60",
+    danger: "#c65757",
+    shadow: "rgba(18, 52, 74, 0.12)",
+  },
+  radius: {
+    sm: 12,
+    md: 18,
+    lg: 24,
+    pill: 999,
+  },
+  spacing: {
+    xs: 8,
+    sm: 12,
+    md: 16,
+    lg: 20,
+    xl: 24,
+    xxl: 32,
+  },
+};
