@@ -2,7 +2,33 @@ import { getToken } from "../utils/tokenStorage";
 
 const API_BASE = process.env.IP || "http://192.168.1.16:8000";
 
-export type MobileOrganization = { id: number; name: string };
+const resolveMediaUrl = (value: string | null | undefined) => {
+  if (!value) {
+    return value ?? null;
+  }
+
+  if (/^https?:\/\//i.test(value)) {
+    return value;
+  }
+
+  return new URL(value, API_BASE).toString();
+};
+
+export type MobileOrganization = {
+  id: number;
+  name: string;
+  description?: string;
+  image?: string | null;
+  address?: string;
+  city?: string;
+  capacity?: number;
+  radius?: number;
+  phone_number?: string;
+  contact_email?: string;
+  bank_account_title?: string;
+  bank_account_number?: string;
+  user_email?: string;
+};
 export type MobileUser = {
   id: number;
   email: string;
@@ -58,14 +84,32 @@ async function parseJson<T>(response: Response): Promise<T> {
   return data as T;
 }
 
+const normalizeOrganization = (organization: MobileOrganization): MobileOrganization => ({
+  ...organization,
+  image: resolveMediaUrl(organization.image),
+});
+
+const normalizeAnimal = (animal: MobileAnimal): MobileAnimal => ({
+  ...animal,
+  image: resolveMediaUrl(animal.image),
+  organization: normalizeOrganization(animal.organization),
+});
+
+const normalizePost = (post: MobilePost): MobilePost => ({
+  ...post,
+  image: resolveMediaUrl(post.image),
+  animal: normalizeAnimal(post.animal),
+  organization: normalizeOrganization(post.organization),
+});
+
 export async function getPublicFeed() {
   const response = await fetch(`${API_BASE}/api/posts/public-feed/`);
-  return parseJson<MobilePost[]>(response);
+  return (await parseJson<MobilePost[]>(response)).map(normalizePost);
 }
 
 export async function getPublicAnimals() {
   const response = await fetch(`${API_BASE}/api/animals/public/`);
-  return parseJson<MobileAnimal[]>(response);
+  return (await parseJson<MobileAnimal[]>(response)).map(normalizeAnimal);
 }
 
 export async function getMyReports() {
@@ -84,14 +128,32 @@ export async function getCurrentUser() {
   return parseJson<MobileUser>(response);
 }
 
+export async function getMyOrganizationProfile() {
+  const token = await getToken();
+  const response = await fetch(`${API_BASE}/api/organizations/me/`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return normalizeOrganization(await parseJson<MobileOrganization>(response));
+}
+
 export async function getAnimal(animalId: string | number) {
   const response = await fetch(`${API_BASE}/api/animals/${animalId}/`);
-  return parseJson<MobileAnimal>(response);
+  return normalizeAnimal(await parseJson<MobileAnimal>(response));
 }
 
 export async function getAnimalPosts(animalId: string | number) {
   const response = await fetch(`${API_BASE}/api/posts/by-animal/?animal_id=${animalId}`);
-  return parseJson<MobilePost[]>(response);
+  return (await parseJson<MobilePost[]>(response)).map(normalizePost);
+}
+
+export async function getOrganization(organizationId: string | number) {
+  const response = await fetch(`${API_BASE}/api/organizations/${organizationId}/`);
+  return normalizeOrganization(await parseJson<MobileOrganization>(response));
+}
+
+export async function getOrganizationAnimals(organizationId: string | number) {
+  const response = await fetch(`${API_BASE}/api/organizations/${organizationId}/animals/`);
+  return (await parseJson<MobileAnimal[]>(response)).map(normalizeAnimal);
 }
 
 export async function submitReport(formData: FormData) {

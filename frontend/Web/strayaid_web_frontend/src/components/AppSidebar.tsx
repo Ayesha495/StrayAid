@@ -1,10 +1,24 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { clearSession, useCurrentUser } from "../services/authSevice";
+import { getOrganizationProfile } from "../services/platformService";
 
 function AppSidebar() {
   const navigate = useNavigate();
   const currentUser = useCurrentUser();
   const isOrganization = currentUser?.role === "organization";
+  const [organizationName, setOrganizationName] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isOrganization) {
+      setOrganizationName(null);
+      return;
+    }
+
+    getOrganizationProfile()
+      .then((profile) => setOrganizationName(profile.name))
+      .catch(() => setOrganizationName(null));
+  }, [isOrganization]);
 
   const handleLogout = () => {
     clearSession();
@@ -15,7 +29,7 @@ function AppSidebar() {
     <aside className="dashboard-sidebar">
       <Link to="/" className="dashboard-brand">StrayAid</Link>
       <div className="dashboard-user-card">
-        <strong>{currentUser?.username || "Rescue Account"}</strong>
+        <strong>{isOrganization ? (organizationName || "Organization Account") : (currentUser?.username || "Rescue Account")}</strong>
         <span>{isOrganization ? "Organization Access" : "Public Access"}</span>
       </div>
       <nav className="dashboard-nav">

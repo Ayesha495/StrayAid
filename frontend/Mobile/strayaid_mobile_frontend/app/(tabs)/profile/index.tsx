@@ -2,17 +2,29 @@ import { useEffect, useState } from "react";
 import { Alert, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { profileStyles as styles } from "../../../styles/ProfileStyles";
-import { getCurrentUser, getMyReports, type MobileCase, type MobileUser } from "../../../services/mobileContentService";
+import { getCurrentUser, getMyOrganizationProfile, getMyReports, type MobileCase, type MobileOrganization, type MobileUser } from "../../../services/mobileContentService";
 import { logoutUser } from "../../../services/authService";
 
 export default function ProfilePage() {
   const [reports, setReports] = useState<MobileCase[]>([]);
   const [user, setUser] = useState<MobileUser | null>(null);
+  const [organization, setOrganization] = useState<MobileOrganization | null>(null);
 
   useEffect(() => {
-    getCurrentUser().then(setUser).catch(console.error);
+    getCurrentUser()
+      .then((currentUser) => {
+        setUser(currentUser);
+        if (currentUser.role === "organization") {
+          getMyOrganizationProfile().then(setOrganization).catch(console.error);
+        }
+      })
+      .catch(console.error);
     getMyReports().then(setReports).catch(console.error);
   }, []);
+
+  const displayName = user?.role === "organization"
+    ? (organization?.name || "Organization Account")
+    : (user?.username || "Public User");
 
   const handleLogout = async () => {
     await logoutUser();
@@ -29,11 +41,11 @@ export default function ProfilePage() {
           <View style={styles.profileHeader}>
             <View style={styles.avatar}>
               <Text style={styles.avatarText}>
-                {(user?.username || user?.email || "U").slice(0, 1).toUpperCase()}
+                {(displayName || user?.email || "U").slice(0, 1).toUpperCase()}
               </Text>
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.profileTitle}>{user?.username || "Public User"}</Text>
+              <Text style={styles.profileTitle}>{displayName}</Text>
               <Text style={styles.profileSubtitle}>
                 Manage your account details and review the rescue reports submitted from this phone.
               </Text>
@@ -42,8 +54,8 @@ export default function ProfilePage() {
 
           <View style={styles.infoGrid}>
             <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Username</Text>
-              <Text style={styles.infoValue}>{user?.username || "Not available"}</Text>
+              <Text style={styles.infoLabel}>{user?.role === "organization" ? "Organization" : "Username"}</Text>
+              <Text style={styles.infoValue}>{displayName || "Not available"}</Text>
             </View>
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Email</Text>
@@ -70,7 +82,7 @@ export default function ProfilePage() {
               </View>
               <Text style={styles.reportTitle}>Case #{item.id}</Text>
               <Text style={styles.sectionText}>{item.description || "No description provided."}</Text>
-              <Text style={styles.metaText}>{item.latitude.toFixed(4)}, {item.longitude.toFixed(4)}</Text>
+              <Text style={styles.metaText}>Reported on {new Date(item.created_at).toLocaleDateString()}</Text>
               <Text style={styles.metaText}>
                 {item.reports.length} report{item.reports.length === 1 ? "" : "s"} attached
               </Text>

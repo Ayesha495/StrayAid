@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import CaseDetail from "./pages/CaseDetail";
 import AnimalManagement from "./pages/AnimalManagement";
 import AnimalDetail from "./pages/AnimalDetail";
+import OrganizationPublicProfile from "./pages/OrganizationPublicProfile";
 import PostFeed from "./pages/PostFeed";
 import Cases from "./pages/Cases";
 import OrganizationFeed from "./pages/OrganizationFeed";
@@ -23,6 +24,7 @@ function App() {
         <Route path="/register" element={<Register />}></Route>
         <Route path="/feed" element={<PostFeed />}></Route>
         <Route path="/animals/:animalId" element={<AnimalDetail />}></Route>
+        <Route path="/organizations/:organizationId" element={<OrganizationPublicProfile />}></Route>
         <Route element={<ProtectedRoute />}>
           <Route path="/organization/register" element={<OrganizationRegistration />}></Route>
         </Route>

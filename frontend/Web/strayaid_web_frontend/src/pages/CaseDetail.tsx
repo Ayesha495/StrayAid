@@ -41,7 +41,6 @@ function CaseDetail() {
       </div>
 
       <section className="panel-card">
-        <p className="meta-line">Coordinates: {caseItem.latitude}, {caseItem.longitude}</p>
         <p className="meta-line">Reported: {new Date(caseItem.created_at).toLocaleString()}</p>
         <div className="case-actions">
           {!caseItem.organization && <button className="primary-btn" onClick={handleAccept}>Accept Case</button>}
@@ -59,6 +58,7 @@ function CaseDetail() {
         <div className="card-grid">
           {caseItem.reports.map((report) => (
             <article className="feed-card" key={report.id}>
+              {report.image ? <img className="card-media" src={report.image} alt="Case report" /> : null}
               <p>{report.description}</p>
               <p className="meta-line">{report.user_email ?? "Reporter"} · {new Date(report.created_at).toLocaleString()}</p>
             </article>

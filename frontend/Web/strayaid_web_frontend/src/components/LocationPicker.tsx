@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { MapContainer, Marker, TileLayer, useMapEvents } from "react-leaflet";
 import L, { type LatLngExpression, type LeafletMouseEvent } from "leaflet";
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
@@ -50,20 +50,11 @@ function LocationPicker({
   onLocationChange,
   onAddressChange,
 }: LocationPickerProps) {
-  const [manualLatitude, setManualLatitude] = useState(latitude ? latitude.toFixed(6) : "");
-  const [manualLongitude, setManualLongitude] = useState(longitude ? longitude.toFixed(6) : "");
   const hasCoordinates = Number.isFinite(latitude) && Number.isFinite(longitude) && (latitude !== 0 || longitude !== 0);
   const center: LatLngExpression = hasCoordinates ? [latitude, longitude] : DEFAULT_CENTER;
 
-  useEffect(() => {
-    setManualLatitude(hasCoordinates ? latitude.toFixed(6) : "");
-    setManualLongitude(hasCoordinates ? longitude.toFixed(6) : "");
-  }, [hasCoordinates, latitude, longitude]);
-
   const updateLocation = (nextLatitude: number, nextLongitude: number) => {
     onLocationChange({ latitude: nextLatitude, longitude: nextLongitude });
-    setManualLatitude(nextLatitude.toFixed(6));
-    setManualLongitude(nextLongitude.toFixed(6));
   };
 
   const useCurrentLocation = () => {
@@ -83,24 +74,12 @@ function LocationPicker({
     );
   };
 
-  const applyManualCoordinates = () => {
-    const nextLatitude = Number(manualLatitude);
-    const nextLongitude = Number(manualLongitude);
-
-    if (Number.isNaN(nextLatitude) || Number.isNaN(nextLongitude)) {
-      window.alert("Enter valid latitude and longitude values first.");
-      return;
-    }
-
-    updateLocation(nextLatitude, nextLongitude);
-  };
-
   return (
     <section className="location-picker">
       <div className="location-picker-header">
         <div>
           <h2>Organization Location</h2>
-          <p>Pin your rescue location on the map, use your current position, or enter coordinates manually if needed.</p>
+          <p>Pin your rescue location on the map or use your current position. We will not show raw coordinates to end users.</p>
         </div>
         <button type="button" className="secondary-btn" onClick={useCurrentLocation}>
           Use Current Location
@@ -128,39 +107,12 @@ function LocationPicker({
             placeholder="Enter your office, shelter, or rescue base address"
           />
         </label>
-        <label>
-          Latitude
-          <input
-            type="number"
-            step="any"
-            value={manualLatitude}
-            onChange={(event) => setManualLatitude(event.target.value)}
-            placeholder="Manual latitude"
-          />
-        </label>
-        <label>
-          Longitude
-          <input
-            type="number"
-            step="any"
-            value={manualLongitude}
-            onChange={(event) => setManualLongitude(event.target.value)}
-            placeholder="Manual longitude"
-          />
-        </label>
       </div>
 
       <div className="portal-actions">
-        <button type="button" className="secondary-btn" onClick={applyManualCoordinates}>
-          Apply Manual Coordinates
-        </button>
-        {hasCoordinates ? (
-          <p className="meta-line">
-            Selected location: {latitude.toFixed(6)}, {longitude.toFixed(6)}
-          </p>
-        ) : (
-          <p className="meta-line">No map pin selected yet.</p>
-        )}
+        <p className="meta-line">
+          {hasCoordinates ? "Map pin selected successfully." : "No map pin selected yet."}
+        </p>
       </div>
     </section>
   );

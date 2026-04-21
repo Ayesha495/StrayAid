@@ -34,19 +34,19 @@ function SponsorModal({ isOpen, onClose, title, donationInfo }: SponsorModalProp
         onClick={(event) => event.stopPropagation()}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="sponsor-modal-title"
+        aria-labelledby="donation-modal-title"
       >
         <div className="modal-header">
           <div>
-            <p className="modal-eyebrow">Sponsor</p>
-            <h2 id="sponsor-modal-title">{title}</h2>
+            <p className="modal-eyebrow">Donation Information</p>
+            <h2 id="donation-modal-title">{title}</h2>
           </div>
-          <button type="button" className="icon-btn" onClick={onClose} aria-label="Close sponsor details">
+          <button type="button" className="icon-btn" onClick={onClose} aria-label="Close donation information">
             x
           </button>
         </div>
         <p className="modal-copy">
-          {donationInfo?.trim() || "This organization has not shared sponsorship details for this animal yet."}
+          {donationInfo?.trim() || "This organization has not shared donation information for this animal yet."}
         </p>
       </div>
     </div>

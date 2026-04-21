@@ -91,7 +91,9 @@ export default function FeedPage() {
                 {animal.image ? <Image source={{ uri: animal.image }} style={styles.animalImage} /> : null}
                 <View style={styles.badge}><Text style={styles.badgeText}>{animal.status}</Text></View>
                 <Text style={styles.cardTitle}>{animal.name}</Text>
-                <Text style={styles.metaText}>{animal.organization.name}</Text>
+                <Pressable onPress={() => router.push(`/organizations/${animal.organization.id}` as Href)}>
+                  <Text style={styles.linkText}>{animal.organization.name}</Text>
+                </Pressable>
                 <Text style={styles.cardText}>{animal.description || "This animal profile does not have a public description yet."}</Text>
               </Pressable>
             </AnimatedCard>
@@ -110,16 +112,20 @@ export default function FeedPage() {
             <AnimatedCard key={post.id} index={index + animals.length + 1}>
               <View style={styles.postCard}>
                 <View style={styles.postTopRow}>
-                  <View style={styles.orgChip}><Text style={styles.orgChipText}>{post.organization.name}</Text></View>
+                  <Pressable style={styles.orgChip} onPress={() => router.push(`/organizations/${post.organization.id}` as Href)}>
+                    <Text style={styles.orgChipText}>{post.organization.name}</Text>
+                  </Pressable>
                   <Pressable style={styles.sponsorButton} onPress={() => setSponsorAnimal(post.animal)}>
-                    <Text style={styles.sponsorButtonText}>Sponsor</Text>
+                    <Text style={styles.sponsorButtonText}>Donation Info</Text>
                   </Pressable>
                 </View>
                 {(post.image || post.animal.image) ? (
                   <Image source={{ uri: post.image || post.animal.image || undefined }} style={styles.postImage} />
                 ) : null}
                 <Text style={styles.cardTitle}>{post.title}</Text>
-                <Text style={styles.metaText}>{post.animal.name}</Text>
+                <Pressable onPress={() => router.push(`/animals/${post.animal.id}` as Href)}>
+                  <Text style={styles.linkText}>{post.animal.name}</Text>
+                </Pressable>
                 <Text style={styles.metaText}>{new Date(post.created_at).toLocaleDateString()}</Text>
                 <Text style={styles.cardText}>{post.content}</Text>
               </View>
@@ -134,10 +140,10 @@ export default function FeedPage() {
       <Modal visible={Boolean(sponsorAnimal)} transparent animationType="fade" onRequestClose={() => setSponsorAnimal(null)}>
         <Pressable style={styles.modalBackdrop} onPress={() => setSponsorAnimal(null)}>
           <Pressable style={styles.modalCard} onPress={(event) => event.stopPropagation()}>
-            <Text style={styles.modalEyebrow}>Sponsor</Text>
+            <Text style={styles.modalEyebrow}>Donation Information</Text>
             <Text style={styles.modalTitle}>{sponsorAnimal?.name}</Text>
             <Text style={styles.modalText}>
-              {sponsorAnimal?.donation_info || "This organization has not shared sponsor details for this animal yet."}
+              {sponsorAnimal?.donation_info || "This organization has not shared donation information for this animal yet."}
             </Text>
             <Pressable style={styles.modalClose} onPress={() => setSponsorAnimal(null)}>
               <Text style={styles.modalCloseText}>Close</Text>

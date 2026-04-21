@@ -76,7 +76,7 @@ export default function SelectLocationScreen() {
             <Marker
               coordinate={markerPosition}
               title="Selected Location"
-              description={`${markerPosition.latitude.toFixed(4)}, ${markerPosition.longitude.toFixed(4)}`}
+              description="Pinned location"
             />
           )}
         </MapView>
@@ -85,11 +85,6 @@ export default function SelectLocationScreen() {
       <View style={styles.bottomPanel}>
         <Text style={styles.title}>Pin The Exact Location</Text>
         <Text style={styles.helper}>Tap the map to reposition the marker, then confirm when it matches the animal&apos;s location.</Text>
-        {markerPosition && (
-          <Text style={styles.coordinatesText}>
-            {markerPosition.latitude.toFixed(4)}, {markerPosition.longitude.toFixed(4)}
-          </Text>
-        )}
         <View style={styles.buttonRow}>
           <Pressable style={styles.secondaryButton} onPress={() => router.back()}>
             <Text style={styles.secondaryButtonText}>Cancel</Text>

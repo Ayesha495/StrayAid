@@ -34,7 +34,7 @@ function Dashboard() {
     <div className="portal-page">
       <div className="portal-header">
         <div>
-          <h1>Organization Dashboard</h1>
+          <h1>{dashboard?.organization.name || "Organization Dashboard"}</h1>
           <p>Track incoming rescue work, accepted cases, and animals currently under your care.</p>
         </div>
       </div>

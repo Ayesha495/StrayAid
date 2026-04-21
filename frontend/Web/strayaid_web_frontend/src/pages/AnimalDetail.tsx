@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import SponsorModal from "../components/SponsorModal";
 import { getAnimal, getAnimalPosts } from "../services/platformService";
 import type { Animal, Post } from "../types/platform";
@@ -25,7 +25,12 @@ function AnimalDetail() {
       <div className="portal-header">
         <div>
           <h1>{animal.name}</h1>
-          <p>{animal.organization.name} · {animal.breed || "Breed not specified"}</p>
+          <p>
+            <Link className="inline-link" to={`/organizations/${animal.organization.id}`}>
+              {animal.organization.name}
+            </Link>
+            {animal.breed ? ` · ${animal.breed}` : ""}
+          </p>
         </div>
         <span className="badge">{animal.status}</span>
       </div>
@@ -36,12 +41,15 @@ function AnimalDetail() {
         <p className="meta-line">Medical Info: {animal.medical_info || "No medical notes shared yet."}</p>
         <div className="sponsor-panel">
           <div>
-            <h2>Sponsor This Animal</h2>
+            <h2>Donation Information</h2>
             <p className="meta-line">Support this rescue directly using the organization details shared for {animal.name}.</p>
           </div>
-          <button type="button" className="primary-btn" onClick={() => setIsSponsorOpen(true)}>
-            View Sponsor Details
-          </button>
+          <div className="feed-actions">
+            <Link className="secondary-btn" to={`/organizations/${animal.organization.id}`}>View Organization</Link>
+            <button type="button" className="primary-btn" onClick={() => setIsSponsorOpen(true)}>
+              View Donation Information
+            </button>
+          </div>
         </div>
       </section>
 

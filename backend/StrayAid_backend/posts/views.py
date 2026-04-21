@@ -1,4 +1,4 @@
-from rest_framework import exceptions, viewsets
+from rest_framework import exceptions, serializers, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -35,7 +35,10 @@ class PostViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         organization = self.request.user.organization_profile
         animal_id = self.request.data.get("animal")
-        animal = Animal.objects.get(id=animal_id, organization=organization)
+        try:
+            animal = Animal.objects.get(id=animal_id, organization=organization)
+        except Animal.DoesNotExist as error:
+            raise serializers.ValidationError({"animal": "You can only post updates for your own animals."}) from error
         serializer.save(organization=organization, animal=animal)
 
     def perform_update(self, serializer):

@@ -32,7 +32,7 @@ export default function ReportPage() {
         if (!selectedLocationStr) return;
         const selectedLocation = JSON.parse(selectedLocationStr) as LatLng;
         setLocation(selectedLocation);
-        setLocationText(`${selectedLocation.latitude.toFixed(4)}, ${selectedLocation.longitude.toFixed(4)}`);
+        setLocationText("Pinned location selected");
         await AsyncStorage.removeItem("selectedLocation");
       };
 
@@ -55,7 +55,7 @@ export default function ReportPage() {
 
       const coords = { latitude: results[0].latitude, longitude: results[0].longitude };
       setLocation(coords);
-      setLocationText(`${coords.latitude.toFixed(4)}, ${coords.longitude.toFixed(4)}`);
+      setLocationText(locationText.trim());
     } catch (error) {
       console.error(error);
       Alert.alert("Geocode error", "Location lookup failed.");
@@ -98,7 +98,7 @@ export default function ReportPage() {
     const current = await Location.getCurrentPositionAsync({});
     const coords = { latitude: current.coords.latitude, longitude: current.coords.longitude };
     setLocation(coords);
-    setLocationText(`${coords.latitude.toFixed(4)}, ${coords.longitude.toFixed(4)}`);
+    setLocationText("Current location selected");
   };
 
   const handleSubmit = async () => {

@@ -67,8 +67,11 @@ class AnimalViewSet(viewsets.ModelViewSet):
     def public(self, request):
         queryset = super().get_queryset()
         status_filter = request.query_params.get("status")
+        organization_id = request.query_params.get("organization_id")
         if status_filter:
             queryset = queryset.filter(status=status_filter)
+        if organization_id:
+            queryset = queryset.filter(organization_id=organization_id)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 

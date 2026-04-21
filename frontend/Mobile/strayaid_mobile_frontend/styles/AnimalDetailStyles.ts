@@ -14,6 +14,8 @@ export const animalDetailStyles = StyleSheet.create({
   badgeText: { color: theme.colors.primary, fontWeight: "700", fontSize: 11, textTransform: "uppercase" },
   title: { color: theme.colors.ink, fontSize: 24, fontWeight: "800" },
   subtitle: { color: theme.colors.inkMuted, fontSize: 14 },
+  subtitleRow: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: theme.spacing.sm },
+  linkText: { color: theme.colors.primaryDeep, fontSize: 14, fontWeight: "700" },
   bodyText: { color: theme.colors.inkSoft, lineHeight: 22 },
   sponsorButton: { backgroundColor: theme.colors.primary, borderRadius: theme.radius.sm, paddingVertical: 14, alignItems: "center" },
   sponsorButtonText: { color: theme.colors.surface, fontWeight: "700" },

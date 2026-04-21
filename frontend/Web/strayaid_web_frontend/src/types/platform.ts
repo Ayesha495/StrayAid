@@ -2,11 +2,17 @@ export interface Organization {
   id: number;
   name: string;
   description: string;
+  image?: string | null;
   latitude: number;
   longitude: number;
   address: string;
+  city?: string;
+  capacity?: number;
+  radius?: number;
   phone_number: string;
   contact_email: string;
+  bank_account_title?: string;
+  bank_account_number?: string;
   user_email?: string;
   user_username?: string;
 }

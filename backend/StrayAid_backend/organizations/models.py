@@ -22,10 +22,9 @@ class Organization(models.Model):
     radius = models.FloatField(null=True, blank=True)
     is_available = models.BooleanField(default=True)
     description = models.TextField(blank=True)
+    image = models.ImageField(upload_to="organizations/", null=True, blank=True)
     bank_account_title = models.CharField(max_length=255, blank=True)
     bank_account_number = models.CharField(max_length=100, blank=True)
-    jazzcash_number = models.CharField(max_length=30, blank=True)
-    easypaisa_number = models.CharField(max_length=30, blank=True)
 
     class Meta:
         ordering = ["name"]

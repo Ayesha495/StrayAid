@@ -18,16 +18,16 @@ class OrganizationSerializer(serializers.ModelSerializer):
             "user_username",
             "name",
             "description",
+            "image",
             "latitude",
             "longitude",
             "address",
             "city",
+            "capacity",
             "phone_number",
             "contact_email",
             "radius",
             "bank_account_title",
             "bank_account_number",
-            "jazzcash_number",
-            "easypaisa_number",
         ]
         read_only_fields = ["id", "user", "user_email", "user_username"]

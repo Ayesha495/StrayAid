@@ -47,6 +47,7 @@ export const feedStyles = StyleSheet.create({
   sponsorButtonText: { color: theme.colors.primaryDeep, fontWeight: "700", fontSize: 12 },
   orgChip: { backgroundColor: theme.colors.primarySoft, borderRadius: theme.radius.pill, paddingHorizontal: 10, paddingVertical: 6 },
   orgChipText: { color: theme.colors.primary, fontWeight: "700", fontSize: 12 },
+  linkText: { color: theme.colors.primaryDeep, fontWeight: "700", fontSize: 14 },
   metaText: { color: theme.colors.inkMuted, fontSize: 13 },
   postImage: { width: "100%", height: 220, borderRadius: theme.radius.md, backgroundColor: theme.colors.primarySoft },
   emptyCard: { backgroundColor: theme.colors.surface, borderRadius: theme.radius.lg, padding: theme.spacing.xl },

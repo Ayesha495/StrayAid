@@ -47,14 +47,19 @@ export default function AnimalDetailPage() {
             <Text style={styles.badgeText}>{animal?.status || "loading"}</Text>
           </View>
           <Text style={styles.title}>{animal?.name || "Loading animal..."}</Text>
-          <Text style={styles.subtitle}>
-            {[animal?.organization?.name, animal?.breed].filter(Boolean).join(" • ") || "Public rescue profile"}
-          </Text>
+          <View style={styles.subtitleRow}>
+            {animal?.organization ? (
+              <Pressable onPress={() => router.push(`/organizations/${animal.organization.id}`)}>
+                <Text style={styles.linkText}>{animal.organization.name}</Text>
+              </Pressable>
+            ) : null}
+            {animal?.breed ? <Text style={styles.subtitle}>{animal.breed}</Text> : null}
+          </View>
           <Text style={styles.bodyText}>
             {animal?.description || "No public description has been added for this animal yet."}
           </Text>
           <Pressable style={styles.sponsorButton} onPress={() => setShowSponsor(true)}>
-            <Text style={styles.sponsorButtonText}>Sponsor This Animal</Text>
+            <Text style={styles.sponsorButtonText}>View Donation Information</Text>
           </Pressable>
         </View>
 
@@ -85,10 +90,10 @@ export default function AnimalDetailPage() {
       <Modal visible={showSponsor} transparent animationType="fade" onRequestClose={() => setShowSponsor(false)}>
         <Pressable style={styles.modalBackdrop} onPress={() => setShowSponsor(false)}>
           <Pressable style={styles.modalCard} onPress={(event) => event.stopPropagation()}>
-            <Text style={styles.modalEyebrow}>Sponsor</Text>
+            <Text style={styles.modalEyebrow}>Donation Information</Text>
             <Text style={styles.modalTitle}>{animal?.name || "Animal"}</Text>
             <Text style={styles.modalText}>
-              {animal?.donation_info || "This organization has not shared sponsor details for this animal yet."}
+              {animal?.donation_info || "This organization has not shared donation information for this animal yet."}
             </Text>
             <Pressable style={styles.modalClose} onPress={() => setShowSponsor(false)}>
               <Text style={styles.modalCloseText}>Close</Text>
