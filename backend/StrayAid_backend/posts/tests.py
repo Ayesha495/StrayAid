@@ -126,3 +126,73 @@ class PostApiTests(MediaEnabledAPITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, [])
+
+    def test_public_can_retrieve_post_detail(self):
+        post = Post.objects.create(
+            animal=self.animal,
+            organization=self.organization,
+            title="Recovery update",
+            content="Milo is eating well.",
+        )
+
+        response = self.client.get(f"/api/posts/{post.id}/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["id"], post.id)
+        self.assertEqual(response.data["title"], "Recovery update")
+
+    def test_public_can_filter_posts_by_animal(self):
+        own_post = Post.objects.create(
+            animal=self.animal,
+            organization=self.organization,
+            title="Recovery update",
+            content="Milo is eating well.",
+        )
+        Post.objects.create(
+            animal=self.other_animal,
+            organization=self.other_organization,
+            title="Other update",
+            content="Luna is recovering.",
+        )
+
+        response = self.client.get(f"/api/posts/by-animal/?animal_id={self.animal.id}")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["id"], own_post.id)
+
+    def test_organization_can_update_own_post(self):
+        post = Post.objects.create(
+            animal=self.animal,
+            organization=self.organization,
+            title="Recovery update",
+            content="Milo is eating well.",
+        )
+        self.client.force_authenticate(user=self.org_user)
+
+        response = self.client.patch(
+            f"/api/posts/{post.id}/",
+            {"title": "Recovery update 2", "content": "Milo is much better."},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        post.refresh_from_db()
+        self.assertEqual(post.title, "Recovery update 2")
+
+    def test_organization_cannot_update_another_organizations_post(self):
+        post = Post.objects.create(
+            animal=self.other_animal,
+            organization=self.other_organization,
+            title="Other update",
+            content="Luna is recovering.",
+        )
+        self.client.force_authenticate(user=self.org_user)
+
+        response = self.client.patch(
+            f"/api/posts/{post.id}/",
+            {"title": "Blocked update"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

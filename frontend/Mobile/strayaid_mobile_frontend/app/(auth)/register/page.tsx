@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { registerUser } from "../../../services/authService";
+import { useGoogleAuth } from "../../../services/googleAuthService";
 import { registerStyles as styles } from "../../../styles/RegisterStyles";
 
 export default function RegisterPage() {
@@ -11,6 +12,13 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rePassword, setRePassword] = useState("");
+  const { request, promptAsync } = useGoogleAuth({
+    onSuccess: async () => {
+      Alert.alert("Success", "Welcome to StrayAid.");
+      router.replace("/(tabs)/feed");
+    },
+    onError: (message) => Alert.alert("Error", message),
+  });
 
   const handleRegister = async () => {
     try {
@@ -50,6 +58,13 @@ export default function RegisterPage() {
             <TextInput style={styles.input} placeholder="Confirm password" placeholderTextColor="#6d8594" value={rePassword} onChangeText={setRePassword} secureTextEntry />
             <Pressable style={styles.primaryButton} onPress={handleRegister}>
               <Text style={styles.primaryButtonText}>Register</Text>
+            </Pressable>
+            <Pressable
+              style={styles.secondaryButton}
+              disabled={!request}
+              onPress={() => promptAsync()}
+            >
+              <Text style={styles.secondaryButtonText}>Continue with Google</Text>
             </Pressable>
             <View style={styles.footerRow}>
               <Text style={styles.footerText}>Already have an account?</Text>

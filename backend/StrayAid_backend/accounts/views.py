@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.utils.crypto import get_random_string
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -15,6 +16,7 @@ User = get_user_model()
 
 
 def _sync_user_role(user):
+    # Keep the stored role aligned with whether an organization profile exists.
     has_organization_profile = hasattr(user, "organization_profile")
     if has_organization_profile and user.role != "organization":
         user.role = "organization"
@@ -23,6 +25,7 @@ def _sync_user_role(user):
 
 
 def _serialize_user(user):
+    # Return the compact user shape consumed by the frontend clients.
     user = _sync_user_role(user)
     return {
         "id": user.id,
@@ -35,6 +38,7 @@ def _serialize_user(user):
 
 
 def _build_unique_username(email):
+    # Google sign-in may not provide a username that is unique in our system.
     base_username = (email.split("@")[0] if email else "google_user").strip() or "google_user"
     candidate = base_username
     suffix = 1
@@ -65,11 +69,12 @@ def _get_or_create_google_user(email, first_name="", last_name=""):
         username=_build_unique_username(email),
         first_name=first_name or "",
         last_name=last_name or "",
-        password=User.objects.make_random_password(),
+        password=get_random_string(32),
     )
 
 
 def _verify_google_id_token(token):
+    # Accept tokens from any configured client app, not just a single audience.
     token_info = google_id_token.verify_oauth2_token(
         token,
         google_requests.Request(),
@@ -94,6 +99,7 @@ def _fetch_google_userinfo(access_token):
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def google_auth(request):
+    # Mobile may send an access token while web can send an ID token.
     google_id = request.data.get("id_token")
     google_access_token = request.data.get("access_token")
 
@@ -133,6 +139,7 @@ def google_auth(request):
         last_name=payload.get("family_name", ""),
     )
 
+    # Issue the same JWT payload shape as the standard login flow.
     refresh = RefreshToken.for_user(user)
 
     return Response(

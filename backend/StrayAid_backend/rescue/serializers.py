@@ -13,6 +13,7 @@ class ReportSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class CaseSerializer(serializers.ModelSerializer):
+    # Nested reports let client apps render a case detail view in one request.
     reports = ReportSerializer(many = True, read_only = True)
     organization = OrganizationSerializer(read_only=True)
     distance_km = serializers.SerializerMethodField()
@@ -28,6 +29,7 @@ class CaseSerializer(serializers.ModelSerializer):
         if not organization:
             return None
 
+        # Distance is computed relative to the signed-in organization when available.
         distance_m = calculate_distance(
             organization.latitude,
             organization.longitude,

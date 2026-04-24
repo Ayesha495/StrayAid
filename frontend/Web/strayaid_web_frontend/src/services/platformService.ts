@@ -2,6 +2,7 @@ import API, { PublicAPI } from "../api/axios";
 import type { Animal, Case, DashboardData, Organization, Post } from "../types/platform";
 import { normalizeAnimal, normalizeCase, normalizeDashboard, normalizeOrganization, normalizePost } from "../utils/media";
 
+// These helpers keep component code focused on rendering instead of request details.
 export const getOrganizationProfile = async () => {
   const response = await API.get<Organization>("/api/organizations/me/");
   return normalizeOrganization(response.data);
@@ -85,8 +86,17 @@ export const getPublicOrganizationAnimals = async (organizationId: string | numb
   return response.data.map(normalizeAnimal);
 };
 
-export const getPublicAnimals = async () => {
-  const response = await PublicAPI.get<Animal[]>("/api/animals/public/");
+export const getPublicAnimals = async (filters?: { organizationId?: string | number; status?: string }) => {
+  const params = new URLSearchParams();
+  if (filters?.organizationId) {
+    params.set("organization_id", String(filters.organizationId));
+  }
+  if (filters?.status) {
+    params.set("status", filters.status);
+  }
+
+  const query = params.toString();
+  const response = await PublicAPI.get<Animal[]>(`/api/animals/public/${query ? `?${query}` : ""}`);
   return response.data.map(normalizeAnimal);
 };
 

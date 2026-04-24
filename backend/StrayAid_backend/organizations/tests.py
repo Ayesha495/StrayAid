@@ -70,6 +70,81 @@ class OrganizationApiTests(APITestCase):
         self.assertEqual(organization.phone, "123456789")
         self.assertEqual(organization.email, self.user.email)
 
+    def test_authenticated_organization_can_get_own_profile(self):
+        self.user.role = "organization"
+        self.user.save(update_fields=["role"])
+        organization = Organization.objects.create(user=self.user, name="Safe Paws", email=self.user.email)
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.get("/api/organizations/me/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["id"], organization.id)
+        self.assertEqual(response.data["name"], "Safe Paws")
+
+    def test_organization_me_returns_404_when_profile_missing(self):
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.get("/api/organizations/me/")
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.data["detail"], "Organization profile not found.")
+
+    def test_authenticated_organization_can_patch_own_profile(self):
+        self.user.role = "organization"
+        self.user.save(update_fields=["role"])
+        Organization.objects.create(user=self.user, name="Safe Paws", email=self.user.email)
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.patch(
+            "/api/organizations/me/",
+            {"city": "Lahore", "capacity": 12, "phone_number": "03123456789"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["city"], "Lahore")
+        self.assertEqual(response.data["capacity"], 12)
+        self.assertEqual(response.data["phone_number"], "03123456789")
+
+    def test_dashboard_returns_summary_for_organization(self):
+        self.user.role = "organization"
+        self.user.save(update_fields=["role"])
+        organization = Organization.objects.create(
+            user=self.user,
+            name="Safe Paws",
+            email=self.user.email,
+            latitude=31.5,
+            longitude=74.3,
+        )
+        assigned_case = Case.objects.create(
+            description="Assigned case",
+            latitude=31.51,
+            longitude=74.31,
+            reported_by=self.user,
+            organization=organization,
+            assigned_to=self.user,
+            status="assigned",
+        )
+        Case.objects.create(
+            description="Nearby open case",
+            latitude=31.5001,
+            longitude=74.3001,
+            reported_by=self.user,
+            status="reported",
+        )
+        Animal.objects.create(case=assigned_case, organization=organization, name="Milo")
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.get("/api/organizations/dashboard/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["organization"]["name"], "Safe Paws")
+        self.assertEqual(response.data["summary"]["total_cases"], 1)
+        self.assertEqual(response.data["summary"]["animals_count"], 1)
+        self.assertEqual(len(response.data["recent_cases"]), 1)
+        self.assertEqual(len(response.data["nearby_cases"]), 1)
+
     def test_public_can_view_organization_and_its_animals(self):
         self.user.role = "organization"
         self.user.save(update_fields=["role"])

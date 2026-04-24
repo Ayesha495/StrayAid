@@ -20,6 +20,7 @@ function AnimatedCard({ children, index }: { children: React.ReactNode; index: n
   const translateY = useRef(new Animated.Value(18)).current;
 
   useEffect(() => {
+    // Stagger cards slightly so the feed feels less abrupt on load.
     Animated.parallel([
       Animated.timing(opacity, { toValue: 1, duration: 320, delay: index * 70, useNativeDriver: true }),
       Animated.timing(translateY, { toValue: 0, duration: 320, delay: index * 70, useNativeDriver: true }),
@@ -36,6 +37,7 @@ export default function FeedPage() {
   const [sponsorAnimal, setSponsorAnimal] = useState<MobileAnimal | null>(null);
 
   const load = async () => {
+    // The feed mixes organization posts with public animal profiles.
     const [postsData, animalsData] = await Promise.all([getPublicFeed(), getPublicAnimals()]);
     setPosts(postsData);
     setAnimals(animalsData);
@@ -115,6 +117,7 @@ export default function FeedPage() {
                   <Pressable style={styles.orgChip} onPress={() => router.push(`/organizations/${post.organization.id}` as Href)}>
                     <Text style={styles.orgChipText}>{post.organization.name}</Text>
                   </Pressable>
+                  {/* Donation details are shown inline so the user can stay in the feed. */}
                   <Pressable style={styles.sponsorButton} onPress={() => setSponsorAnimal(post.animal)}>
                     <Text style={styles.sponsorButtonText}>Donation Info</Text>
                   </Pressable>

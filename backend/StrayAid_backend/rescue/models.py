@@ -3,11 +3,12 @@ from accounts.models import User
 
 class CaseQuerySet(models.QuerySet):
     def open_cases(self):
+        # Open cases are the ones still visible to rescue organizations.
         return self.exclude(status="closed")
 
 
-# Create your models here.
 class Case(models.Model):
+    # Case status tracks the rescue workflow before an animal profile is complete.
     STATUS_CHOICES = [
         ('reported', 'Reported'),
         ('assigned', 'Assigned'),
@@ -47,6 +48,7 @@ class Case(models.Model):
         return f"Case #{self.pk} - {self.status}"
 
 class Report(models.Model):
+    # Multiple public reports can roll up into the same case.
     case = models.ForeignKey(Case, on_delete= models.CASCADE, related_name = "reports")
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     image = models.ImageField(upload_to="reports/")

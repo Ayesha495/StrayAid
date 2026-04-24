@@ -30,6 +30,7 @@ function RescueBoard({ cases, animals, heading = "Case Management", copy }: Resc
   );
   const rescuedAnimals = animals.filter((animal) => ["rescued", "recovering"].includes(animal.status));
   const adoptionAnimals = animals.filter((animal) => animal.status === "adoptable");
+  const previewItems = <T,>(items: T[]) => items.slice(0, 3);
 
   const mapCenter = reportedCases.length ? [reportedCases[0].latitude, reportedCases[0].longitude] as [number, number] : DEFAULT_CENTER;
 
@@ -82,12 +83,13 @@ function RescueBoard({ cases, animals, heading = "Case Management", copy }: Resc
               <h3>Reported</h3>
               <span className="badge">{reportedCases.length}</span>
             </div>
-            {reportedCases.length ? reportedCases.map((caseItem) => (
+            {previewItems(reportedCases).length ? previewItems(reportedCases).map((caseItem) => (
               <Link className="status-card" key={caseItem.id} to={`/cases/${caseItem.id}`}>
                 <strong>Case #{caseItem.id}</strong>
                 <p>{caseItem.description}</p>
               </Link>
             )) : <div className="empty-state compact-state">No unclaimed reported cases.</div>}
+            {reportedCases.length > 3 ? <Link className="inline-link workflow-more-link" to="/dashboard/workflow/reported">More reported cases</Link> : null}
           </div>
 
           <div className="category-panel">
@@ -95,12 +97,13 @@ function RescueBoard({ cases, animals, heading = "Case Management", copy }: Resc
               <h3>In Progress</h3>
               <span className="badge">{inProgressCases.length}</span>
             </div>
-            {inProgressCases.length ? inProgressCases.map((caseItem) => (
+            {previewItems(inProgressCases).length ? previewItems(inProgressCases).map((caseItem) => (
               <Link className="status-card" key={caseItem.id} to={`/cases/${caseItem.id}`}>
                 <strong>Case #{caseItem.id}</strong>
                 <p>{caseItem.description}</p>
               </Link>
             )) : <div className="empty-state compact-state">No active rescue cases right now.</div>}
+            {inProgressCases.length > 3 ? <Link className="inline-link workflow-more-link" to="/dashboard/workflow/in-progress">More in progress</Link> : null}
           </div>
 
           <div className="category-panel">
@@ -108,12 +111,13 @@ function RescueBoard({ cases, animals, heading = "Case Management", copy }: Resc
               <h3>Rescued</h3>
               <span className="badge">{rescuedAnimals.length}</span>
             </div>
-            {rescuedAnimals.length ? rescuedAnimals.map((animal) => (
+            {previewItems(rescuedAnimals).length ? previewItems(rescuedAnimals).map((animal) => (
               <Link className="status-card" key={animal.id} to={`/animals/${animal.id}`}>
                 <strong>{animal.name}</strong>
                 <p>{animal.description || "Animal profile ready for care updates."}</p>
               </Link>
             )) : <div className="empty-state compact-state">No rescued animal profiles yet.</div>}
+            {rescuedAnimals.length > 3 ? <Link className="inline-link workflow-more-link" to="/dashboard/workflow/rescued">More rescued animals</Link> : null}
           </div>
 
           <div className="category-panel">
@@ -121,12 +125,13 @@ function RescueBoard({ cases, animals, heading = "Case Management", copy }: Resc
               <h3>Up For Adoption</h3>
               <span className="badge">{adoptionAnimals.length}</span>
             </div>
-            {adoptionAnimals.length ? adoptionAnimals.map((animal) => (
+            {previewItems(adoptionAnimals).length ? previewItems(adoptionAnimals).map((animal) => (
               <Link className="status-card" key={animal.id} to={`/animals/${animal.id}`}>
                 <strong>{animal.name}</strong>
                 <p>{animal.description || "Ready for sponsors and adopters."}</p>
               </Link>
             )) : <div className="empty-state compact-state">No animals are up for adoption yet.</div>}
+            {adoptionAnimals.length > 3 ? <Link className="inline-link workflow-more-link" to="/dashboard/workflow/adoptable">More adoptable animals</Link> : null}
           </div>
         </div>
       </section>

@@ -55,7 +55,7 @@ function CaseDetail() {
 
       <section className="panel-card">
         <h2>Attached Reports</h2>
-        <div className="card-grid">
+        <div className="stacked-feed">
           {caseItem.reports.map((report) => (
             <article className="feed-card" key={report.id}>
               {report.image ? <img className="card-media" src={report.image} alt="Case report" /> : null}

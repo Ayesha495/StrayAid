@@ -2,6 +2,7 @@ from django.db import models
 
 
 class Animal(models.Model):
+    # Animal status also drives the linked rescue case lifecycle.
     STATUS_RESCUED = "rescued"
     STATUS_RECOVERING = "recovering"
     STATUS_ADOPTABLE = "adoptable"

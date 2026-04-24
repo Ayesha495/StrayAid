@@ -1,11 +1,10 @@
 import { Link, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import AppSidebar from "../components/AppSidebar";
+import AuthenticatedShell from "../components/AuthenticatedShell";
 import FeedContent from "../components/FeedContent";
 import { useCurrentUser } from "../services/authSevice";
 import { getPublicAnimals, getPublicFeed } from "../services/platformService";
 import type { Animal, Post } from "../types/platform";
-import "../components/DashboardLayout.css";
 import "../styles/Portal.css";
 
 function PostFeed() {
@@ -25,9 +24,7 @@ function PostFeed() {
 
   if (currentUser) {
     return (
-      <div className="dashboard-shell">
-        <AppSidebar />
-        <main className="dashboard-content">
+      <AuthenticatedShell>
           <FeedContent
             animals={animals}
             posts={posts}
@@ -35,8 +32,7 @@ function PostFeed() {
             onSelectAnimal={setSelectedAnimal}
             action={<Link className="primary-btn" to="/organization/register">Register As An Organization</Link>}
           />
-        </main>
-      </div>
+      </AuthenticatedShell>
     );
   }
 

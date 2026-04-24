@@ -2,6 +2,7 @@ from django.db import models
 
 
 class Post(models.Model):
+    # Posts are public-facing updates tied back to a rescued animal.
     animal = models.ForeignKey(
         "animals.Animal",
         on_delete=models.CASCADE,

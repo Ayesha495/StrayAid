@@ -24,6 +24,7 @@ class OrganizationViewSet(
     serializer_class = OrganizationSerializer
 
     def get_permissions(self):
+        # Public pages can read profiles, but management remains organization-only.
         if self.action in ["retrieve", "animals"]:
             return [AllowAny()]
         if self.action in ["create", "me"]:
@@ -39,6 +40,7 @@ class OrganizationViewSet(
         organization = getattr(request.user, "organization_profile", None)
 
         if organization:
+            # Treat a repeated create request as profile completion/update.
             serializer = self.get_serializer(organization, data=request.data, partial=True)
             serializer.is_valid(raise_exception=True)
             self._ensure_organization_role()
@@ -83,6 +85,7 @@ class OrganizationViewSet(
             return Response({"detail": "Organization profile not found."}, status=status.HTTP_404_NOT_FOUND)
 
         organization_cases = Case.objects.filter(organization=organization)
+        # Nearby cases are limited so the dashboard stays lightweight.
         nearby_cases = (
             Case.objects.select_related("reported_by", "organization")
             .prefetch_related("reports")
@@ -108,6 +111,7 @@ class OrganizationViewSet(
     @action(detail=True, methods=["get"], permission_classes=[AllowAny], url_path="animals")
     def animals(self, request, pk=None):
         organization = self.get_object()
+        # Public organization pages reuse the animal card data shape.
         animals = (
             Animal.objects.select_related("case", "organization", "organization__user")
             .filter(organization=organization)

@@ -15,6 +15,7 @@ class PostViewSet(viewsets.ModelViewSet):
     serializer_class = PostSerializer
 
     def get_permissions(self):
+        # The public feed is open, but creating updates is organization-only.
         if self.action in ["list", "retrieve", "public_feed", "by_animal"]:
             return [AllowAny()]
         return [IsAuthenticated(), IsOrganizationUser()]
@@ -24,6 +25,7 @@ class PostViewSet(viewsets.ModelViewSet):
         animal_id = self.request.query_params.get("animal")
         if animal_id:
             queryset = queryset.filter(animal_id=animal_id)
+        # Private management views should stay scoped to the signed-in organization.
         if self.action not in ["list", "retrieve", "public_feed", "by_animal"]:
             organization = getattr(self.request.user, "organization_profile", None)
             if organization:

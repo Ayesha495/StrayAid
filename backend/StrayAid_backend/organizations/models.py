@@ -3,6 +3,7 @@ from django.db import models
 
 
 class Organization(models.Model):
+    # This profile extends a regular user account with rescue-specific data.
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,

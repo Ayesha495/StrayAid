@@ -1,8 +1,9 @@
 import { getToken } from "../utils/tokenStorage";
 
-const API_BASE = process.env.IP || "http://192.168.1.16:8000";
+const API_BASE = process.env.IP || "http://192.168.1.13:8000";
 
 const resolveMediaUrl = (value: string | null | undefined) => {
+  // The API can return relative media paths during local development.
   if (!value) {
     return value ?? null;
   }
@@ -84,6 +85,7 @@ async function parseJson<T>(response: Response): Promise<T> {
   return data as T;
 }
 
+// Normalizers keep screen components from worrying about media URL cleanup.
 const normalizeOrganization = (organization: MobileOrganization): MobileOrganization => ({
   ...organization,
   image: resolveMediaUrl(organization.image),

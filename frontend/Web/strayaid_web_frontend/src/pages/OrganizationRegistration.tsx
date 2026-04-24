@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import AppSidebar from "../components/AppSidebar";
-import "../components/DashboardLayout.css";
+import AuthenticatedShell from "../components/AuthenticatedShell";
 import LocationPicker from "../components/LocationPicker";
 import { syncCurrentUser, useCurrentUser } from "../services/authSevice";
 import { createOrganizationProfile, getOrganizationProfile, updateOrganizationProfile } from "../services/platformService";
@@ -176,12 +175,9 @@ function OrganizationRegistration() {
 
   if (currentUser) {
     return (
-      <div className="dashboard-shell">
-        <AppSidebar />
-        <main className="dashboard-content">
+      <AuthenticatedShell>
           {pageContent}
-        </main>
-      </div>
+      </AuthenticatedShell>
     );
   }
 

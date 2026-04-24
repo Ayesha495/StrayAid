@@ -6,7 +6,7 @@ UserModel = get_user_model()
 
 class UsernameOrEmailBackend(ModelBackend):
     def authenticate(self, request, username=None, password=None, **kwargs):
-        # Use username OR email from any parameter
+        # Accept either username or email so older forms still work.
         login_value = username or kwargs.get("email")
         if login_value is None or password is None:
             return None

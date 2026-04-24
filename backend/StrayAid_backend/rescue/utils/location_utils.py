@@ -1,6 +1,7 @@
 import math
 
 def calculate_distance(lat1, lon1, lat2, lon2):
+    # Haversine distance in meters for map and matching features.
     R = 6371
 
     lat1 = math.radians(float(lat1))

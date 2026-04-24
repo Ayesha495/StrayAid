@@ -21,9 +21,7 @@ def report_case(request):
     longitude = request.data.get('longitude')
     image = request.FILES.get('image')
 
-    # -----------------------------
-    # Basic validation
-    # -----------------------------
+    # Basic validation before we try duplicate matching or file creation.
     if not latitude or not longitude:
         return Response(
             {"error": "Latitude and longitude are required"},
@@ -45,9 +43,7 @@ def report_case(request):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    # -----------------------------
-    # Duplicate case detection
-    # -----------------------------
+    # If a similar nearby case exists, attach the report instead of creating a new case.
     existing_case = find_nearby_case(latitude, longitude)
 
     if existing_case:
@@ -62,9 +58,7 @@ def report_case(request):
         )
         message = "New case created and report added"
 
-    # -----------------------------
-    # Create report
-    # -----------------------------
+    # Every submission still gets its own report record for history.
     report = Report.objects.create(
         case=case,
         user=user,
@@ -117,6 +111,9 @@ class CaseViewSet(viewsets.ReadOnlyModelViewSet):
         queryset = super().get_queryset()
         if not organization:
             return queryset.none()
+        if self.action == "accept_case":
+            return queryset
+        # Organizations can browse unclaimed work plus the cases already assigned to them.
         return queryset.filter(Q(organization__isnull=True) | Q(organization=organization))
 
     @action(detail=False, methods=["get"], url_path="nearby")
@@ -126,6 +123,7 @@ class CaseViewSet(viewsets.ReadOnlyModelViewSet):
         radius_km = float(request.query_params.get("radius_km", 50))
         nearby_cases = []
 
+        # Distance is evaluated in Python because the helper is shared elsewhere too.
         for case in queryset:
             distance_m = calculate_distance(
                 organization.latitude,
@@ -153,6 +151,7 @@ class CaseViewSet(viewsets.ReadOnlyModelViewSet):
         if case.organization_id and case.organization_id != organization.id:
             return Response({"detail": "This case is already assigned."}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Accepting a case records both the owning organization and acting user.
         case.organization = organization
         case.assigned_to = request.user
         case.status = "assigned"
@@ -175,6 +174,7 @@ class CaseViewSet(viewsets.ReadOnlyModelViewSet):
             return Response({"detail": "Invalid status."}, status=status.HTTP_400_BAD_REQUEST)
 
         case.status = new_status
+        # Resolved timestamps are only set when the workflow reaches an end state.
         if new_status in ["rescued", "closed"]:
             from django.utils import timezone
 

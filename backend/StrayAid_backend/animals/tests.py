@@ -19,6 +19,7 @@ class MediaEnabledAPITestCase(APITestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        # Store uploaded test media in a temporary directory.
         cls._temp_media = tempfile.mkdtemp()
         cls._override = override_settings(MEDIA_ROOT=cls._temp_media)
         cls._override.enable()
@@ -32,6 +33,7 @@ class MediaEnabledAPITestCase(APITestCase):
 
 class AnimalApiTests(MediaEnabledAPITestCase):
     def setUp(self):
+        # Two organizations make ownership checks easy to exercise.
         self.org_user = User.objects.create_user(
             email="org@example.com",
             username="org",
@@ -123,3 +125,60 @@ class AnimalApiTests(MediaEnabledAPITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, [])
+
+    def test_public_feed_can_filter_animals_by_status(self):
+        adoptable = Animal.objects.create(
+            case=self.case,
+            organization=self.organization,
+            name="Milo",
+            status=Animal.STATUS_ADOPTABLE,
+        )
+        Animal.objects.create(
+            case=self.other_case,
+            organization=self.other_organization,
+            name="Luna",
+            status=Animal.STATUS_RECOVERING,
+        )
+
+        response = self.client.get(f"/api/animals/public/?status={Animal.STATUS_ADOPTABLE}")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["id"], adoptable.id)
+
+    def test_public_can_retrieve_single_animal(self):
+        animal = Animal.objects.create(case=self.case, organization=self.organization, name="Milo")
+
+        response = self.client.get(f"/api/animals/{animal.id}/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["id"], animal.id)
+        self.assertEqual(response.data["name"], "Milo")
+
+    def test_organization_can_update_own_animal(self):
+        animal = Animal.objects.create(case=self.case, organization=self.organization, name="Milo")
+        self.client.force_authenticate(user=self.org_user)
+
+        response = self.client.patch(
+            f"/api/animals/{animal.id}/",
+            {"status": Animal.STATUS_ADOPTED, "medical_info": "Recovered"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        animal.refresh_from_db()
+        self.case.refresh_from_db()
+        self.assertEqual(animal.status, Animal.STATUS_ADOPTED)
+        self.assertEqual(self.case.status, "closed")
+        self.assertIsNotNone(self.case.resolved_at)
+
+    def test_organization_listing_returns_only_own_animals(self):
+        own_animal = Animal.objects.create(case=self.case, organization=self.organization, name="Milo")
+        Animal.objects.create(case=self.other_case, organization=self.other_organization, name="Luna")
+        self.client.force_authenticate(user=self.org_user)
+
+        response = self.client.get("/api/animals/organization/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["id"], own_animal.id)

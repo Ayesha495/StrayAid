@@ -1,17 +1,44 @@
 .dashboard-shell {
-  display: grid;
-  grid-template-columns: 260px 1fr;
+  position: relative;
   min-height: 100vh;
   background: linear-gradient(180deg, #f4f8fb 0%, #eef5f7 100%);
 }
 
+.dashboard-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 15;
+  border: none;
+  background: rgba(9, 24, 34, 0.38);
+}
+
 .dashboard-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 20;
+  width: min(320px, calc(100vw - 32px));
   display: flex;
   flex-direction: column;
   gap: 24px;
   padding: 28px 20px;
   background: linear-gradient(180deg, #133b52 0%, #1e6f9f 100%);
   color: #fff;
+  box-shadow: 0 24px 60px rgba(7, 28, 42, 0.25);
+  transform: translateX(-100%);
+  transition: transform 0.22s ease;
+}
+
+.dashboard-shell.sidebar-open .dashboard-sidebar {
+  transform: translateX(0);
+}
+
+.dashboard-sidebar-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .dashboard-brand {
@@ -47,6 +74,39 @@
   background: rgba(255, 255, 255, 0.08);
 }
 
+.sidebar-toggle-btn,
+.sidebar-reopen-btn {
+  display: inline-grid;
+  place-items: center;
+  border: none;
+  border-radius: 12px;
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  font-weight: 700;
+}
+
+.menu-toggle-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.sidebar-reopen-btn {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 12;
+  z-index: 10;
+  color: #164764;
+  background: #d7ebf5;
+}
+
+.sidebar-reopen-btn.is-open {
+  color: #fff;
+  background: rgba(19, 59, 82, 0.92);
+}
+
 .dashboard-secondary-link {
   padding: 12px 14px;
   border-radius: 12px;
@@ -73,19 +133,22 @@
 
 .dashboard-content {
   padding: 32px;
+  padding-top: 88px;
 }
 
 @media (max-width: 900px) {
-  .dashboard-shell {
-    grid-template-columns: 1fr;
-  }
-
   .dashboard-sidebar {
     gap: 16px;
+    width: min(300px, calc(100vw - 24px));
   }
 
-  .dashboard-nav {
-    flex-direction: row;
-    flex-wrap: wrap;
+  .dashboard-content {
+    padding: 20px;
+    padding-top: 84px;
+  }
+
+  .sidebar-reopen-btn {
+    top: 16px;
+    left: 16px;
   }
 }

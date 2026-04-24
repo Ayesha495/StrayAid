@@ -96,6 +96,177 @@ class RescueApiTests(MediaEnabledAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data["error"], "Image is required")
 
+    def test_report_case_requires_latitude_and_longitude(self):
+        self.client.force_authenticate(user=self.public_user)
+
+        response = self.client.post(
+            "/api/cases/report/",
+            {
+                "description": "Dog is injured",
+                "image": make_test_image(),
+            },
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data["error"], "Latitude and longitude are required")
+
+    def test_report_case_rejects_invalid_coordinates(self):
+        self.client.force_authenticate(user=self.public_user)
+
+        response = self.client.post(
+            "/api/cases/report/",
+            {
+                "description": "Dog is injured",
+                "latitude": "abc",
+                "longitude": "74.3200",
+                "image": make_test_image(),
+            },
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data["error"], "Invalid latitude or longitude format")
+
+    def test_report_case_attaches_report_to_nearby_existing_case(self):
+        self.client.force_authenticate(user=self.public_user)
+
+        response = self.client.post(
+            "/api/cases/report/",
+            {
+                "description": "Another sighting nearby",
+                "latitude": "31.5100",
+                "longitude": "74.3100",
+                "image": make_test_image(),
+            },
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["message"], "Report attached to existing case")
+        self.assertEqual(response.data["case_id"], self.case.id)
+        self.assertEqual(Case.objects.count(), 1)
+        self.assertEqual(Report.objects.count(), 1)
+
+    def test_user_can_view_own_reported_cases(self):
+        self.client.force_authenticate(user=self.public_user)
+        self.client.post(
+            "/api/cases/report/",
+            {
+                "description": "Dog is injured",
+                "latitude": "31.5200",
+                "longitude": "74.3200",
+                "image": make_test_image(),
+            },
+            format="multipart",
+        )
+
+        response = self.client.get("/api/cases/my-reports/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["reported_by"], self.public_user.id)
+
+    def test_public_user_cannot_access_organization_case_endpoints(self):
+        self.client.force_authenticate(user=self.public_user)
+
+        response = self.client.get("/api/cases/")
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_organization_case_list_shows_unassigned_and_own_cases_only(self):
+        other_org_user = User.objects.create_user(
+            email="otherorg@example.com",
+            username="otherorg",
+            password="secret123",
+            role="organization",
+        )
+        other_organization = Organization.objects.create(
+            user=other_org_user,
+            name="Second Chance",
+            email=other_org_user.email,
+            latitude=31.7,
+            longitude=74.5,
+        )
+        own_case = Case.objects.create(
+            description="Own case",
+            latitude=31.52,
+            longitude=74.32,
+            reported_by=self.public_user,
+            organization=self.organization,
+            assigned_to=self.organization_user,
+            status="assigned",
+        )
+        foreign_case = Case.objects.create(
+            description="Foreign case",
+            latitude=31.53,
+            longitude=74.33,
+            reported_by=self.public_user,
+            organization=other_organization,
+            assigned_to=other_org_user,
+            status="assigned",
+        )
+        self.client.force_authenticate(user=self.organization_user)
+
+        response = self.client.get("/api/cases/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        returned_ids = {item["id"] for item in response.data}
+        self.assertIn(self.case.id, returned_ids)
+        self.assertIn(own_case.id, returned_ids)
+        self.assertNotIn(foreign_case.id, returned_ids)
+
+    def test_nearby_cases_filters_by_radius_and_excludes_closed_cases(self):
+        near_case = Case.objects.create(
+            description="Near open case",
+            latitude=31.5001,
+            longitude=74.3001,
+            reported_by=self.public_user,
+            status="reported",
+        )
+        far_case = Case.objects.create(
+            description="Far case",
+            latitude=32.5,
+            longitude=75.3,
+            reported_by=self.public_user,
+            status="reported",
+        )
+        Case.objects.create(
+            description="Closed case",
+            latitude=31.5002,
+            longitude=74.3002,
+            reported_by=self.public_user,
+            status="closed",
+        )
+        self.client.force_authenticate(user=self.organization_user)
+
+        response = self.client.get("/api/cases/nearby/?radius_km=5")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        returned_ids = {item["id"] for item in response.data}
+        self.assertIn(self.case.id, returned_ids)
+        self.assertIn(near_case.id, returned_ids)
+        self.assertNotIn(far_case.id, returned_ids)
+        self.assertEqual(len(returned_ids), 2)
+
+    def test_my_cases_returns_only_cases_assigned_to_current_organization(self):
+        Case.objects.create(
+            description="Assigned case",
+            latitude=31.52,
+            longitude=74.32,
+            reported_by=self.public_user,
+            organization=self.organization,
+            assigned_to=self.organization_user,
+            status="assigned",
+        )
+        self.client.force_authenticate(user=self.organization_user)
+
+        response = self.client.get("/api/cases/my-cases/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["organization"]["id"], self.organization.id)
+
     def test_organization_can_accept_unassigned_case(self):
         self.client.force_authenticate(user=self.organization_user)
 
@@ -105,6 +276,46 @@ class RescueApiTests(MediaEnabledAPITestCase):
         self.case.refresh_from_db()
         self.assertEqual(self.case.organization, self.organization)
         self.assertEqual(self.case.status, "assigned")
+
+    def test_organization_cannot_accept_case_assigned_to_another_organization(self):
+        other_org_user = User.objects.create_user(
+            email="otherorg@example.com",
+            username="otherorg",
+            password="secret123",
+            role="organization",
+        )
+        other_organization = Organization.objects.create(
+            user=other_org_user,
+            name="Second Chance",
+            email=other_org_user.email,
+        )
+        self.case.organization = other_organization
+        self.case.assigned_to = other_org_user
+        self.case.status = "assigned"
+        self.case.save(update_fields=["organization", "assigned_to", "status", "updated_at"])
+        self.client.force_authenticate(user=self.organization_user)
+
+        response = self.client.post(f"/api/cases/{self.case.id}/accept/")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data["detail"], "This case is already assigned.")
+
+    def test_organization_can_update_own_case_status(self):
+        self.case.organization = self.organization
+        self.case.assigned_to = self.organization_user
+        self.case.status = "assigned"
+        self.case.save(update_fields=["organization", "assigned_to", "status", "updated_at"])
+        self.client.force_authenticate(user=self.organization_user)
+
+        response = self.client.patch(
+            f"/api/cases/{self.case.id}/update-status/",
+            {"status": "in_progress"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.case.refresh_from_db()
+        self.assertEqual(self.case.status, "in_progress")
 
     def test_invalid_case_status_update_is_rejected(self):
         self.case.organization = self.organization
@@ -120,3 +331,47 @@ class RescueApiTests(MediaEnabledAPITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data["detail"], "Invalid status.")
+
+    def test_organization_cannot_update_another_organizations_case(self):
+        other_org_user = User.objects.create_user(
+            email="otherorg@example.com",
+            username="otherorg",
+            password="secret123",
+            role="organization",
+        )
+        other_organization = Organization.objects.create(
+            user=other_org_user,
+            name="Second Chance",
+            email=other_org_user.email,
+        )
+        self.case.organization = other_organization
+        self.case.assigned_to = other_org_user
+        self.case.status = "assigned"
+        self.case.save(update_fields=["organization", "assigned_to", "status", "updated_at"])
+        self.client.force_authenticate(user=self.organization_user)
+
+        response = self.client.patch(
+            f"/api/cases/{self.case.id}/update-status/",
+            {"status": "rescued"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_resolved_timestamp_is_set_when_case_is_rescued(self):
+        self.case.organization = self.organization
+        self.case.assigned_to = self.organization_user
+        self.case.status = "assigned"
+        self.case.save(update_fields=["organization", "assigned_to", "status", "updated_at"])
+        self.client.force_authenticate(user=self.organization_user)
+
+        response = self.client.patch(
+            f"/api/cases/{self.case.id}/update-status/",
+            {"status": "rescued"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.case.refresh_from_db()
+        self.assertEqual(self.case.status, "rescued")
+        self.assertIsNotNone(self.case.resolved_at)

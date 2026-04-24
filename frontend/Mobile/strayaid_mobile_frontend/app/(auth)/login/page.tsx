@@ -3,6 +3,7 @@ import { Alert, Animated, KeyboardAvoidingView, Platform, Pressable, Text, TextI
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { loginUser } from "../../../services/authService";
+import { useGoogleAuth } from "../../../services/googleAuthService";
 import { loginStyles as styles } from "../../../styles/LoginStyles";
 
 export default function LoginPage() {
@@ -11,6 +12,13 @@ export default function LoginPage() {
   const slide = useRef(new Animated.Value(16)).current;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const { request, promptAsync } = useGoogleAuth({
+    onSuccess: async () => {
+      Alert.alert("Success", "Welcome back.");
+      router.replace("/(tabs)/feed");
+    },
+    onError: (message) => Alert.alert("Error", message),
+  });
 
   useEffect(() => {
     Animated.parallel([
@@ -61,6 +69,13 @@ export default function LoginPage() {
             />
             <Pressable style={styles.primaryButton} onPress={handleLogin}>
               <Text style={styles.primaryButtonText}>Login</Text>
+            </Pressable>
+            <Pressable
+              style={styles.secondaryButton}
+              disabled={!request}
+              onPress={() => promptAsync()}
+            >
+              <Text style={styles.secondaryButtonText}>Continue with Google</Text>
             </Pressable>
             <View style={styles.footerRow}>
               <Text style={styles.footerText}>New to StrayAid?</Text>

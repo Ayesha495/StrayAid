@@ -1,9 +1,8 @@
 const fs = require('fs');
 const path = require('path');
-const ip = require('ip');
 
 try {
-  const localIp = ip.address();
+  const localIp = '192.168.1.13';
   const envPath = path.join(__dirname, '.env');
   let envContent = '';
   if (fs.existsSync(envPath)) {

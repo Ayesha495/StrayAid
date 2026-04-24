@@ -16,6 +16,7 @@ class AnimalViewSet(viewsets.ModelViewSet):
     serializer_class = AnimalSerializer
 
     def get_permissions(self):
+        # Public users can browse animals, but only organizations can manage them.
         if self.action in ["public", "retrieve"]:
             return [AllowAny()]
         return [IsAuthenticated(), IsOrganizationUser()]
@@ -25,6 +26,7 @@ class AnimalViewSet(viewsets.ModelViewSet):
         if self.action in ["public", "retrieve"]:
             return queryset
 
+        # Organization dashboards should only see animals they manage.
         organization = getattr(self.request.user, "organization_profile", None)
         if organization:
             return queryset.filter(organization=organization)
@@ -36,6 +38,7 @@ class AnimalViewSet(viewsets.ModelViewSet):
         if case.organization_id != organization.id:
             raise serializers.ValidationError({"case": "You can only create animals for your own cases."})
         animal = serializer.save(organization=organization)
+        # Keep case status in sync with the new public outcome for the animal.
         if animal.status == Animal.STATUS_ADOPTABLE:
             case.status = "adoption"
             case.save(update_fields=["status", "updated_at"])
@@ -52,6 +55,7 @@ class AnimalViewSet(viewsets.ModelViewSet):
             raise serializers.ValidationError({"detail": "You can only update your own animals."})
         animal = serializer.save(organization=self.request.user.organization_profile)
         case = animal.case
+        # Updating an animal can reopen or close the linked rescue workflow.
         if animal.status == Animal.STATUS_ADOPTABLE and case.status != "adoption":
             case.status = "adoption"
             case.save(update_fields=["status", "updated_at"])
@@ -66,6 +70,7 @@ class AnimalViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["get"], permission_classes=[AllowAny], url_path="public")
     def public(self, request):
         queryset = super().get_queryset()
+        # The public feed supports simple filter chips on the frontend.
         status_filter = request.query_params.get("status")
         organization_id = request.query_params.get("organization_id")
         if status_filter:

@@ -18,6 +18,8 @@ function OrganizationPublicProfile() {
     return <div className="empty-state">Organization profile not found.</div>;
   }
 
+  const featuredAnimals = animals.slice(0, 3);
+
   const donationDetails = [
     organization.bank_account_title ? `Account Title: ${organization.bank_account_title}` : null,
     organization.bank_account_number ? `Account Number or Wallet ID: ${organization.bank_account_number}` : null,
@@ -33,7 +35,11 @@ function OrganizationPublicProfile() {
       </div>
 
       <section className="panel-card">
-        {organization.image ? <img className="detail-hero-image" src={organization.image} alt={organization.name} /> : null}
+        {organization.image ? (
+          <div className="detail-hero-media-shell">
+            <img className="detail-hero-image detail-hero-image-fit" src={organization.image} alt={organization.name} />
+          </div>
+        ) : null}
         <h2>About</h2>
         <p>{organization.description || "This organization has not added a public description yet."}</p>
         <div className="card-grid">
@@ -61,9 +67,17 @@ function OrganizationPublicProfile() {
       </section>
 
       <section className="panel-card">
-        <h2>Animals In Their Care</h2>
+        <div className="section-heading">
+          <div>
+            <h2>Animals In Their Care</h2>
+            <p className="meta-line">Showing up to three profiles here with the full list on a separate page.</p>
+          </div>
+          {animals.length > featuredAnimals.length ? (
+            <Link className="secondary-btn" to={`/animals/browse?organizationId=${organization.id}`}>More Animals</Link>
+          ) : null}
+        </div>
         <div className="card-grid">
-          {animals.length ? animals.map((animal) => (
+          {featuredAnimals.length ? featuredAnimals.map((animal) => (
             <article className="animal-card" key={animal.id}>
               {animal.image ? <img className="card-media" src={animal.image} alt={animal.name} /> : null}
               <span className="badge">{animal.status}</span>

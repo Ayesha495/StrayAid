@@ -12,6 +12,7 @@ function Dashboard() {
   const [needsProfile, setNeedsProfile] = useState(false);
 
   useEffect(() => {
+    // Load the dashboard in parallel so the first view fills in progressively.
     getOrganizationProfile().then(() => setNeedsProfile(false)).catch(() => setNeedsProfile(true));
     getDashboard().then(setDashboard).catch(() => setDashboard(null));
     getCases().then(setCases).catch(() => setCases([]));

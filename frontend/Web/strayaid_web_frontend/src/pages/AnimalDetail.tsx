@@ -36,7 +36,11 @@ function AnimalDetail() {
       </div>
 
       <section className="panel-card">
-        {animal.image ? <img className="detail-hero-image" src={animal.image} alt={animal.name} /> : null}
+        {animal.image ? (
+          <div className="detail-hero-media-shell">
+            <img className="detail-hero-image detail-hero-image-fit" src={animal.image} alt={animal.name} />
+          </div>
+        ) : null}
         <p>{animal.description}</p>
         <p className="meta-line">Medical Info: {animal.medical_info || "No medical notes shared yet."}</p>
         <div className="sponsor-panel">
@@ -55,10 +59,18 @@ function AnimalDetail() {
 
       <section className="panel-card">
         <h2>Organization Updates</h2>
-        <div className="card-grid">
+        <div className={posts.length > 1 ? "feed-posts-grid" : "stacked-feed"}>
           {posts.length ? posts.map((post) => (
-            <article className="feed-card" key={post.id}>
-              {post.image ? <img className="card-media" src={post.image} alt={post.title} /> : null}
+            <article className={`feed-card${posts.length === 1 ? " single-update-card" : ""}`} key={post.id}>
+              {post.image ? (
+                posts.length === 1 ? (
+                  <div className="detail-hero-media-shell update-media-shell">
+                    <img className="detail-hero-image detail-hero-image-fit" src={post.image} alt={post.title} />
+                  </div>
+                ) : (
+                  <img className="card-media" src={post.image} alt={post.title} />
+                )
+              ) : null}
               <h3>{post.title}</h3>
               <p>{post.content}</p>
               <p className="meta-line">{new Date(post.created_at).toLocaleString()}</p>

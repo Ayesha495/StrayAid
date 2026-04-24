@@ -20,6 +20,7 @@ from django.conf.urls.static import static
 from . import settings
 
 urlpatterns = [
+    # Auth endpoints combine Djoser flows with custom account helpers.
     path('admin/', admin.site.urls),
     path('auth/', include("djoser.urls")),
     path('auth/', include("djoser.urls.jwt")),
@@ -31,5 +32,5 @@ urlpatterns = [
     path('api/posts/', include('posts.urls')),
 ]
 
-# media files
+# Serve uploaded media in development.
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

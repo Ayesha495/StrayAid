@@ -6,6 +6,7 @@ function ProtectedRoute() {
   const token = localStorage.getItem("access");
   const location = useLocation();
   useCurrentUser();
+  // If we already have a cached user, skip the loading gate on first paint.
   const [isReady, setIsReady] = useState(() => Boolean(!token || getStoredUser()));
 
   useEffect(() => {
@@ -14,6 +15,7 @@ function ProtectedRoute() {
       return;
     }
 
+    // Rehydrate the current user after a hard refresh.
     syncCurrentUser()
       .then(() => setIsReady(true))
       .catch(() => {
