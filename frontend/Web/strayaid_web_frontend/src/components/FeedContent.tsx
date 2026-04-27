@@ -83,6 +83,12 @@ function FeedContent({ animals, posts, selectedAnimal, onSelectAnimal, action }:
                 </div>
               ) : null}
               <h3>{post.title}</h3>
+              <p className="meta-line">
+                Animal:{" "}
+                <Link className="inline-link" to={`/animals/${post.animal.id}`}>
+                  {post.animal.name}
+                </Link>
+              </p>
               <p>{post.content}</p>
               <div className="feed-actions">
                 <Link className="secondary-btn" to={`/animals/${post.animal.id}`}>View Animal</Link>

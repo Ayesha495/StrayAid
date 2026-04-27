@@ -81,6 +81,10 @@ DJOSER = {
     "SEND_ACTIVATION_EMAIL": False,
 }
 
+SIMPLE_JWT = {
+    "TOKEN_OBTAIN_SERIALIZER": "accounts.serializers.UsernameOrEmailTokenObtainPairSerializer",
+}
+
 SOCIALACCOUNT_PROVIDERS = {
     "google": {
         "SCOPE": [

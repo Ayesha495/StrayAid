@@ -141,6 +141,17 @@ html, body {
     gap: 0;
 }
 
+.auth-error {
+    margin-bottom: 14px;
+    padding: 10px 12px;
+    border: 1px solid #f0b6b6;
+    border-radius: 10px;
+    background: #fff1f1;
+    color: #b91c1c;
+    font-size: 13px;
+    font-weight: 500;
+}
+
 .form-group {
     display: flex;
     flex-direction: column;

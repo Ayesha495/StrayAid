@@ -8,7 +8,7 @@ import type { Animal, Case } from "../types/platform";
 
 type RescueBoardProps = {
   cases: Case[];
-  animals: Animal[];
+  animals?: Animal[];
   heading?: string;
   copy?: string;
 };
@@ -23,7 +23,7 @@ const defaultIcon = L.icon({
 
 const DEFAULT_CENTER: [number, number] = [30.3753, 69.3451];
 
-function RescueBoard({ cases, animals, heading = "Case Management", copy }: RescueBoardProps) {
+function RescueBoard({ cases, animals = [], heading = "Case Management", copy }: RescueBoardProps) {
   const reportedCases = cases.filter((caseItem) => !caseItem.organization && caseItem.status === "reported");
   const inProgressCases = cases.filter(
     (caseItem) => Boolean(caseItem.organization) && ["assigned", "in_progress"].includes(caseItem.status)
@@ -62,6 +62,9 @@ function RescueBoard({ cases, animals, heading = "Case Management", copy }: Resc
                 <Popup>
                   <strong>Case #{caseItem.id}</strong>
                   <div>{caseItem.description}</div>
+                  <div style={{ marginTop: "8px" }}>
+                    <Link className="inline-link" to={`/cases/${caseItem.id}`}>View case details</Link>
+                  </div>
                 </Popup>
               </Marker>
             ))}
@@ -73,11 +76,11 @@ function RescueBoard({ cases, animals, heading = "Case Management", copy }: Resc
         <div className="section-heading">
           <div>
             <h2>Rescue Workflow</h2>
-            <p className="meta-line">Reported and in progress are case stages. Rescued and up for adoption are animal profiles.</p>
+            <p className="meta-line">A quick status view of your active rescue pipeline from intake to adoption readiness.</p>
           </div>
         </div>
 
-        <div className="category-grid">
+        <div className="workflow-grid">
           <div className="category-panel">
             <div className="category-header">
               <h3>Reported</h3>

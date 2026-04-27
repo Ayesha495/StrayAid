@@ -12,10 +12,49 @@ function Register() {
     re_password: "",
   });
   const [errors, setErrors] = useState<Partial<typeof form>>({});
+  const [formError, setFormError] = useState("");
+
+  const getRegisterErrorMessage = (error: unknown) => {
+    const responseData = (error as {
+      response?: {
+        data?: Record<string, string[] | string> & {
+          detail?: string;
+          non_field_errors?: string[];
+        };
+      };
+    })?.response?.data;
+
+    if (!responseData) {
+      return "Registration failed. Please try again.";
+    }
+
+    if (responseData.detail) {
+      return responseData.detail;
+    }
+
+    if (Array.isArray(responseData.non_field_errors) && responseData.non_field_errors.length) {
+      return responseData.non_field_errors[0];
+    }
+
+    const firstFieldError = Object.entries(responseData).find(
+      ([key, value]) => key !== "detail" && key !== "non_field_errors" && value
+    )?.[1];
+
+    if (Array.isArray(firstFieldError)) {
+      return firstFieldError[0] || "Registration failed. Please check your input.";
+    }
+
+    if (typeof firstFieldError === "string") {
+      return firstFieldError;
+    }
+
+    return "Registration failed. Please check your input.";
+  };
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+    setFormError("");
 
     if (errors[name as keyof typeof form]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
@@ -56,12 +95,11 @@ function Register() {
       .then((data) => {
         localStorage.setItem("access", data.access);
         localStorage.setItem("refresh", data.refresh);
-        alert("Google login successful");
-        navigate("/feed");
+        navigate("/dashboard", { replace: true });
       })
       .catch((error) => {
         console.error(error);
-        alert("Google login failed");
+        setFormError("Google login failed. Please try again.");
       });
   };
 
@@ -71,14 +109,14 @@ function Register() {
     if (!validateForm()) {
       return;
     }
+    setFormError("");
 
     try {
       await register(form);
-      alert("Account created successfully");
-      navigate("/login");
-    } catch (error: any) {
-      console.error(error.response?.data);
-      alert(JSON.stringify(error.response?.data ?? { detail: "Registration failed" }));
+      navigate("/login", { replace: true });
+    } catch (error: unknown) {
+      console.error(error);
+      setFormError(getRegisterErrorMessage(error));
     }
   };
 
@@ -98,6 +136,7 @@ function Register() {
             <h2>Create Account</h2>
             <p>Sign up to follow rescue stories, support organizations, and be part of StrayAid.</p>
           </div>
+          {formError && <p className="auth-error">{formError}</p>}
 
           <form className="register-form" onSubmit={handleSubmit}>
             <div className="form-group">

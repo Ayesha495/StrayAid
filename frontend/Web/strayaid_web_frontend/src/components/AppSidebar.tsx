@@ -28,6 +28,10 @@ function AppSidebar({ isCollapsed, isMobile, onToggle }: AppSidebarProps) {
   }, [isOrganization]);
 
   const handleLogout = () => {
+    const shouldLogout = window.confirm("Are you sure you want to log out?");
+    if (!shouldLogout) {
+      return;
+    }
     clearSession();
     navigate("/login");
   };

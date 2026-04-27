@@ -138,6 +138,17 @@ html, body {
     gap: 0;
 }
 
+.auth-error {
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    border: 1px solid #f0b6b6;
+    border-radius: 10px;
+    background: #fff1f1;
+    color: #b91c1c;
+    font-size: 12px;
+    font-weight: 500;
+}
+
 /* Form Group - Reduced margin */
 .form-group {
     display: flex;

@@ -58,9 +58,9 @@ function CaseDetail() {
         <div className="stacked-feed">
           {caseItem.reports.map((report) => (
             <article className="feed-card" key={report.id}>
-              {report.image ? <img className="card-media" src={report.image} alt="Case report" /> : null}
+              {report.image ? <img className="card-media report-media-fit" src={report.image} alt="Case report" /> : null}
               <p>{report.description}</p>
-              <p className="meta-line">{report.user_email ?? "Reporter"} · {new Date(report.created_at).toLocaleString()}</p>
+              <p className="meta-line">{report.user_email ?? "Reporter"} - {new Date(report.created_at).toLocaleString()}</p>
             </article>
           ))}
         </div>
@@ -70,3 +70,4 @@ function CaseDetail() {
 }
 
 export default CaseDetail;
+

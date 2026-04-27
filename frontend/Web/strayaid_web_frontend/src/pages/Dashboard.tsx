@@ -9,7 +9,10 @@ function Dashboard() {
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [cases, setCases] = useState<Case[]>([]);
   const [animals, setAnimals] = useState<Animal[]>([]);
+  const [animalPreviewCount, setAnimalPreviewCount] = useState(4);
   const [needsProfile, setNeedsProfile] = useState(false);
+  const animalsUnderCare = animals.filter((animal) => animal.status !== "adopted");
+  const visibleAnimals = animalsUnderCare.slice(0, animalPreviewCount);
 
   useEffect(() => {
     // Load the dashboard in parallel so the first view fills in progressively.
@@ -17,6 +20,16 @@ function Dashboard() {
     getDashboard().then(setDashboard).catch(() => setDashboard(null));
     getCases().then(setCases).catch(() => setCases([]));
     getOrganizationAnimals().then(setAnimals).catch(() => setAnimals([]));
+  }, []);
+
+  useEffect(() => {
+    const syncAnimalPreviewCount = () => {
+      setAnimalPreviewCount(window.innerWidth >= 1360 ? 4 : 3);
+    };
+
+    syncAnimalPreviewCount();
+    window.addEventListener("resize", syncAnimalPreviewCount);
+    return () => window.removeEventListener("resize", syncAnimalPreviewCount);
   }, []);
 
   if (needsProfile) {
@@ -53,25 +66,53 @@ function Dashboard() {
         cases={cases}
         animals={animals}
         heading="Rescue Dashboard"
-        copy="See open reported cases on the map, track rescue work in progress, and jump into animal profiles as the case lifecycle advances."
+        copy="See open reported cases on the map and track rescue flow through reported, in progress, rescued, and adoption-ready stages."
       />
 
       <section className="panel-card">
         <div className="section-heading">
           <div>
-            <h2>Recent Activity</h2>
-            <p className="meta-line">Your latest accepted or managed cases.</p>
+            <h2>Recent Updates</h2>
+            <p className="meta-line">Latest accepted and managed rescue cases.</p>
           </div>
         </div>
         <div className="card-grid">
           {dashboard?.recent_cases.length ? dashboard.recent_cases.map((caseItem) => (
             <article className="case-card" key={caseItem.id}>
+              {caseItem.reports[0]?.image ? (
+                <img
+                  className="card-media report-media-fit"
+                  src={caseItem.reports[0].image}
+                  alt={`Case ${caseItem.id} report`}
+                />
+              ) : null}
               <span className="badge">{caseItem.status}</span>
               <h3>{caseItem.description}</h3>
               <p className="meta-line">Reported {new Date(caseItem.created_at).toLocaleString()}</p>
               <Link className="secondary-btn" to={`/cases/${caseItem.id}`}>View Details</Link>
             </article>
           )) : <div className="empty-state">No cases assigned yet.</div>}
+        </div>
+      </section>
+
+      <section className="panel-card">
+        <div className="section-heading">
+          <div>
+            <h2>Animals Under Care</h2>
+            <p className="meta-line">Rescued, recovering, and adoptable animals currently with your organization.</p>
+          </div>
+          <Link className="secondary-btn" to="/dashboard/workflow/under-care">Show More Animals</Link>
+        </div>
+        <div className="under-care-grid">
+          {visibleAnimals.length ? visibleAnimals.map((animal) => (
+            <Link className="animal-card under-care-card" key={animal.id} to={`/animals/${animal.id}`}>
+              {animal.image ? <img className="card-media report-media-fit" src={animal.image} alt={animal.name} /> : null}
+              <span className="badge">{animal.status}</span>
+              <h3>{animal.name}</h3>
+              <p className="meta-line">{animal.description || "Animal profile available for care updates."}</p>
+              <span className="inline-link">View Profile</span>
+            </Link>
+          )) : <div className="empty-state">No active animal profiles under care yet.</div>}
         </div>
       </section>
     </div>

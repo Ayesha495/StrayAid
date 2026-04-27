@@ -1,4 +1,4 @@
-import base64
+from pathlib import Path
 
 from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand
@@ -10,30 +10,12 @@ from posts.models import Post
 from rescue.models import Case, Report
 
 
-BLACK_PIXEL_GIF = base64.b64decode(
-    "R0lGODdhAQABAIABAAAAAP///ywAAAAAAQABAAACAkQBADs="
-)
+ASSET_ROOT = Path(__file__).resolve().parents[5] / "images"
 
 
-def image_file(name):
-    return ContentFile(BLACK_PIXEL_GIF, name=name)
-
-
-def svg_file(name, title, subtitle, color):
-    svg = f"""<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
-  <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="{color}" />
-      <stop offset="100%" stop-color="#143b52" />
-    </linearGradient>
-  </defs>
-  <rect width="1200" height="800" fill="url(#bg)" />
-  <circle cx="940" cy="180" r="130" fill="rgba(255,255,255,0.10)" />
-  <circle cx="180" cy="640" r="180" fill="rgba(255,255,255,0.08)" />
-  <text x="90" y="330" fill="#ffffff" font-family="Arial, sans-serif" font-size="88" font-weight="700">{title}</text>
-  <text x="90" y="415" fill="#dff3ff" font-family="Arial, sans-serif" font-size="36">{subtitle}</text>
-</svg>"""
-    return ContentFile(svg.encode("utf-8"), name=name)
+def image_file(category, name):
+    image_path = ASSET_ROOT / category / name
+    return ContentFile(image_path.read_bytes(), name=name)
 
 
 def ensure_password(user, raw_password):
@@ -230,18 +212,18 @@ class Command(BaseCommand):
         )
 
         org_1.image.save(
-            "safe-paws.svg",
-            svg_file("safe-paws.svg", "Safe Paws Rescue", "Rescue, recovery, and adoption support", "#e37b40"),
+            "download.jpg",
+            image_file("organizations", "download.jpg"),
             save=True,
         )
         org_2.image.save(
-            "second-chance.svg",
-            svg_file("second-chance.svg", "Second Chance Shelter", "Shelter care and long-term recovery", "#3b8ea5"),
+            "images.jpg",
+            image_file("organizations", "images.jpg"),
             save=True,
         )
         org_3.image.save(
-            "city-tails.svg",
-            svg_file("city-tails.svg", "City Tails Clinic", "Street rescue treatment and foster prep", "#4f7c52"),
+            "download (1).jpg",
+            image_file("organizations", "download (1).jpg"),
             save=True,
         )
 
@@ -313,77 +295,67 @@ class Command(BaseCommand):
             },
         )
 
-        report_1, created = Report.objects.get_or_create(
+        report_1, _ = Report.objects.get_or_create(
             case=case_1,
             user=public_user_1,
             description="The dog has a visible leg wound and seems frightened but approachable.",
             latitude=31.4712,
             longitude=74.2683,
         )
-        if created or not report_1.image:
-            report_1.image.save("report-1.gif", image_file("report-1.gif"), save=True)
+        report_1.image.save("4377.Rocky.jpg", image_file("reports", "4377.Rocky.jpg"), save=True)
 
-        report_2, created = Report.objects.get_or_create(
+        report_2, _ = Report.objects.get_or_create(
             case=case_2,
             user=public_user_2,
             description="The cat was hiding under a parked car and looked weak from heat.",
             latitude=33.7095,
             longitude=73.0511,
         )
-        if created or not report_2.image:
-            report_2.image.save("report-2.gif", image_file("report-2.gif"), save=True)
+        report_2.image.save("gang-cats-Alaksa.webp", image_file("reports", "gang-cats-Alaksa.webp"), save=True)
 
-        report_3, created = Report.objects.get_or_create(
+        report_3, _ = Report.objects.get_or_create(
             case=case_3,
             user=public_user_2,
             description="The puppy keeps returning to the same corner and struggles to walk.",
             latitude=31.5204,
             longitude=74.3587,
         )
-        if created or not report_3.image:
-            report_3.image.save("report-3.gif", image_file("report-3.gif"), save=True)
+        report_3.image.save("images (1).jpg", image_file("reports", "images (1).jpg"), save=True)
 
-        report_4, created = Report.objects.get_or_create(
+        report_4, _ = Report.objects.get_or_create(
             case=case_4,
             user=public_user_3,
             description="The kitten was cold, weak, and curled beside the concrete wall until picked up.",
             latitude=24.8204,
             longitude=67.0331,
         )
-        if created or not report_4.image:
-            report_4.image.save(
-                "report-4.svg",
-                svg_file("report-4.svg", "Field Report", "Kitten safely moved for treatment", "#7f5aa2"),
-                save=True,
-            )
+        report_4.image.save(
+            "detail-domestic-animals-abandoned-street-260nw-2706423185.webp",
+            image_file("reports", "detail-domestic-animals-abandoned-street-260nw-2706423185.webp"),
+            save=True,
+        )
 
-        report_5, created = Report.objects.get_or_create(
+        report_5, _ = Report.objects.get_or_create(
             case=case_5,
             user=public_user_1,
             description="This older dog is calm around people and seems comfortable indoors after treatment.",
             latitude=24.8074,
             longitude=67.0215,
         )
-        if created or not report_5.image:
-            report_5.image.save(
-                "report-5.svg",
-                svg_file("report-5.svg", "Community Update", "Senior dog now stable and social", "#aa6a39"),
-                save=True,
-            )
+        report_5.image.save(
+            "Banner_stray-dog-with-puppies_credit_AlRahmeh.jpg",
+            image_file("reports", "Banner_stray-dog-with-puppies_credit_AlRahmeh.jpg"),
+            save=True,
+        )
 
-        report_6, created = Report.objects.get_or_create(
+        report_6, _ = Report.objects.get_or_create(
             case=case_6,
             user=public_user_3,
             description="The dog has good energy, friendly behavior, and seems eager to stay around people.",
             latitude=33.7001,
             longitude=73.0402,
         )
-        if created or not report_6.image:
-            report_6.image.save(
-                "report-6.svg",
-                svg_file("report-6.svg", "Volunteer Report", "Young dog ready for a next step", "#2b7a78"),
-                save=True,
-            )
+        report_6.image.save("_130505861_mediaitem130505860.jpg", image_file("reports", "_130505861_mediaitem130505860.jpg"), save=True)
 
         animal_1, _ = Animal.objects.update_or_create(
             case=case_1,
@@ -402,8 +374,8 @@ class Command(BaseCommand):
             },
         )
         animal_1.image.save(
-            "animal-milo.svg",
-            svg_file("animal-milo.svg", "Milo", "Friendly dog ready to meet adopters", "#df6d3c"),
+            "dog-hero.jpg",
+            image_file("animals", "dog-hero.jpg"),
             save=True,
         )
 
@@ -424,8 +396,8 @@ class Command(BaseCommand):
             },
         )
         animal_2.image.save(
-            "animal-luna.svg",
-            svg_file("animal-luna.svg", "Luna", "Quiet rescue cat in supervised recovery", "#5b7cfa"),
+            "Cat-on-couch.jpg",
+            image_file("animals", "Cat-on-couch.jpg"),
             save=True,
         )
 
@@ -446,8 +418,8 @@ class Command(BaseCommand):
             },
         )
         animal_3.image.save(
-            "animal-pepper.svg",
-            svg_file("animal-pepper.svg", "Pepper", "Kitten in recovery and gaining strength", "#6c5b7b"),
+            "8a87d092545e4d949f2d95978445aa9a.webp",
+            image_file("animals", "8a87d092545e4d949f2d95978445aa9a.webp"),
             save=True,
         )
 
@@ -468,8 +440,8 @@ class Command(BaseCommand):
             },
         )
         animal_4.image.save(
-            "animal-buddy.svg",
-            svg_file("animal-buddy.svg", "Buddy", "Senior dog ready for a quiet home", "#c06c52"),
+            "awsmaine_peachesDOG_0325-scaled-e1742240776863-1024x1024.jpg",
+            image_file("animals", "awsmaine_peachesDOG_0325-scaled-e1742240776863-1024x1024.jpg"),
             save=True,
         )
 
@@ -490,8 +462,8 @@ class Command(BaseCommand):
             },
         )
         animal_5.image.save(
-            "animal-sunny.svg",
-            svg_file("animal-sunny.svg", "Sunny", "Energetic dog looking for a home", "#f0a830"),
+            "NationalGeographic_2572187_16x9.avif",
+            image_file("animals", "NationalGeographic_2572187_16x9.avif"),
             save=True,
         )
 
@@ -504,8 +476,8 @@ class Command(BaseCommand):
             },
         )
         post_1.image.save(
-            "post-milo.svg",
-            svg_file("post-milo.svg", "Milo Update", "Recovery complete and adoption-ready", "#d86f45"),
+            "Stray-dogs-India.jpg",
+            image_file("posts", "Stray-dogs-India.jpg"),
             save=True,
         )
 
@@ -518,8 +490,8 @@ class Command(BaseCommand):
             },
         )
         post_2.image.save(
-            "post-luna.svg",
-            svg_file("post-luna.svg", "Luna Update", "Eating regularly and resting indoors", "#5673f3"),
+            "images.jpg",
+            image_file("posts", "images.jpg"),
             save=True,
         )
 
@@ -532,8 +504,8 @@ class Command(BaseCommand):
             },
         )
         post_3.image.save(
-            "post-pepper.svg",
-            svg_file("post-pepper.svg", "Pepper Update", "Warm shelter and steady feeding routine", "#7a5c87"),
+            "800_a0895029beforesurgery-verystenoticnostirlscatwasmostlyopenmouthbreathing..jpg",
+            image_file("posts", "800_a0895029beforesurgery-verystenoticnostirlscatwasmostlyopenmouthbreathing..jpg"),
             save=True,
         )
 
@@ -546,8 +518,8 @@ class Command(BaseCommand):
             },
         )
         post_4.image.save(
-            "post-buddy.svg",
-            svg_file("post-buddy.svg", "Buddy Update", "Senior dog now available for adoption", "#b46b48"),
+            "BlcNf2ItMVsDsMjKkRBwu1sMt0.webp",
+            image_file("posts", "BlcNf2ItMVsDsMjKkRBwu1sMt0.webp"),
             save=True,
         )
 
@@ -560,8 +532,8 @@ class Command(BaseCommand):
             },
         )
         post_5.image.save(
-            "post-sunny.svg",
-            svg_file("post-sunny.svg", "Sunny Update", "Playful dog entering adoption prep", "#d8911e"),
+            "VIER PFOTEN_2024-07-2820241217_0142-1041x720.jpg",
+            image_file("posts", "VIER PFOTEN_2024-07-2820241217_0142-1041x720.jpg"),
             save=True,
         )
 

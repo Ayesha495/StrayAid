@@ -52,6 +52,18 @@
   gap: 16px;
 }
 
+.workflow-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.under-care-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
 .stacked-feed {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -75,7 +87,24 @@
   padding: 20px;
   border-radius: 20px;
   background: #fff;
-  box-shadow: 0 18px 35px rgba(18, 52, 74, 0.08);
+  border: 1px solid #dde9ef;
+  box-shadow: 0 20px 38px rgba(18, 52, 74, 0.09);
+}
+
+.summary-grid .summary-card:nth-child(1) {
+  background: linear-gradient(180deg, #eef7fd 0%, #ffffff 100%);
+}
+
+.summary-grid .summary-card:nth-child(2) {
+  background: linear-gradient(180deg, #edf9f5 0%, #ffffff 100%);
+}
+
+.summary-grid .summary-card:nth-child(3) {
+  background: linear-gradient(180deg, #fdf7eb 0%, #ffffff 100%);
+}
+
+.summary-grid .summary-card:nth-child(4) {
+  background: linear-gradient(180deg, #f4f1fd 0%, #ffffff 100%);
 }
 
 .status-card {
@@ -99,14 +128,24 @@
 }
 
 .location-map-shell {
+  position: relative;
+  z-index: 1;
   overflow: hidden;
   border-radius: 20px;
   border: 1px solid #d6e4eb;
 }
 
 .location-map {
+  position: relative;
+  z-index: 1;
   height: 360px;
   width: 100%;
+}
+
+.location-map .leaflet-pane,
+.location-map .leaflet-top,
+.location-map .leaflet-bottom {
+  z-index: 1;
 }
 
 .compact-grid {
@@ -116,7 +155,7 @@
 .summary-card strong {
   display: block;
   font-size: 32px;
-  color: #1e6f9f;
+  color: #165d86;
 }
 
 .summary-card span {
@@ -198,6 +237,12 @@
   margin-bottom: 16px;
 }
 
+.report-media-fit {
+  object-fit: contain;
+  background: #f4f8fb;
+  padding: 8px;
+}
+
 .detail-hero-image {
   max-height: 380px;
   margin-bottom: 18px;
@@ -259,8 +304,8 @@
   align-items: center;
   padding: 6px 10px;
   border-radius: 999px;
-  background: #e5f3fa;
-  color: #1e6f9f;
+  background: #dff0fa;
+  color: #15567c;
   font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
@@ -296,6 +341,34 @@
 .workflow-more-link {
   display: inline-flex;
   margin-top: 12px;
+}
+
+.under-care-card {
+  display: grid;
+  gap: 10px;
+  text-decoration: none;
+  color: inherit;
+  padding: 16px;
+}
+
+.under-care-card .card-media {
+  margin-bottom: 8px;
+  max-height: 200px;
+}
+
+.under-care-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 24px 42px rgba(18, 52, 74, 0.14);
+}
+
+@media (max-width: 1320px) {
+  .under-care-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .workflow-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .feed-image-shell {
@@ -374,6 +447,8 @@
 
   .summary-grid,
   .card-grid,
+  .workflow-grid,
+  .under-care-grid,
   .category-grid,
   .feed-posts-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -392,6 +467,8 @@
 @media (max-width: 640px) {
   .summary-grid,
   .card-grid,
+  .workflow-grid,
+  .under-care-grid,
   .category-grid,
   .feed-posts-grid {
     grid-template-columns: minmax(0, 1fr);

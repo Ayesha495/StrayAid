@@ -17,7 +17,7 @@ function Cases() {
       cases={cases}
       animals={animals}
       heading="Cases"
-      copy="Use this board to claim reported cases, monitor in-progress rescues, and jump straight into rescued or adoptable animal profiles."
+      copy="Use this board to claim reported cases and monitor each rescue stage through to adoption readiness."
     />
   );
 }

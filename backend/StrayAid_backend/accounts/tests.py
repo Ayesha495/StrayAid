@@ -10,6 +10,42 @@ User = get_user_model()
 
 
 class AccountApiTests(APITestCase):
+    def test_jwt_login_accepts_email_with_case_and_whitespace(self):
+        User.objects.create_user(
+            email="public@example.com",
+            username="publicuser",
+            password="secret123",
+            role="public",
+        )
+
+        response = self.client.post(
+            "/auth/jwt/create/",
+            {"email": "  PUBLIC@example.com  ", "password": "secret123"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("access", response.data)
+        self.assertIn("refresh", response.data)
+
+    def test_jwt_login_accepts_username_identifier(self):
+        User.objects.create_user(
+            email="public@example.com",
+            username="publicuser",
+            password="secret123",
+            role="public",
+        )
+
+        response = self.client.post(
+            "/auth/jwt/create/",
+            {"username": "publicuser", "password": "secret123"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("access", response.data)
+        self.assertIn("refresh", response.data)
+
     def test_me_endpoint_returns_authenticated_user_profile(self):
         user = User.objects.create_user(
             email="public@example.com",

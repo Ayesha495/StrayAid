@@ -1,16 +1,34 @@
 import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { login, loginWithGoogle, resolvePostLoginRoute, syncCurrentUser } from "../services/authSevice";
+import { Link, useNavigate } from "react-router-dom";
+import { login, loginWithGoogle, syncCurrentUser } from "../services/authSevice";
 import "../styles/Login.css";
 
 function Login() {
     const navigate = useNavigate();
-    const location = useLocation();
     const [formData, setFormData] = useState({
         email: "",
         password: "",
     });
     const [errors, setErrors] = useState<Partial<typeof formData>>({});
+    const [authError, setAuthError] = useState("");
+
+    const getLoginErrorMessage = (error: unknown) => {
+        const response = (error as {
+            response?: {
+                status?: number;
+                data?: { detail?: string; non_field_errors?: string[] };
+            };
+        })?.response;
+
+        const detail = response?.data?.detail || response?.data?.non_field_errors?.[0] || "";
+        const normalizedDetail = String(detail).toLowerCase();
+
+        if (response?.status === 401 || normalizedDetail.includes("no active account")) {
+            return "The username/email or password is incorrect.";
+        }
+
+        return detail || "Login failed. Please try again.";
+    };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -18,6 +36,7 @@ function Login() {
             ...prev,
             [name]: value,
         }));
+        setAuthError("");
 
         if (errors[name as keyof typeof formData]) {
             setErrors((prev) => ({
@@ -31,9 +50,7 @@ function Login() {
         const newErrors: Partial<typeof formData> = {};
 
         if (!formData.email.trim()) {
-            newErrors.email = "Email is required";
-        } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-            newErrors.email = "Please enter a valid email address";
+            newErrors.email = "Email or username is required";
         }
 
         if (!formData.password) {
@@ -47,13 +64,12 @@ function Login() {
     const handleGoogleLogin = () => {
         loginWithGoogle()
             .then(async (data) => {
-                const user = await syncCurrentUser(data);
-                alert("Google login successful");
-                navigate(resolvePostLoginRoute(user, location.state?.from), { replace: true });
+                await syncCurrentUser(data);
+                navigate("/dashboard", { replace: true });
             })
             .catch((error) => {
                 console.error(error);
-                alert("Google login failed");
+                setAuthError(getLoginErrorMessage(error));
             });
     };
 
@@ -63,19 +79,18 @@ function Login() {
         if (!validateForm()) {
             return;
         }
+        setAuthError("");
 
         try {
             const data = await login({
                 email: formData.email,
                 password: formData.password,
             });
-            const user = await syncCurrentUser(data);
-
-            alert("Login successful");
-            navigate(resolvePostLoginRoute(user, location.state?.from), { replace: true });
+            await syncCurrentUser(data);
+            navigate("/dashboard", { replace: true });
         } catch (error) {
             console.error(error);
-            alert("Login failed");
+            setAuthError(getLoginErrorMessage(error));
         }
 
     };
@@ -96,17 +111,18 @@ function Login() {
                         <h2>Welcome Back</h2>
                         <p>Login to manage and protect stray animals with StrayAid.</p>
                     </div>
+                    {authError && <p className="auth-error">{authError}</p>}
 
                     <form className="login-form" onSubmit={handleSubmit}>
                         <div className="form-group">
-                            <label htmlFor="email">Email Address</label>
+                            <label htmlFor="email">Email or Username</label>
                             <input
                                 id="email"
-                                type="email"
+                                type="text"
                                 name="email"
                                 value={formData.email}
                                 onChange={handleChange}
-                                placeholder="Enter your email"
+                                placeholder="Enter your email or username"
                             />
                             {errors.email && <span>{errors.email}</span>}
                         </div>

@@ -56,14 +56,16 @@ function AuthenticatedShell({ children }: AuthenticatedShellProps) {
         onToggle={handleToggleSidebar}
       />
       <main className="dashboard-content">
-        <button
-          className={`sidebar-reopen-btn${isSidebarOpen ? " is-open" : ""}`}
-          type="button"
-          aria-label={isSidebarOpen ? "Close menu" : "Open menu"}
-          onClick={handleToggleSidebar}
-        >
-          <MenuToggleIcon isOpen={isSidebarOpen} />
-        </button>
+        {!isSidebarOpen ? (
+          <button
+            className="sidebar-reopen-btn"
+            type="button"
+            aria-label="Open menu"
+            onClick={handleToggleSidebar}
+          >
+            <MenuToggleIcon isOpen={false} />
+          </button>
+        ) : null}
         {children}
       </main>
     </div>

@@ -7,8 +7,9 @@ import "../styles/Portal.css";
 const COPY_BY_GROUP = {
   reported: "Open reported cases that still need an organization to accept them.",
   "in-progress": "Cases your organization has already picked up and is actively working through.",
-  rescued: "Animals that are rescued or recovering and still moving through care.",
-  adoptable: "Animals that are ready to meet adopters.",
+  rescued: "Animal profiles that are rescued or recovering and still moving through care.",
+  adoptable: "Animal profiles that are ready to meet adopters.",
+  "under-care": "Animal profiles currently under your care, including rescued, recovering, and adoptable.",
 } as const;
 
 function WorkflowListPage() {
@@ -64,14 +65,28 @@ function WorkflowListPage() {
       };
     }
 
+    if (group === "adoptable") {
+      return {
+        title: "Animals Up For Adoption",
+        items: animals
+          .filter((animal) => animal.status === "adoptable")
+          .map((animal) => ({
+            id: animal.id,
+            heading: animal.name,
+            description: animal.description || "Ready for sponsors and adopters.",
+            href: `/animals/${animal.id}`,
+          })),
+      };
+    }
+
     return {
-      title: "Animals Up For Adoption",
+      title: "Animals Under Care",
       items: animals
-        .filter((animal) => animal.status === "adoptable")
+        .filter((animal) => ["rescued", "recovering", "adoptable"].includes(animal.status))
         .map((animal) => ({
           id: animal.id,
           heading: animal.name,
-          description: animal.description || "Ready for sponsors and adopters.",
+          description: animal.description || "Animal profile ready for care updates.",
           href: `/animals/${animal.id}`,
         })),
     };
