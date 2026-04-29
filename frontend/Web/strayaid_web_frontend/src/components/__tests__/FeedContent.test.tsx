@@ -9,7 +9,16 @@ const mockAnimal: Animal = {
   breed: "Mixed",
   description: "Recovering well and ready for cuddles.",
   medical_info: "Vaccinated",
-  donation_info: "Support via clinic wallet",
+  donation_info: {
+    bank: "Meezan Bank",
+    account_name: "City Tails Rescue",
+    account_number: "1234567890",
+  },
+  adoption_info: {
+    message: "To adopt Pepper, contact City Tails via",
+    phone: "0300-0000000",
+    email: "citytails@example.com",
+  },
   status: "recovering",
   image: "https://example.com/pepper.jpg",
   case: 77,

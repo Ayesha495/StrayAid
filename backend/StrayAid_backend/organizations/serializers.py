@@ -27,6 +27,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
             "phone_number",
             "contact_email",
             "radius",
+            "bank_name",
             "bank_account_title",
             "bank_account_number",
         ]

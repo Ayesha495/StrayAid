@@ -1,47 +1,41 @@
 import React from 'react';
 import './Features.css';
+import { FileText, Home, BarChart3, BookOpen } from 'lucide-react';
 
 const Features: React.FC = () => {
   const features = [
     {
-      icon: '📍',
-      title: 'Report Stray Animals',
-      description: 'Easily report stray animals in your area with location tracking and photos.'
+      icon: <FileText size={32} />,
+      title: <>Case<br/>Management</>,
+      description: 'Efficiently track, update, and manage all reported stray animal cases in one place.'
     },
     {
-      icon: '🏥',
-      title: 'Medical Assistance',
-      description: 'Connect with nearby vets and animal hospitals for emergency care.'
+      icon: <Home size={32} />,
+      title: <>Volunteer<br/>Coordination</>,
+      description: 'Assign tasks, monitor activity, and stay connected with your rescue team.'
     },
     {
-      icon: '🏠',
-      title: 'Adoption Services',
-      description: 'Find loving homes for stray animals through our adoption network.'
+      icon: <BarChart3 size={32} />,
+      title: <>Dashboard<br/>Insights</>,
+      description: 'Access real-time data and analytics to make faster, informed decisions.'
     },
     {
-      icon: '👥',
-      title: 'Volunteer Network',
-      description: 'Join our volunteer community and help make a difference.'
-    },
-    {
-      icon: '💰',
-      title: 'Donation Platform',
-      description: 'Support animal shelters and rescue organizations directly.'
-    },
-    {
-      icon: '📱',
-      title: 'Mobile App',
-      description: 'Access all features on the go with our mobile application.'
+      icon: <BookOpen size={32} />,
+      title: <>Centralized<br/>Records</>,
+      description: 'Securely store and manage rescue, medical, and case history records.'
     }
   ];
 
   return (
     <section id="features" className="features-section">
       <div className="features-container">
-        <div className="features-header">
-          <h2>Powerful Features</h2>
-          <p>Everything you need to help stray animals in one place</p>
+        
+        <div className="features-header-wrapper">
+          <div className="line"></div>
+          <h2 className="features-title">Powerful Tools for Better Management</h2>
+          <div className="line"></div>
         </div>
+
         <div className="features-grid">
           {features.map((feature, index) => (
             <div key={index} className="feature-card">
@@ -51,6 +45,7 @@ const Features: React.FC = () => {
             </div>
           ))}
         </div>
+
       </div>
     </section>
   );

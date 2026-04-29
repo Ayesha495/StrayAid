@@ -3,12 +3,33 @@ from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.db.models import Q
+from animals.models import Animal
 from organizations.permissions import IsOrganizationUser
 
 from .models import Case, Report
 from .serializers import CaseSerializer
 from .utils.case_matcher import find_nearby_case
 from .utils.location_utils import calculate_distance
+
+
+def organization_capacity_is_full(organization):
+    return (
+        organization.capacity
+        and Animal.objects.filter(organization=organization).exclude(status=Animal.STATUS_ADOPTED).count() >= organization.capacity
+    )
+
+
+def case_is_within_organization_radius(case, organization):
+    if not organization.radius or organization.latitude is None or organization.longitude is None:
+        return True
+
+    distance_m = calculate_distance(
+        organization.latitude,
+        organization.longitude,
+        case.latitude,
+        case.longitude,
+    )
+    return distance_m <= organization.radius * 1000
 
 
 @api_view(['POST'])
@@ -116,11 +137,29 @@ class CaseViewSet(viewsets.ReadOnlyModelViewSet):
         # Organizations can browse unclaimed work plus the cases already assigned to them.
         return queryset.filter(Q(organization__isnull=True) | Q(organization=organization))
 
+    def list(self, request, *args, **kwargs):
+        organization = request.user.organization_profile
+        queryset = self.get_queryset()
+        visible_cases = [
+            case
+            for case in queryset
+            if case.organization_id == organization.id or case_is_within_organization_radius(case, organization)
+        ]
+        serializer = self.get_serializer(visible_cases, many=True, context={"request": request})
+        return Response(serializer.data)
+
     @action(detail=False, methods=["get"], url_path="nearby")
     def nearby(self, request):
         organization = request.user.organization_profile
         queryset = self.get_queryset().filter(organization__isnull=True).exclude(status="closed")
-        radius_km = float(request.query_params.get("radius_km", 50))
+        try:
+            radius_km = float(request.query_params.get("radius_km", organization.radius or 50))
+        except ValueError:
+            return Response({"detail": "Invalid radius."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if organization.radius:
+            radius_km = min(radius_km, organization.radius)
+
         nearby_cases = []
 
         # Distance is evaluated in Python because the helper is shared elsewhere too.
@@ -150,6 +189,12 @@ class CaseViewSet(viewsets.ReadOnlyModelViewSet):
 
         if case.organization_id and case.organization_id != organization.id:
             return Response({"detail": "This case is already assigned."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not case_is_within_organization_radius(case, organization):
+            return Response({"detail": "This case is outside your service radius."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if organization_capacity_is_full(organization):
+            return Response({"detail": "Organization animal capacity has been reached."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Accepting a case records both the owning organization and acting user.
         case.organization = organization

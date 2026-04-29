@@ -62,7 +62,7 @@ const LandingPage: React.FC = () => {
         />
         <About />
         <Features />
-        <GetStarted onGetStarted={handleSignup} />
+        <GetStarted onLogin={handleLogin} />
       </main>
     </div>
   );

@@ -30,6 +30,9 @@ class OrganizationApiTests(APITestCase):
                 "description": "City rescue network",
                 "address": "Main Street",
                 "phone_number": "123456789",
+                "bank_name": "Meezan Bank",
+                "bank_account_title": "Safe Paws Rescue",
+                "bank_account_number": "1234567890",
             },
             format="json",
         )
@@ -39,6 +42,9 @@ class OrganizationApiTests(APITestCase):
         organization = Organization.objects.get(user=self.user)
         self.assertEqual(self.user.role, "organization")
         self.assertEqual(organization.email, self.user.email)
+        self.assertEqual(organization.bank_name, "Meezan Bank")
+        self.assertEqual(organization.bank_account_title, "Safe Paws Rescue")
+        self.assertEqual(organization.bank_account_number, "1234567890")
 
     def test_create_profile_updates_existing_organization_for_legacy_account(self):
         Organization.objects.create(

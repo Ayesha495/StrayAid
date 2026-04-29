@@ -7,6 +7,7 @@ from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from animals.models import Animal
 from organizations.models import Organization
 
 from .models import Case, Report
@@ -54,6 +55,7 @@ class RescueApiTests(MediaEnabledAPITestCase):
             email=self.organization_user.email,
             latitude=31.5,
             longitude=74.3,
+            radius=5,
         )
         self.case = Case.objects.create(
             description="Need help",
@@ -148,6 +150,25 @@ class RescueApiTests(MediaEnabledAPITestCase):
         self.assertEqual(Case.objects.count(), 1)
         self.assertEqual(Report.objects.count(), 1)
 
+    def test_report_case_creates_new_case_when_report_is_outside_15_feet(self):
+        self.client.force_authenticate(user=self.public_user)
+
+        response = self.client.post(
+            "/api/cases/report/",
+            {
+                "description": "Another sighting but outside duplicate range",
+                "latitude": "31.5101",
+                "longitude": "74.3100",
+                "image": make_test_image(),
+            },
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["message"], "New case created and report added")
+        self.assertEqual(Case.objects.count(), 2)
+        self.assertEqual(Report.objects.count(), 1)
+
     def test_user_can_view_own_reported_cases(self):
         self.client.force_authenticate(user=self.public_user)
         self.client.post(
@@ -216,6 +237,23 @@ class RescueApiTests(MediaEnabledAPITestCase):
         self.assertIn(own_case.id, returned_ids)
         self.assertNotIn(foreign_case.id, returned_ids)
 
+    def test_case_list_hides_unassigned_cases_outside_organization_radius(self):
+        far_unassigned = Case.objects.create(
+            description="Far open case",
+            latitude=32.5,
+            longitude=75.3,
+            reported_by=self.public_user,
+            status="reported",
+        )
+        self.client.force_authenticate(user=self.organization_user)
+
+        response = self.client.get("/api/cases/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        returned_ids = {item["id"] for item in response.data}
+        self.assertIn(self.case.id, returned_ids)
+        self.assertNotIn(far_unassigned.id, returned_ids)
+
     def test_nearby_cases_filters_by_radius_and_excludes_closed_cases(self):
         near_case = Case.objects.create(
             description="Near open case",
@@ -276,6 +314,37 @@ class RescueApiTests(MediaEnabledAPITestCase):
         self.case.refresh_from_db()
         self.assertEqual(self.case.organization, self.organization)
         self.assertEqual(self.case.status, "assigned")
+
+    def test_organization_cannot_accept_case_outside_service_radius(self):
+        self.case.latitude = 32.5
+        self.case.longitude = 75.3
+        self.case.save(update_fields=["latitude", "longitude", "updated_at"])
+        self.client.force_authenticate(user=self.organization_user)
+
+        response = self.client.post(f"/api/cases/{self.case.id}/accept/")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data["detail"], "This case is outside your service radius.")
+
+    def test_organization_cannot_accept_case_when_animal_capacity_is_full(self):
+        self.organization.capacity = 1
+        self.organization.save(update_fields=["capacity"])
+        assigned_case = Case.objects.create(
+            description="Assigned case",
+            latitude=31.5001,
+            longitude=74.3001,
+            reported_by=self.public_user,
+            organization=self.organization,
+            assigned_to=self.organization_user,
+            status="rescued",
+        )
+        Animal.objects.create(case=assigned_case, organization=self.organization, name="Milo")
+        self.client.force_authenticate(user=self.organization_user)
+
+        response = self.client.post(f"/api/cases/{self.case.id}/accept/")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data["detail"], "Organization animal capacity has been reached.")
 
     def test_organization_cannot_accept_case_assigned_to_another_organization(self):
         other_org_user = User.objects.create_user(

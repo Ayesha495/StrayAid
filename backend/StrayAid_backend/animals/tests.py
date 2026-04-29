@@ -50,6 +50,10 @@ class AnimalApiTests(MediaEnabledAPITestCase):
             user=self.org_user,
             name="Safe Paws",
             email=self.org_user.email,
+            phone="03123456789",
+            bank_name="Meezan Bank",
+            bank_account_title="Safe Paws Rescue",
+            bank_account_number="1234567890",
         )
         self.other_organization = Organization.objects.create(
             user=self.other_user,
@@ -154,6 +158,38 @@ class AnimalApiTests(MediaEnabledAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["id"], animal.id)
         self.assertEqual(response.data["name"], "Milo")
+        self.assertEqual(response.data["adoption_info"]["phone"], "03123456789")
+        self.assertEqual(response.data["adoption_info"]["email"], self.org_user.email)
+        self.assertEqual(response.data["donation_info"]["bank"], "Meezan Bank")
+        self.assertEqual(response.data["donation_info"]["account_name"], "Safe Paws Rescue")
+        self.assertEqual(response.data["donation_info"]["account_number"], "1234567890")
+
+    def test_organization_cannot_create_animal_when_capacity_is_full(self):
+        self.organization.capacity = 1
+        self.organization.save(update_fields=["capacity"])
+        Animal.objects.create(case=self.case, organization=self.organization, name="Milo")
+        second_case = Case.objects.create(
+            description="Second own case",
+            latitude=31.51,
+            longitude=74.31,
+            reported_by=self.org_user,
+            organization=self.organization,
+            assigned_to=self.org_user,
+            status="rescued",
+        )
+        self.client.force_authenticate(user=self.org_user)
+
+        response = self.client.post(
+            "/api/animals/",
+            {
+                "case": second_case.id,
+                "name": "Luna",
+            },
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("capacity", response.data)
 
     def test_organization_can_update_own_animal(self):
         animal = Animal.objects.create(case=self.case, organization=self.organization, name="Milo")

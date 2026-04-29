@@ -1,51 +1,45 @@
 import React from 'react';
 import './Hero.css';
+import '../assets/Group1.jpg'; // Ensure you have an image at this path or update accordingly
 
 interface HeroProps {
   scrollToSection: (sectionId: string) => void;
-  onLogin: () => void;     // ← Add this line
-  onSignup: () => void;    // ← Add this line
+  onLogin: () => void;
+  onSignup: () => void;
 }
 
-const Hero: React.FC<HeroProps> = ({  onLogin, onSignup }) => {
+const Hero: React.FC<HeroProps> = ({ onLogin, onSignup }) => {
   return (
     <section id="home" className="hero-section">
       <div className="hero-container">
         <div className="hero-content">
-          <h1 className="hero-title">
-            Manage.Protect.
-            <br />
-            Transform Lives.
-          </h1>
-          <h3>
-            -------------------------------------------------------------
-          </h3>
-          <h2 className="hero-description">
-            A smarter way to manage stray animal
-            <br />
-            welfare track cases, coordinate teams,
-            <br />
-            and take action faster.
-          </h2>
-          <div className="hero-buttons">
-            <button 
-              className="btn-login-hero"
-              onClick={onLogin}
-            >
+          <div className="header-text-container">
+            <h1 className="hero-title animate-text">
+              Manage. Protect.
+              <br />
+              Transform Lives.
+            </h1>
+            <div className="hero-divider animate-text"></div>
+          </div>
+          
+          <p className="hero-description animate-text">
+            A smarter way to manage stray animal welfare. Track cases, 
+            coordinate teams, and take action faster for a better world.
+          </p>
+          
+          <div className="hero-buttons animate-text">
+            <button className="btn-login-hero" onClick={onLogin}>
               Login
             </button>
-            <button 
-              className="btn-signup-hero"
-              onClick={onSignup}
-            >
+            <button className="btn-signup-hero" onClick={onSignup}>
               Sign Up
             </button>
           </div>
         </div>
-        <div className="hero-image">
-          <div className="image-placeholder">
-            🐕 🐈 🐾
-          </div>
+        
+        <div className="hero-image-side">
+          <div className="hero-full-bg"></div>
+          <img src="../assets/Group1.jpg" alt="Hero" className="hero-image" />
         </div>
       </div>
     </section>

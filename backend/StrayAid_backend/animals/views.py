@@ -37,6 +37,9 @@ class AnimalViewSet(viewsets.ModelViewSet):
         case = serializer.validated_data["case"]
         if case.organization_id != organization.id:
             raise serializers.ValidationError({"case": "You can only create animals for your own cases."})
+        active_animals = Animal.objects.filter(organization=organization).exclude(status=Animal.STATUS_ADOPTED).count()
+        if organization.capacity and active_animals >= organization.capacity:
+            raise serializers.ValidationError({"capacity": "Organization animal capacity has been reached."})
         animal = serializer.save(organization=organization)
         # Keep case status in sync with the new public outcome for the animal.
         if animal.status == Animal.STATUS_ADOPTABLE:

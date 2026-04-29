@@ -21,8 +21,9 @@ function OrganizationPublicProfile() {
   const featuredAnimals = animals.slice(0, 3);
 
   const donationDetails = [
-    organization.bank_account_title ? `Account Title: ${organization.bank_account_title}` : null,
-    organization.bank_account_number ? `Account Number or Wallet ID: ${organization.bank_account_number}` : null,
+    organization.bank_name ? `Bank: ${organization.bank_name}` : null,
+    organization.bank_account_title ? `Account Name: ${organization.bank_account_title}` : null,
+    organization.bank_account_number ? `Account Number: ${organization.bank_account_number}` : null,
   ].filter(Boolean);
 
   return (

@@ -14,7 +14,6 @@ function AnimalManagement() {
     breed: "",
     description: "",
     medical_info: "",
-    donation_info: "",
     status: "rescued",
     image: null as File | null,
   });
@@ -55,7 +54,6 @@ function AnimalManagement() {
       breed: "",
       description: "",
       medical_info: "",
-      donation_info: "",
       status: "rescued",
       image: null,
     });
@@ -119,14 +117,7 @@ function AnimalManagement() {
           </div>
           <label>Description<textarea value={animalForm.description} onChange={(e) => setAnimalForm({ ...animalForm, description: e.target.value })} /></label>
           <label>Medical Info<textarea value={animalForm.medical_info} onChange={(e) => setAnimalForm({ ...animalForm, medical_info: e.target.value })} /></label>
-          <label>
-            Donation Details
-            <textarea
-              value={animalForm.donation_info}
-              onChange={(e) => setAnimalForm({ ...animalForm, donation_info: e.target.value })}
-              placeholder="Share how people can sponsor this animal. Example: bank account title, account number, Easypaisa, JazzCash, or any verified digital wallet details."
-            />
-          </label>
+          <p className="meta-line">Donation and adoption contact details are taken from your organization profile.</p>
           <label>
             Animal Image
             <input type="file" accept="image/*" onChange={(e) => setAnimalForm({ ...animalForm, image: e.target.files?.[0] ?? null })} />

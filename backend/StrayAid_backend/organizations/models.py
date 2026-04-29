@@ -24,6 +24,7 @@ class Organization(models.Model):
     is_available = models.BooleanField(default=True)
     description = models.TextField(blank=True)
     image = models.ImageField(upload_to="organizations/", null=True, blank=True)
+    bank_name = models.CharField(max_length=255, blank=True)
     bank_account_title = models.CharField(max_length=255, blank=True)
     bank_account_number = models.CharField(max_length=100, blank=True)
 

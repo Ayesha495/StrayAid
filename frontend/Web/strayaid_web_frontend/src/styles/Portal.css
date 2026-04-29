@@ -299,6 +299,15 @@
   padding: 10px 14px;
 }
 
+.donation-detail-list {
+  display: grid;
+  gap: 6px;
+}
+
+.donation-detail-list p {
+  margin: 0;
+}
+
 .badge {
   display: inline-flex;
   align-items: center;

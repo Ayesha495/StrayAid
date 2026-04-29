@@ -45,7 +45,14 @@ class PostApiTests(MediaEnabledAPITestCase):
             password="secret123",
             role="organization",
         )
-        self.organization = Organization.objects.create(user=self.org_user, name="Safe Paws", email=self.org_user.email)
+        self.organization = Organization.objects.create(
+            user=self.org_user,
+            name="Safe Paws",
+            email=self.org_user.email,
+            bank_name="Meezan Bank",
+            bank_account_title="Safe Paws Rescue",
+            bank_account_number="1234567890",
+        )
         self.other_organization = Organization.objects.create(user=self.other_user, name="Second Chance", email=self.other_user.email)
         self.case = Case.objects.create(
             description="Own case",
@@ -113,6 +120,9 @@ class PostApiTests(MediaEnabledAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["id"], post.id)
+        self.assertEqual(response.data[0]["animal"]["donation_info"]["bank"], "Meezan Bank")
+        self.assertEqual(response.data[0]["animal"]["donation_info"]["account_name"], "Safe Paws Rescue")
+        self.assertEqual(response.data[0]["animal"]["donation_info"]["account_number"], "1234567890")
 
     def test_by_animal_returns_empty_list_for_unknown_animal(self):
         Post.objects.create(

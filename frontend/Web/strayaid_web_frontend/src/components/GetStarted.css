@@ -1,6 +1,6 @@
 .getstarted-section {
   padding: 6rem 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #1E6F9F;
   position: relative;
   overflow: hidden;
 }
@@ -13,27 +13,27 @@
 
 .getstarted-content {
   color: white;
-  max-width: 800px;
-  margin: 0 auto;
 }
 
 .getstarted-content h2 {
   font-size: 2.5rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem; /* Tightened space above description */
 }
 
-.getstarted-content p {
+/* Forces the two-liner alignment and manages vertical gaps */
+.getstarted-description {
   font-size: 1.2rem;
-  margin-bottom: 2rem;
   line-height: 1.6;
   opacity: 0.95;
+  max-width: 600px; /* Adjust this to control exactly where the line breaks */
+  margin: 0 auto 2.5rem auto; /* Centers text and creates gap above buttons */
 }
 
 .getstarted-buttons {
   display: flex;
   gap: 1rem;
   justify-content: center;
-  margin-bottom: 3rem;
+  margin-bottom: 2.5rem; /* Symmetry: Same gap below buttons as above them */
 }
 
 .btn-getstarted,
@@ -48,12 +48,13 @@
 
 .btn-getstarted {
   background: white;
-  color: #667eea;
+  color: #1E6F9F;
   border: none;
 }
 
 .btn-getstarted:hover {
-  transform: translateY(-2px);
+  transform: translateY(-5px);
+  background-color: #ffffff;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
 }
 
@@ -65,8 +66,8 @@
 
 .btn-contact:hover {
   background: white;
-  color: #667eea;
-  transform: translateY(-2px);
+  color: #1E6F9F;
+  transform: translateY(-5px);
 }
 
 .stats {
@@ -74,6 +75,8 @@
   justify-content: space-around;
   gap: 2rem;
   margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1); /* Optional: defines the stats area better */
 }
 
 .stat h3 {
@@ -81,25 +84,13 @@
   margin-bottom: 0.5rem;
 }
 
-.stat p {
-  font-size: 1rem;
-  margin-bottom: 0;
-}
-
 @media (max-width: 768px) {
   .getstarted-buttons {
     flex-direction: column;
     align-items: center;
   }
-  
-  .btn-getstarted,
-  .btn-contact {
-    width: 100%;
-    max-width: 250px;
-  }
-  
   .stats {
     flex-direction: column;
-    align-items: center;
+    gap: 3rem;
   }
 }

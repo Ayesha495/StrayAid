@@ -8,6 +8,7 @@ from animals.serializers import AnimalSerializer
 from posts.models import Post
 from rescue.models import Case
 from rescue.serializers import CaseSerializer
+from rescue.views import case_is_within_organization_radius
 
 from .models import Organization
 from .permissions import IsOrganizationUser
@@ -86,12 +87,17 @@ class OrganizationViewSet(
 
         organization_cases = Case.objects.filter(organization=organization)
         # Nearby cases are limited so the dashboard stays lightweight.
-        nearby_cases = (
+        nearby_queryset = (
             Case.objects.select_related("reported_by", "organization")
             .prefetch_related("reports")
             .filter(organization__isnull=True)
-            .exclude(status="closed")[:5]
+            .exclude(status="closed")
         )
+        nearby_cases = [
+            case
+            for case in nearby_queryset
+            if case_is_within_organization_radius(case, organization)
+        ][:5]
 
         data = {
             "organization": self.get_serializer(organization).data,

@@ -1,6 +1,6 @@
 .about-section {
   padding: 6rem 2rem;
-  background: #f8f9fa;
+  background: #ffffff; /* Clean white background */
 }
 
 .about-container {
@@ -13,15 +13,19 @@
   margin-bottom: 4rem;
 }
 
+/* Heading updated to your specific color */
 .about-header h2 {
   font-size: 2.5rem;
-  color: #333;
+  color: #1E6F9F; 
   margin-bottom: 1rem;
+  font-weight: 700;
 }
 
 .about-header p {
   font-size: 1.2rem;
   color: #666;
+  max-width: 700px;
+  margin: 0 auto;
 }
 
 .about-content {
@@ -30,32 +34,39 @@
   gap: 2rem;
 }
 
+/* Card design with the requested aesthetic */
 .about-card {
-  background: white;
-  padding: 2rem;
+  background: #f0f7fb; /* Light blue tint for depth */
+  padding: 2.5rem;
   border-radius: 15px;
   text-align: center;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+  border: 1px solid #d1e4f0;
+  transition: all 0.3s ease;
 }
 
+/* Hover effect with the primary color glow */
 .about-card:hover {
   transform: translateY(-10px);
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+  background: #ffffff;
+  border-color: #1E6F9F;
+  /* Glow effect using 1E6F9F */
+  box-shadow: 0 15px 30px rgba(30, 111, 159, 0.2);
 }
 
 .about-icon {
   font-size: 3rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
+  display: block;
 }
 
 .about-card h3 {
   font-size: 1.5rem;
-  color: #333;
+  color: #1E6F9F; /* Card titles in your brand color */
   margin-bottom: 1rem;
+  font-weight: 600;
 }
 
 .about-card p {
-  color: #666;
+  color: #556b78;
   line-height: 1.6;
 }

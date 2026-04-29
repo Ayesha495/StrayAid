@@ -1,10 +1,11 @@
 import { useEffect } from "react";
+import type { DonationInfo } from "../types/platform";
 
 type SponsorModalProps = {
   isOpen: boolean;
   onClose: () => void;
   title: string;
-  donationInfo?: string | null;
+  donationInfo?: DonationInfo | null;
 };
 
 function SponsorModal({ isOpen, onClose, title, donationInfo }: SponsorModalProps) {
@@ -45,9 +46,15 @@ function SponsorModal({ isOpen, onClose, title, donationInfo }: SponsorModalProp
             x
           </button>
         </div>
-        <p className="modal-copy">
-          {donationInfo?.trim() || "This organization has not shared donation information for this animal yet."}
-        </p>
+        {donationInfo ? (
+          <div className="modal-copy donation-detail-list">
+            <p><strong>Bank:</strong> {donationInfo.bank || "Not shared"}</p>
+            <p><strong>Account Name:</strong> {donationInfo.account_name || "Not shared"}</p>
+            <p><strong>Account Number:</strong> {donationInfo.account_number || "Not shared"}</p>
+          </div>
+        ) : (
+          <p className="modal-copy">This organization has not shared donation information for this animal yet.</p>
+        )}
       </div>
     </div>
   );

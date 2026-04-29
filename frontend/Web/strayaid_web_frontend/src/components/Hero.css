@@ -1,171 +1,133 @@
 .hero-section {
-    width: 100%;
-  min-height: 100vh;
+  width: 100%;
+  height: 100vh;
   display: flex;
-  align-items: center;
-  padding: 6rem 2rem 4rem;
-  background: linear-gradient(135deg, #008083 100%);
-  position: relative;
+  background: #f0f7fb; 
+  padding: 0;
   overflow: hidden;
 }
 
-.hero-section::before {
-  content: '';
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2000 2000"><path fill="rgba(255,255,255,0.1)" d="M0,0 L2000,0 L2000,2000 L0,2000 Z M500,500 L1500,500 L1500,1500 L500,1500 Z"/></svg>');
-  opacity: 0.1;
-}
-
 .hero-container {
-  max-width: 1600px;
-  margin: 0 auto;
+  width: 100%;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 18rem;
+  grid-template-columns: 1fr 40%; 
   align-items: center;
-  position: relative;
-  z-index: 1;
 }
 
 .hero-content {
-  color: white;
+  padding: 0 10%;
+  text-align: left;
+}
+
+.header-text-container {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 .hero-title {
-  font-size: 3.5rem;
+  font-size: clamp(2.5rem, 5vw, 4rem);
   font-weight: 800;
-  margin-bottom: 1.5rem;
-  line-height: 1.2;
+  color: #1E6F9F; 
+  line-height: 1.1;
+  margin-bottom: 8px;
+  white-space: nowrap; 
 }
 
-.gradient-text {
-  background: linear-gradient(135deg, #FFD89B, #C7E9FB);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  display: inline-block;
+.hero-divider {
+  width: 100%; 
+  height: 4px;
+  background: #1E6F9F;
+  margin-bottom: 2rem;
+  border-radius: 2px;
 }
 
 .hero-description {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
+  color: #556b78;
   line-height: 1.6;
-  margin-bottom: 2rem;
-  opacity: 0.9;
+  margin-bottom: 2.5rem;
+  max-width: 500px;
 }
 
+/* Updated Buttons: Fixed Sizing */
 .hero-buttons {
   display: flex;
-  gap: 1rem;
-  
+  gap: 1.2rem;
 }
 
-/* Hero Buttons - Updated with your desired styling */
 .btn-login-hero,
 .btn-signup-hero {
-  padding: 1rem 3rem;
-  font-size: 1rem;
+  /* min-width ensures both buttons are the exact same size */
+  min-width: 140px; 
+  padding: 0.8rem 0; /* Padding top/bottom only since width is fixed */
+  font-size: 0.95rem;
   font-weight: 600;
   border-radius: 50px;
   cursor: pointer;
   transition: all 0.3s ease;
-  background: #008083;
-  border: 2px solid #ffffff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #1E6F9F;
+  border: 2px solid #1E6F9F;
   color: #ffffff;
+}
+
+.btn-signup-hero {
+    background: transparent;
+    color: #1E6F9F;
 }
 
 .btn-login-hero:hover,
 .btn-signup-hero:hover {
   background: #ffffff;
-  border-color: #008083;
-  color: #008083;
-  transform: translateY(-2px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  color: #1E6F9F;
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(30, 111, 159, 0.2);
 }
 
-.btn-primary,
-.btn-secondary {
-  padding: 1rem 2rem;
-  font-size: 1rem;
-  font-weight: 600;
-  border-radius: 50px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-/* Login Button inside Hero section */
-/* .btn-login {
-  background: #008083;
-  border: 2px solid #ffffff;
-  color: #ffffff;
-} */
-
-.btn-primary {
-  background: white;
-  color: #008083;
-  border: none;
-}
-
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-}
-
-.btn-secondary {
-  background: transparent;
-  color: white;
-  border: 2px solid white;
-}
-
-.btn-secondary:hover {
-  background: white;
-  color: #008083;
-  transform: translateY(-2px);
-}
-
-.hero-image {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.image-placeholder {
+/* Right Side Image */
+.hero-image-side {
+  height: 100%;
   width: 100%;
-  height: 400px;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 5rem;
-  backdrop-filter: blur(10px);
-  animation: float 3s ease-in-out infinite;
 }
 
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-20px);
+.hero-full-bg {
+  width: 100%;
+  height: 100%;
+  background-image: url('../assets/1.JPG');
+  background-size: cover;
+  background-position: center;
+}
+
+/* Animations */
+.animate-text {
+  opacity: 0;
+  transform: translateX(-30px);
+  animation: fadeInLeft 0.8s ease forwards;
+}
+
+@keyframes fadeInLeft {
+  to {
+    opacity: 1;
+    transform: translateX(0);
   }
 }
 
-@media (max-width: 768px) {
-  .hero-container {
-    grid-template-columns: 1fr;
+.hero-title { animation-delay: 0.2s; }
+.hero-divider { animation-delay: 0.3s; }
+.hero-description { animation-delay: 0.4s; }
+.hero-buttons { animation-delay: 0.5s; }
+
+/* Responsive */
+@media (max-width: 992px) {
+  .hero-container { grid-template-columns: 1fr; }
+  .hero-image-side { display: none; }
+  .hero-content {
+    padding: 40px;
     text-align: center;
   }
-
-  .hero-title {
-    font-size: 2.5rem;
-  }
-
-  .hero-buttons {
-    justify-content: center;
-  }
-
-  .image-placeholder {
-    height: 300px;
-  }
+  .header-text-container { align-items: center; }
+  .hero-buttons { justify-content: center; }
 }

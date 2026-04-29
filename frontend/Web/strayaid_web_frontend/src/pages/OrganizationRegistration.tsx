@@ -18,6 +18,7 @@ const initialForm = {
   radius: 0,
   phone_number: "",
   contact_email: "",
+  bank_name: "",
   bank_account_title: "",
   bank_account_number: "",
 };
@@ -44,6 +45,7 @@ function OrganizationRegistration() {
           radius: profile.radius ?? 0,
           phone_number: profile.phone_number,
           contact_email: profile.contact_email,
+          bank_name: profile.bank_name ?? "",
           bank_account_title: profile.bank_account_title ?? "",
           bank_account_number: profile.bank_account_number ?? "",
         });
@@ -153,14 +155,18 @@ function OrganizationRegistration() {
 
         <section className="panel-card compact-state">
           <h2>Donation Information</h2>
-          <p className="meta-line">This can be a bank account, digital wallet, or any verified donation destination your organization uses.</p>
+          <p className="meta-line">These details will appear on animal profiles and post donation panels.</p>
           <div className="portal-form-grid">
             <label>
-              Donation Account Title
+              Bank
+              <input value={form.bank_name} onChange={(e) => setForm({ ...form, bank_name: e.target.value })} />
+            </label>
+            <label>
+              Account Name
               <input value={form.bank_account_title} onChange={(e) => setForm({ ...form, bank_account_title: e.target.value })} />
             </label>
             <label>
-              Donation Account Number or Wallet ID
+              Account Number
               <input value={form.bank_account_number} onChange={(e) => setForm({ ...form, bank_account_number: e.target.value })} />
             </label>
           </div>

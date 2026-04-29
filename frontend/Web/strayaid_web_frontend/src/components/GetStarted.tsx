@@ -2,27 +2,33 @@ import React from 'react';
 import './GetStarted.css';
 
 interface GetStartedProps {
-  onGetStarted: () => void;
+  onLogin: () => void;
 }
 
-const GetStarted: React.FC<GetStartedProps> = ({ onGetStarted }) => {
+const GetStarted: React.FC<GetStartedProps> = ({ onLogin }) => {
   return (
     <section id="get-started" className="getstarted-section">
       <div className="getstarted-container">
         <div className="getstarted-content">
           <h2>Ready to Make a Difference?</h2>
-          <p>
-            Join StrayAid today and start helping stray animals in your community.
-            Whether you want to report, volunteer, donate, or adopt, we're here to help.
+          
+          <p className="getstarted-description">
+            Join StrayAid today and take the first step toward a 
+            more organized and impactful animal welfare system.
           </p>
+          
           <div className="getstarted-buttons">
-            <button className="btn-getstarted" onClick={onGetStarted}>
-              Create Free Account
+            <button className="btn-getstarted" onClick={onLogin}>
+              Register as Organization
             </button>
-            <button className="btn-contact" onClick={() => window.location.href = 'mailto:info@strayaid.com'}>
+            <button
+              className="btn-contact"
+              onClick={() => window.location.href = 'mailto:info@strayaid.com'}
+            >
               Contact Us
             </button>
           </div>
+
           <div className="stats">
             <div className="stat">
               <h3>10K+</h3>

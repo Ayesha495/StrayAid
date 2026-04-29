@@ -2,6 +2,9 @@ from rescue.models import Case
 from .location_utils import calculate_distance
 
 
+FIFTEEN_FEET_IN_METERS = 4.572
+
+
 def find_nearby_case(latitude, longitude):
     # Only unresolved intake-stage cases should absorb new public reports.
     # Rescued/adoption/closed cases represent completed workflows and should not
@@ -16,5 +19,5 @@ def find_nearby_case(latitude, longitude):
             case.longitude,
         )
 
-        if distance < 10:
+        if distance <= FIFTEEN_FEET_IN_METERS:
             return case

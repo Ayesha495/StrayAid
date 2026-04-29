@@ -11,10 +11,23 @@ export interface Organization {
   radius?: number;
   phone_number: string;
   contact_email: string;
+  bank_name?: string;
   bank_account_title?: string;
   bank_account_number?: string;
   user_email?: string;
   user_username?: string;
+}
+
+export interface DonationInfo {
+  bank: string;
+  account_name: string;
+  account_number: string;
+}
+
+export interface AdoptionInfo {
+  message: string;
+  phone: string;
+  email: string;
 }
 
 export interface Report {
@@ -47,7 +60,8 @@ export interface Animal {
   breed: string;
   description: string;
   medical_info: string;
-  donation_info: string;
+  donation_info: DonationInfo | null;
+  adoption_info: AdoptionInfo | null;
   status: string;
   image: string | null;
   case: number;

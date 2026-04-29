@@ -27,7 +27,7 @@ const Navbar: React.FC<NavbarProps> = ({
     <nav className="navbar">
       <div className="nav-container">
         <div className="nav-logo">
-          <h2>🐾 StrayAid</h2>
+          <h2 onClick={() => scrollToSection('home')}>🐾 StrayAid</h2>
         </div>
 
         <div className={`nav-menu ${isMenuOpen ? 'active' : ''}`}>
@@ -36,7 +36,10 @@ const Navbar: React.FC<NavbarProps> = ({
               <li key={item.id}>
                 <button
                   className={`nav-link ${activeSection === item.id ? 'active' : ''}`}
-                  onClick={() => scrollToSection(item.id)}
+                  onClick={() => {
+                    scrollToSection(item.id);
+                    setIsMenuOpen(false);
+                  }}
                 >
                   {item.label}
                 </button>

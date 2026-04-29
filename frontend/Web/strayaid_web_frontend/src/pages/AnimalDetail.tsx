@@ -45,8 +45,29 @@ function AnimalDetail() {
         <p className="meta-line">Medical Info: {animal.medical_info || "No medical notes shared yet."}</p>
         <div className="sponsor-panel">
           <div>
+            <h2>For Adoption</h2>
+            {animal.adoption_info ? (
+              <div className="donation-detail-list">
+                <p>{animal.adoption_info.message}</p>
+                <p><strong>Phone:</strong> {animal.adoption_info.phone || "Not shared"}</p>
+                <p><strong>Email:</strong> {animal.adoption_info.email || "Not shared"}</p>
+              </div>
+            ) : (
+              <p className="meta-line">Adoption contact information is not available yet.</p>
+            )}
+          </div>
+        </div>
+        <div className="sponsor-panel">
+          <div>
             <h2>Donation Information</h2>
             <p className="meta-line">Support this rescue directly using the organization details shared for {animal.name}.</p>
+            {animal.donation_info ? (
+              <div className="donation-detail-list">
+                <p><strong>Bank:</strong> {animal.donation_info.bank || "Not shared"}</p>
+                <p><strong>Account Name:</strong> {animal.donation_info.account_name || "Not shared"}</p>
+                <p><strong>Account Number:</strong> {animal.donation_info.account_number || "Not shared"}</p>
+              </div>
+            ) : null}
           </div>
           <div className="feed-actions">
             <Link className="secondary-btn" to={`/organizations/${animal.organization.id}`}>View Organization</Link>
