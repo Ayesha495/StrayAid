@@ -155,7 +155,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'strayaid_db',
         'USER': 'postgres',
-        'PASSWORD': 'postgrespass12',
+        'PASSWORD': '@Decap2630',
         'HOST': 'localhost',
         'PORT': '5432',
     }

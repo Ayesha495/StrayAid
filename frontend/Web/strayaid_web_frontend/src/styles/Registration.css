@@ -1,0 +1,141 @@
+.wizard-stepper {
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+}
+
+.wizard-step {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  position: relative;
+}
+
+.wizard-step:last-child {
+  flex: 0 0 auto;
+}
+
+.wizard-step-dot {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 2px solid #d9dce2;
+  background: #fff;
+  color: #6b7686;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.wizard-step-dot.is-active {
+  border-color: #1c3a2e;
+  background: #1c3a2e;
+  color: #fff;
+}
+
+.wizard-step-dot.is-complete {
+  border-color: #1c3a2e;
+  background: #eef1f5;
+  color: #1c3a2e;
+}
+
+.wizard-step-label {
+  display: none;
+  margin-left: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7686;
+  white-space: nowrap;
+}
+
+.wizard-step-label.is-active {
+  color: #12151c;
+}
+
+.wizard-step-line {
+  flex: 1;
+  height: 2px;
+  margin: 0 8px;
+  background: #e2e5ea;
+}
+
+.wizard-step-line.is-complete {
+  background: #1c3a2e;
+}
+
+.wizard-card {
+  gap: 14px;
+}
+
+.wizard-step-heading h2 {
+  margin: 0;
+  color: #12151c;
+}
+
+.wizard-step-heading p {
+  margin: 4px 0 0;
+}
+
+.wizard-step-body {
+  display: grid;
+  gap: 12px;
+}
+
+.wizard-step-error {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fff1f1;
+  border: 1px solid #f0b6b6;
+  color: #b91c1c;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.wizard-actions {
+  justify-content: space-between;
+}
+
+.wizard-review-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.wizard-review-item {
+  display: grid;
+  gap: 4px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #f0faf5;
+  border: 1px solid #dcefe3;
+}
+
+.wizard-review-item span {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #6b7686;
+}
+
+.wizard-review-item strong {
+  color: #12151c;
+  font-weight: 600;
+  word-break: break-word;
+}
+
+@media (min-width: 640px) {
+  .wizard-step-label {
+    display: inline;
+  }
+}
+
+@media (max-width: 640px) {
+  .wizard-review-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

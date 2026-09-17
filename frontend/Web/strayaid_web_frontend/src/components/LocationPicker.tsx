@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { MapContainer, Marker, TileLayer, useMapEvents } from "react-leaflet";
 import L, { type LatLngExpression, type LeafletMouseEvent } from "leaflet";
+import { CircleCheck, MapPin } from "lucide-react";
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
@@ -11,6 +12,7 @@ type LocationPickerProps = {
   address: string;
   onLocationChange: (next: { latitude: number; longitude: number }) => void;
   onAddressChange: (address: string) => void;
+  hideHeader?: boolean;
 };
 
 const DEFAULT_CENTER: LatLngExpression = [30.3753, 69.3451];
@@ -49,6 +51,7 @@ function LocationPicker({
   address,
   onLocationChange,
   onAddressChange,
+  hideHeader = false,
 }: LocationPickerProps) {
   const hasCoordinates = Number.isFinite(latitude) && Number.isFinite(longitude) && (latitude !== 0 || longitude !== 0);
   const center: LatLngExpression = hasCoordinates ? [latitude, longitude] : DEFAULT_CENTER;
@@ -76,15 +79,33 @@ function LocationPicker({
 
   return (
     <section className="location-picker">
-      <div className="location-picker-header">
-        <div>
-          <h2>Organization Location</h2>
-          <p>Pin your rescue location on the map or use your current position. We will not show raw coordinates to end users.</p>
+      {hideHeader ? (
+        <div className="location-picker-header">
+          <span />
+          <button type="button" className="secondary-btn" onClick={useCurrentLocation}>
+            Use Current Location
+          </button>
         </div>
-        <button type="button" className="secondary-btn" onClick={useCurrentLocation}>
-          Use Current Location
-        </button>
-      </div>
+      ) : (
+        <div className="location-picker-header">
+          <div>
+            <h2>Organization Location</h2>
+            <p>Pin your rescue location on the map or use your current position. We will not show raw coordinates to end users.</p>
+          </div>
+          <button type="button" className="secondary-btn" onClick={useCurrentLocation}>
+            Use Current Location
+          </button>
+        </div>
+      )}
+
+      {hideHeader ? (
+        <div className="location-status-row">
+          <span className="location-status-pill">
+            <CircleCheck size={14} /> {hasCoordinates ? "Map pin selected successfully." : "No map pin selected yet."}
+          </span>
+          <span className="meta-line">Coordinates kept confidential from the public feed.</span>
+        </div>
+      ) : null}
 
       <div className="location-map-shell">
         <MapContainer center={center} zoom={hasCoordinates ? 13 : 6} scrollWheelZoom className="location-map">
@@ -98,22 +119,38 @@ function LocationPicker({
         </MapContainer>
       </div>
 
-      <div className="portal-form-grid compact-grid">
-        <label>
-          Address
-          <input
-            value={address}
-            onChange={(event) => onAddressChange(event.target.value)}
-            placeholder="Enter your office, shelter, or rescue base address"
-          />
+      {hideHeader ? (
+        <label className="profile-field">
+          <span className="profile-field-label">Physical Facility Street Address</span>
+          <div className="profile-input-icon">
+            <MapPin size={15} />
+            <input
+              value={address}
+              onChange={(event) => onAddressChange(event.target.value)}
+              placeholder="Enter your office, shelter, or rescue base address"
+            />
+          </div>
         </label>
-      </div>
+      ) : (
+        <>
+          <div className="portal-form-grid compact-grid">
+            <label>
+              Address
+              <input
+                value={address}
+                onChange={(event) => onAddressChange(event.target.value)}
+                placeholder="Enter your office, shelter, or rescue base address"
+              />
+            </label>
+          </div>
 
-      <div className="portal-actions">
-        <p className="meta-line">
-          {hasCoordinates ? "Map pin selected successfully." : "No map pin selected yet."}
-        </p>
-      </div>
+          <div className="portal-actions">
+            <p className="meta-line">
+              {hasCoordinates ? "Map pin selected successfully." : "No map pin selected yet."}
+            </p>
+          </div>
+        </>
+      )}
     </section>
   );
 }

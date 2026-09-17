@@ -4,17 +4,6 @@
     box-sizing: border-box;
 }
 
-html, body {
-    width: 100%;
-    height: 100%;
-    overflow-x: hidden;
-}
-
-#root {
-    width: 100%;
-    height: 100%;
-}
-
 .login-container {
     width: 100%;
     height: 100vh;
@@ -29,9 +18,9 @@ html, body {
     width: 50%;
     height: 100vh;
     background-image:
-        linear-gradient(rgba(18, 59, 89, 0.3), rgba(18, 59, 89, 0.3)),
+        linear-gradient(rgba(16, 52, 44, 0.3), rgba(16, 52, 44, 0.3)),
         radial-gradient(circle at top, rgba(255, 255, 255, 0.15), transparent 45%),
-        linear-gradient(135deg, #0f3d5c 0%, #1e6f9f 55%, #8cc7de 100%);
+        linear-gradient(135deg, #143b31 0%, #2c7a5c 55%, #bde1c9 100%);
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -98,7 +87,7 @@ html, body {
     max-width: 450px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
     animation: fadeInUp 0.5s ease-out;
-    border: 2px solid #1E6F9F;
+    border: 2px solid #1c3a2e;
 }
 
 @keyframes fadeInUp {
@@ -119,14 +108,14 @@ html, body {
 
 .login-header h2 {
     font-size: 32px;
-    color: #1E6F9F;
+    color: #1c3a2e;
     font-family: 'Poppins', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     font-weight: 600;
     margin-bottom: 8px;
 }
 
 .login-header p {
-    color: #1E6F9F;
+    color: #1c3a2e;
     margin-top: 0;
     font-family: 'Poppins', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     font-weight: 400;
@@ -162,7 +151,7 @@ html, body {
 .form-group label {
     font-size: 14px;
     font-weight: 500;
-    color: #1E6F9F;
+    color: #1c3a2e;
     font-family: 'Poppins', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
@@ -179,8 +168,8 @@ html, body {
 }
 
 .form-group input:focus {
-    border-color: #1E6F9F;
-    box-shadow: 0 0 0 3px rgba(30, 111, 159, 0.1);
+    border-color: #1c3a2e;
+    box-shadow: 0 0 0 3px rgba(28, 58, 46, 0.12);
 }
 
 .form-group input::placeholder {
@@ -195,7 +184,7 @@ html, body {
 }
 
 .forgot-password a {
-    color: #1E6F9F;
+    color: #1c3a2e;
     text-decoration: none;
     font-size: 13px;
     font-weight: 500;
@@ -204,12 +193,12 @@ html, body {
 }
 
 .forgot-password a:hover {
-    color: #1E6F9F;
+    color: #1c3a2e;
     text-decoration: underline;
 }
 
 .login-btn {
-    background: #1E6F9F;
+    background: #1c3a2e;
     color: white;
     padding: 12px;
     border: none;
@@ -280,7 +269,7 @@ html, body {
 
 .google-btn:hover {
     background: #f8f9fa;
-    border-color: #1E6F9F;
+    border-color: #1c3a2e;
     transform: translateY(-2px);
 }
 
@@ -300,14 +289,14 @@ html, body {
 }
 
 .login-footer a {
-    color: #1E6F9F;
+    color: #1c3a2e;
     text-decoration: none;
     font-weight: 600;
     transition: color 0.3s ease;
 }
 
 .login-footer a:hover {
-    color: #1E6F9F;
+    color: #1c3a2e;
     text-decoration: underline;
 }
 

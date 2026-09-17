@@ -1,0 +1,138 @@
+.cases-kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.cases-kpi-chip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid #e6e8ec;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03), 0 12px 24px rgba(15, 23, 42, 0.05);
+}
+
+.cases-kpi-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  background: #eef1f5;
+  color: #3f4b5c;
+}
+
+.cases-kpi-chip-blue .cases-kpi-icon {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.cases-kpi-chip-amber .cases-kpi-icon {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.cases-kpi-chip-green .cases-kpi-icon {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.cases-kpi-chip-purple .cases-kpi-icon {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+
+.cases-kpi-label {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6b7686;
+}
+
+.cases-kpi-value {
+  margin: 2px 0 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: #12151c;
+}
+
+.cases-heading-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.cases-heading-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  background: #eef1f5;
+  color: #3f4b5c;
+}
+
+.cases-heading-icon-blue {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.cases-heading-icon-amber {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.cases-heading-icon-green {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.cases-heading-icon-purple {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+
+.map-footnote {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 12px 2px 0;
+  color: #6b7686;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.status-card .status-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+  font-size: 12px;
+  color: #9aa5b4;
+  font-weight: 600;
+}
+
+@media (max-width: 1180px) {
+  .cases-kpi-strip {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .cases-kpi-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 420px) {
+  .cases-kpi-strip {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

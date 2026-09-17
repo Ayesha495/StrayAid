@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import AppSidebar from "./AppSidebar";
+import DashboardTopbar from "./DashboardTopbar";
 import MenuToggleIcon from "./MenuToggleIcon";
 import "./DashboardLayout.css";
 
@@ -49,7 +50,7 @@ function AuthenticatedShell({ children }: AuthenticatedShellProps) {
 
   return (
     <div className={`dashboard-shell${isSidebarOpen ? " sidebar-open" : ""}`}>
-      {isSidebarOpen ? <button className="dashboard-backdrop" type="button" aria-label="Close menu" onClick={handleToggleSidebar} /> : null}
+      {isMobile && isSidebarOpen ? <button className="dashboard-backdrop" type="button" aria-label="Close menu" onClick={handleToggleSidebar} /> : null}
       <AppSidebar
         isCollapsed={isCollapsed}
         isMobile={isMobile}
@@ -66,7 +67,8 @@ function AuthenticatedShell({ children }: AuthenticatedShellProps) {
             <MenuToggleIcon isOpen={false} />
           </button>
         ) : null}
-        {children}
+        <DashboardTopbar />
+        <div className="dashboard-content-body">{children}</div>
       </main>
     </div>
   );

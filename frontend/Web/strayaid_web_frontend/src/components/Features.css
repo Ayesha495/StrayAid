@@ -20,12 +20,12 @@
 
 .features-header-wrapper .line {
   height: 2px;
-  background-color: #1E6F9F;
+  background-color: #1c3a2e;
   flex-grow: 1;
 }
 
 .features-title {
-  background-color: #1E6F9F;
+  background-color: #1c3a2e;
   color: white;
   padding: 10px 30px;
   margin: 0 20px;
@@ -56,7 +56,7 @@
 .feature-card:hover {
   transform: translateY(-10px);
   background-color: #ffffff;
-  border-color: #1E6F9F;
+  border-color: #1c3a2e;
   /* Glow effect using 1E6F9F color */
   box-shadow: 0 15px 35px rgba(30, 111, 159, 0.25);
 }
@@ -64,14 +64,14 @@
 /* Icon Styling */
 .feature-icon {
   font-size: 3rem;
-  color: #1E6F9F;
+  color: #1c3a2e;
   margin-bottom: 20px;
   display: block;
 }
 
 /* Card Typography */
 .feature-card h3 {
-  color: #1E6F9F;
+  color: #1c3a2e;
   font-size: 1.25rem;
   font-weight: 700;
   margin-bottom: 15px;

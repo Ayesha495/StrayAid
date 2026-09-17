@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import SponsorModal from "../components/SponsorModal";
 import { getAnimal, getAnimalPosts } from "../services/platformService";
 import type { Animal, Post } from "../types/platform";
+import { statusBadgeClass } from "../utils/status";
 import "../styles/Portal.css";
 
 function AnimalDetail() {
@@ -32,7 +33,7 @@ function AnimalDetail() {
             {animal.breed ? ` · ${animal.breed}` : ""}
           </p>
         </div>
-        <span className="badge">{animal.status}</span>
+        <span className={statusBadgeClass(animal.status)}>{animal.status}</span>
       </div>
 
       <section className="panel-card">

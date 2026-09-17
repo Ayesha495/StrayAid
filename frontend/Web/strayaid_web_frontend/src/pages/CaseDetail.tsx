@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { acceptCase, getCase, updateCaseStatus } from "../services/platformService";
 import type { Case } from "../types/platform";
+import { statusBadgeClass } from "../utils/status";
 import "../styles/Portal.css";
 
 function CaseDetail() {
@@ -37,7 +38,7 @@ function CaseDetail() {
           <h1>Case #{caseItem.id}</h1>
           <p>{caseItem.description}</p>
         </div>
-        <span className="badge">{caseItem.status}</span>
+        <span className={statusBadgeClass(caseItem.status)}>{caseItem.status}</span>
       </div>
 
       <section className="panel-card">

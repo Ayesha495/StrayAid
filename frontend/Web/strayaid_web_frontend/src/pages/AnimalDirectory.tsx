@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import AnimalCard from "../components/AnimalCard";
 import { getPublicAnimals, getPublicOrganization } from "../services/platformService";
 import type { Animal, Organization } from "../types/platform";
 import "../styles/Portal.css";
@@ -81,21 +82,23 @@ function AnimalDirectory() {
 
         <div className="card-grid">
           {visibleAnimals.length ? visibleAnimals.map((animal) => (
-            <article className="animal-card" key={animal.id}>
-              {animal.image ? <img className="card-media" src={animal.image} alt={animal.name} /> : null}
-              <span className="badge">{animal.status}</span>
-              <h3>{animal.name}</h3>
-              <p>
-                <Link className="inline-link" to={`/organizations/${animal.organization.id}`}>
-                  {animal.organization.name}
-                </Link>
-              </p>
-              <p>{animal.description || "No public description has been shared yet."}</p>
-              <div className="feed-actions">
-                <Link className="secondary-btn" to={`/animals/${animal.id}`}>View Profile</Link>
-                <Link className="secondary-btn" to={`/organizations/${animal.organization.id}`}>View Organization</Link>
-              </div>
-            </article>
+            <AnimalCard
+              key={animal.id}
+              animal={animal}
+              footer={
+                <>
+                  <p className="meta-line">
+                    <Link className="inline-link" to={`/organizations/${animal.organization.id}`}>
+                      {animal.organization.name}
+                    </Link>
+                  </p>
+                  <div className="feed-actions">
+                    <Link className="secondary-btn" to={`/animals/${animal.id}`}>View Profile</Link>
+                    <Link className="secondary-btn" to={`/organizations/${animal.organization.id}`}>View Organization</Link>
+                  </div>
+                </>
+              }
+            />
           )) : <div className="empty-state">No public animal profiles are available right now.</div>}
         </div>
 

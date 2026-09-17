@@ -1,0 +1,353 @@
+.public-profile-page {
+  min-height: 100vh;
+  background: #f5f6f8;
+}
+
+.public-profile-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 32px;
+  background: #fff;
+  border-bottom: 1px solid #e6e8ec;
+}
+
+.public-profile-logo {
+  font-size: 18px;
+  font-weight: 800;
+  color: #1c3a2e;
+  text-decoration: none;
+}
+
+.public-profile-topnav {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.public-profile-topnav a {
+  color: #33404f;
+  font-weight: 600;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.public-profile-topnav a:hover {
+  color: #1c3a2e;
+  text-decoration: underline;
+}
+
+.public-profile-login-link {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1.5px solid #1c3a2e;
+  color: #1c3a2e !important;
+}
+
+.public-profile-login-link:hover {
+  background: #1c3a2e;
+  color: #fff !important;
+  text-decoration: none !important;
+}
+
+.public-profile-content {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 28px 32px 48px;
+}
+
+.public-hero {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  min-height: 300px;
+  background: linear-gradient(135deg, #1c3a2e 0%, #0f766e 100%);
+  background-size: cover;
+  background-position: center;
+  display: flex;
+}
+
+.public-hero-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(9, 12, 20, 0.2) 0%, rgba(9, 12, 20, 0.78) 100%);
+}
+
+.public-hero-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 18px;
+  padding: 28px;
+  width: 100%;
+  color: #fff;
+}
+
+.public-hero-top {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.public-hero-badge {
+  display: inline-grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+  color: #fff;
+  font-weight: 800;
+  font-size: 20px;
+  flex-shrink: 0;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+}
+
+.public-hero-heading {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.public-hero-name-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.public-hero-heading h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 800;
+  color: #fff;
+}
+
+.public-hero-verified {
+  gap: 4px;
+}
+
+.public-hero-location {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 14px;
+}
+
+.public-hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.public-hero-actions .public-hero-btn-light {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  text-decoration: none;
+}
+
+.public-hero-actions .public-hero-btn-light:hover {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.public-hero-actions .public-hero-share {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  width: 40px;
+  height: 40px;
+}
+
+.public-hero-actions .public-hero-share:hover {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.public-hero-share-confirm {
+  font-size: 12px;
+  font-weight: 700;
+  color: #d1fae5;
+}
+
+.public-stat-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.public-stat-chip {
+  flex: 1 1 200px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid #e6e8ec;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03), 0 12px 24px rgba(15, 23, 42, 0.05);
+  min-width: 0;
+}
+
+.public-stat-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.public-stat-icon-blue {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.public-stat-icon-green {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.public-stat-icon-purple {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+
+.public-stat-icon-amber {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.public-stat-icon-gray {
+  background: #eef1f5;
+  color: #3f4b5c;
+}
+
+.public-stat-body {
+  min-width: 0;
+}
+
+.public-stat-label {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #6b7686;
+}
+
+.public-stat-value {
+  margin: 3px 0 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #12151c;
+  overflow-wrap: anywhere;
+}
+
+.public-mission-quote {
+  margin: 0;
+  padding-left: 16px;
+  border-left: 3px solid #1c3a2e;
+  color: #33404f;
+  font-size: 15px;
+  font-style: italic;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.public-filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0 16px;
+}
+
+.public-filter-chip {
+  border: 1px solid #d9dce2;
+  background: #fff;
+  color: #33404f;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.public-filter-chip:hover {
+  border-color: #1c3a2e;
+}
+
+.public-filter-chip.is-active {
+  background: #1c3a2e;
+  border-color: #1c3a2e;
+  color: #fff;
+}
+
+.public-adoption-panel {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #f5f6f8;
+  border: 1px solid #e6e8ec;
+}
+
+.public-profile-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-top: 8px;
+}
+
+.public-profile-footer-links {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.public-profile-footer-links a {
+  color: #1c3a2e;
+  font-weight: 700;
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.public-profile-footer-links a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 720px) {
+  .public-profile-topbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 14px 20px;
+  }
+
+  .public-profile-content {
+    padding: 20px 18px 36px;
+  }
+
+  .public-hero-content {
+    padding: 20px;
+  }
+
+  .public-hero-top {
+    align-items: flex-start;
+  }
+
+  .public-hero-heading h1 {
+    font-size: 22px;
+  }
+
+  .public-profile-footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

@@ -1,6 +1,6 @@
 .getstarted-section {
   padding: 6rem 2rem;
-  background: #1E6F9F;
+  background: #1c3a2e;
   position: relative;
   overflow: hidden;
 }
@@ -48,7 +48,7 @@
 
 .btn-getstarted {
   background: white;
-  color: #1E6F9F;
+  color: #1c3a2e;
   border: none;
 }
 
@@ -66,7 +66,7 @@
 
 .btn-contact:hover {
   background: white;
-  color: #1E6F9F;
+  color: #1c3a2e;
   transform: translateY(-5px);
 }
 
