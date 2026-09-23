@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import AppSidebar from "./AppSidebar";
+import DashboardTopbar from "./DashboardTopbar";
 import MenuToggleIcon from "./MenuToggleIcon";
 import "./DashboardLayout.css";
 
@@ -7,14 +8,10 @@ type AuthenticatedShellProps = {
   children: React.ReactNode;
 };
 
-const SIDEBAR_PREFERENCE_KEY = "strayaid-sidebar-collapsed";
 const MOBILE_BREAKPOINT = "(max-width: 900px)";
 
 function AuthenticatedShell({ children }: AuthenticatedShellProps) {
   const [isMobile, setIsMobile] = useState(() => window.matchMedia(MOBILE_BREAKPOINT).matches);
-  const [desktopCollapsed, setDesktopCollapsed] = useState(() => (
-    localStorage.getItem(SIDEBAR_PREFERENCE_KEY) === "true"
-  ));
   const [mobileCollapsed, setMobileCollapsed] = useState(true);
 
   useEffect(() => {
@@ -31,25 +28,19 @@ function AuthenticatedShell({ children }: AuthenticatedShellProps) {
     return () => mediaQuery.removeEventListener("change", handleChange);
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem(SIDEBAR_PREFERENCE_KEY, String(desktopCollapsed));
-  }, [desktopCollapsed]);
-
-  const isCollapsed = isMobile ? mobileCollapsed : desktopCollapsed;
+  // Desktop sidebar is always static and expanded; only the mobile drawer collapses.
+  const isCollapsed = isMobile ? mobileCollapsed : false;
   const isSidebarOpen = !isCollapsed;
 
   const handleToggleSidebar = () => {
     if (isMobile) {
       setMobileCollapsed((current) => !current);
-      return;
     }
-
-    setDesktopCollapsed((current) => !current);
   };
 
   return (
     <div className={`dashboard-shell${isSidebarOpen ? " sidebar-open" : ""}`}>
-      {isSidebarOpen ? <button className="dashboard-backdrop" type="button" aria-label="Close menu" onClick={handleToggleSidebar} /> : null}
+      {isMobile && isSidebarOpen ? <button className="dashboard-backdrop" type="button" aria-label="Close menu" onClick={handleToggleSidebar} /> : null}
       <AppSidebar
         isCollapsed={isCollapsed}
         isMobile={isMobile}
@@ -66,7 +57,8 @@ function AuthenticatedShell({ children }: AuthenticatedShellProps) {
             <MenuToggleIcon isOpen={false} />
           </button>
         ) : null}
-        {children}
+        <DashboardTopbar />
+        <div className="dashboard-content-body">{children}</div>
       </main>
     </div>
   );
