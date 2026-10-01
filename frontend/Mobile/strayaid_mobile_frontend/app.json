@@ -10,7 +10,11 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.ayesha4956.strayaid_mobile_frontend"
+      "bundleIdentifier": "com.ayesha4956.strayaid_mobile_frontend",
+      "infoPlist": {
+        "NSSpeechRecognitionUsageDescription": "Allow StrayAid to convert your speech into the report description.",
+        "NSMicrophoneUsageDescription": "Allow StrayAid to use the microphone so you can dictate report descriptions."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -22,7 +26,14 @@
       "package": "com.ayesha4956.strayaid_mobile_frontend",
       "versionCode": 1,
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.VIBRATE"
+      ]
     },
     "web": {
       "output": "static",
@@ -43,7 +54,20 @@
         }
       ],
       "expo-web-browser",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow StrayAid to use your location to show the map."
+        }
+      ],
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Allow StrayAid to use the microphone so you can dictate report descriptions.",
+          "speechRecognitionPermission": "Allow StrayAid to convert your speech into the report description."
+        }
+      ],
     ],
     "experiments": {
       "typedRoutes": true,
@@ -52,8 +76,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "d335ba05-38a7-42ee-acf1-89402b34c2bc"
+        "projectId": "e39dc577-928c-4f2a-90d0-d96d825d9a8c"
       }
-    }
+    },
+    "owner": "ayesha495"
   }
 }

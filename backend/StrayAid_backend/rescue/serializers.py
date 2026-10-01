@@ -26,7 +26,7 @@ class CaseSerializer(serializers.ModelSerializer):
     def get_distance_km(self, obj):
         request = self.context.get("request")
         organization = getattr(getattr(request, "user", None), "organization_profile", None)
-        if not organization:
+        if not organization or organization.latitude is None or organization.longitude is None:
             return None
 
         # Distance is computed relative to the signed-in organization when available.

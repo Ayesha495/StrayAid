@@ -1,6 +1,5 @@
 import { getToken } from "../utils/tokenStorage";
-
-const API_BASE = process.env.IP || "http://192.168.1.13:8000";
+import { API_BASE } from "./apiConfig";
 
 const resolveMediaUrl = (value: string | null | undefined) => {
   // The API can return relative media paths during local development.
@@ -41,7 +40,11 @@ export type MobileUser = {
 export type MobileAnimal = {
   id: number;
   name: string;
-  breed: string;
+  species?: string;
+  breed?: string;
+  gender?: string;
+  age?: number | null;
+  color?: string;
   description: string;
   medical_info: string;
   donation_info: string;
@@ -52,6 +55,7 @@ export type MobileAnimal = {
 };
 export type MobilePost = {
   id: number;
+  category?: string;
   title: string;
   content: string;
   image: string | null;
@@ -156,6 +160,14 @@ export async function getOrganization(organizationId: string | number) {
 export async function getOrganizationAnimals(organizationId: string | number) {
   const response = await fetch(`${API_BASE}/api/organizations/${organizationId}/animals/`);
   return (await parseJson<MobileAnimal[]>(response)).map(normalizeAnimal);
+}
+
+export async function getMyFollows(): Promise<{ followed_animals: number[]; followed_organizations: number[] }> {
+  const token = await getToken();
+  const response = await fetch(`${API_BASE}/api/notifications/my-follows/`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return parseJson(response);
 }
 
 export async function submitReport(formData: FormData) {

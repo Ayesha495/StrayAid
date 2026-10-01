@@ -19,6 +19,8 @@ export const reportStyles = StyleSheet.create({
   imagePreview: { width: "100%", height: 220, borderRadius: theme.radius.md, backgroundColor: theme.colors.primarySoft },
   locationRow: { flexDirection: "row", alignItems: "center", gap: theme.spacing.sm },
   locationInput: { flex: 1 },
+  descriptionRow: { flexDirection: "row", alignItems: "flex-start", gap: theme.spacing.sm },
+  descriptionInput: { flex: 1 },
   mapButton: { width: 54, height: 54, borderRadius: theme.radius.sm, backgroundColor: theme.colors.primarySoft, alignItems: "center", justifyContent: "center" },
   helperText: { color: theme.colors.inkMuted, lineHeight: 20, fontSize: 13 },
 });

@@ -16,6 +16,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { reportStyles as styles } from "../../../styles/ReportStyles";
 import { submitReport } from "../../../services/mobileContentService";
+import VoiceInputButton from "../../../components/VoiceInputButton";
 
 type LatLng = { latitude: number; longitude: number };
 
@@ -195,14 +196,18 @@ export default function ReportPage() {
 
         <View style={styles.card}>
           <Text style={styles.label}>Description</Text>
-          <TextInput
-            style={[styles.input, styles.textArea]}
-            placeholder="Describe the animal's condition, injuries, or what help is needed."
-            value={description}
-            onChangeText={setDescription}
-            multiline
-            placeholderTextColor="#6d8594"
-          />
+          <View style={styles.descriptionRow}>
+            <TextInput
+              style={[styles.input, styles.textArea, styles.descriptionInput]}
+              placeholder="Describe the animal's condition, injuries, or what help is needed."
+              value={description}
+              onChangeText={setDescription}
+              multiline
+              placeholderTextColor="#6d8594"
+            />
+            <VoiceInputButton value={description} onChangeText={setDescription} />
+          </View>
+          <Text style={styles.helperText}>Tap the mic to speak the description instead of typing it.</Text>
         </View>
 
         <Pressable style={styles.primaryButton} onPress={handleSubmit}>

@@ -11,8 +11,13 @@ function Cases() {
   const query = searchParams.get("q")?.trim().toLowerCase() ?? "";
 
   useEffect(() => {
-    getCases().then(setCases).catch(() => setCases([]));
-    getOrganizationAnimals().then(setAnimals).catch(() => setAnimals([]));
+    const load = () => {
+      getCases().then(setCases).catch(() => setCases([]));
+      getOrganizationAnimals().then(setAnimals).catch(() => setAnimals([]));
+    };
+    load();
+    const interval = setInterval(load, 30_000);
+    return () => clearInterval(interval);
   }, []);
 
   const filteredCases = useMemo(() => {

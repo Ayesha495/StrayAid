@@ -1,6 +1,6 @@
 import * as Google from "expo-auth-session/providers/google";
 import * as WebBrowser from "expo-web-browser";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 import { loginWithGoogleAccessToken } from "./authService";
 
@@ -12,6 +12,17 @@ type UseGoogleAuthOptions = {
 };
 
 export function useGoogleAuth(options: UseGoogleAuthOptions = {}) {
+  // Keep callbacks in refs so the effect dep array only changes on `response`
+  const onSuccessRef = useRef(options.onSuccess);
+  const onErrorRef = useRef(options.onError);
+  useEffect(() => {
+    onSuccessRef.current = options.onSuccess;
+    onErrorRef.current = options.onError;
+  });
+
+  // androidClientId requires the SHA-1 of your EAS keystore registered in
+  // Google Cloud Console under the Android OAuth 2.0 client.
+  // Run: eas credentials --platform android  to get your SHA-1.
   const [request, response, promptAsync] = Google.useAuthRequest({
     androidClientId: "998658289609-u4an6pas5lcpg578tb3c1rhdre8g5eji.apps.googleusercontent.com",
     iosClientId: "998658289609-1g2mm1bre24hlccle05gmon0c416h44v.apps.googleusercontent.com",
@@ -22,27 +33,27 @@ export function useGoogleAuth(options: UseGoogleAuthOptions = {}) {
     const completeGoogleAuth = async () => {
       if (response?.type !== "success") {
         if (response?.type === "error") {
-          options.onError?.("Google login failed.");
+          onErrorRef.current?.("Google login failed.");
         }
         return;
       }
 
       const token = response.authentication?.accessToken;
       if (!token) {
-        options.onError?.("Google login failed.");
+        onErrorRef.current?.("Google login failed.");
         return;
       }
 
       try {
         await loginWithGoogleAccessToken(token);
-        await options.onSuccess?.();
+        await onSuccessRef.current?.();
       } catch (error) {
-        options.onError?.(error instanceof Error ? error.message : "Google login failed.");
+        onErrorRef.current?.(error instanceof Error ? error.message : "Google login failed.");
       }
     };
 
     completeGoogleAuth();
-  }, [options, response]);
+  }, [response]);
 
   return { request, promptAsync };
 }

@@ -4,6 +4,7 @@ import { ActivityIndicator, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as SecureStore from "expo-secure-store";
 import { Ionicons } from "@expo/vector-icons";
+import { mobileTheme as theme } from "../../styles/mobileTheme";
 
 export default function TabLayout() {
   const [ready, setReady] = useState(false);
@@ -23,8 +24,8 @@ export default function TabLayout() {
 
   if (!ready) {
     return (
-      <SafeAreaView style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#f4f8fb" }}>
-        <ActivityIndicator size="large" color="#1e6f9f" />
+      <SafeAreaView style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: theme.colors.surfaceMuted }}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
       </SafeAreaView>
     );
   }
@@ -33,79 +34,91 @@ export default function TabLayout() {
     <Tabs
       initialRouteName="feed/index"
       screenOptions={{
-        tabBarActiveTintColor: "#1e6f9f",
-        tabBarInactiveTintColor: "#6d8594",
+        tabBarActiveTintColor: theme.colors.primary,
+        tabBarInactiveTintColor: theme.colors.inkMuted,
         headerShown: false,
         tabBarStyle: {
-          height: 76,
-          paddingTop: 8,
+          height: 72,
+          paddingTop: 6,
           paddingBottom: 10,
-          backgroundColor: "#ffffff",
-          borderTopWidth: 0,
-          shadowColor: "#12344a",
-          shadowOpacity: 0.12,
-          shadowRadius: 18,
+          backgroundColor: theme.colors.surface,
+          borderTopWidth: 0.5,
+          borderTopColor: theme.colors.border,
+          shadowColor: theme.colors.primaryDeep,
+          shadowOpacity: 0.1,
+          shadowRadius: 20,
           shadowOffset: { width: 0, height: -4 },
-          elevation: 10,
+          elevation: 12,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: "700",
+          fontSize: 11,
+          fontWeight: "600",
+          marginTop: 2,
         },
         tabBarItemStyle: {
           paddingHorizontal: 0,
-          marginHorizontal: 0,
         },
       }}>
+
       <Tabs.Screen
         name="feed/index"
         options={{
           title: 'Feed',
-          tabBarLabel: "Feed",
-          tabBarIcon: ({ color }) => <Ionicons size={24} name="paw-outline" color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons size={24} name={focused ? "home" : "home-outline"} color={color} />
+          ),
         }}
       />
+
       <Tabs.Screen
         name="report/index"
         options={{
-          title: 'Report',
-          tabBarLabel: "Report",
+          title: '',
+          tabBarLabel: () => null,
           tabBarIcon: () => (
             <View
               style={{
-                width: 60,
-                height: 60,
-                borderRadius: 30,
-                backgroundColor: "#1e6f9f",
+                width: 56,
+                height: 56,
+                borderRadius: 28,
+                backgroundColor: theme.colors.primary,
                 alignItems: "center",
                 justifyContent: "center",
-                marginBottom: 22,
-                shadowColor: "#12344a",
-                shadowOpacity: 0.28,
-                shadowRadius: 16,
-                shadowOffset: { width: 0, height: 8 },
-                elevation: 12,
+                marginBottom: 20,
+                shadowColor: theme.colors.primary,
+                shadowOpacity: 0.4,
+                shadowRadius: 12,
+                shadowOffset: { width: 0, height: 6 },
+                elevation: 10,
               }}
             >
-              <Ionicons size={28} name="add" color="#ffffff" />
+              <Ionicons size={26} name="camera" color="#ffffff" />
             </View>
           ),
         }}
       />
+
+      <Tabs.Screen
+        name="activity/index"
+        options={{
+          title: 'Activity',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons size={24} name={focused ? "heart" : "heart-outline"} color={color} />
+          ),
+        }}
+      />
+
       <Tabs.Screen
         name="profile/index"
         options={{
           title: 'Profile',
-          tabBarLabel: "Profile",
-          tabBarIcon: ({ color }) => <Ionicons size={24} name="person-outline" color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons size={24} name={focused ? "person" : "person-outline"} color={color} />
+          ),
         }}
       />
-      <Tabs.Screen
-        name="home/index"
-        options={{
-          href: null,
-        }}
-      />
+
+      <Tabs.Screen name="home/index" options={{ href: null }} />
     </Tabs>
   );
 }

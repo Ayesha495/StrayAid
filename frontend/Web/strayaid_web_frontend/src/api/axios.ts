@@ -1,15 +1,17 @@
 import axios from "axios";
 
+const BASE = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000";
+
 const API = axios.create({
-    baseURL: "http://127.0.0.1:8000"
+    baseURL: BASE
 });
 
 export const PublicAPI = axios.create({
-    baseURL: "http://127.0.0.1:8000"
+    baseURL: BASE
 });
 
 const AuthAPI = axios.create({
-    baseURL: "http://127.0.0.1:8000"
+    baseURL: BASE
 });
 
 let refreshPromise: Promise<string | null> | null = null;

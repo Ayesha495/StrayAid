@@ -2,7 +2,7 @@ import { RegisterData, LoginData, TokenResponse } from "../types/auth";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store'
 import { router } from "expo-router";
-const API_BASE = process.env.IP || 'http://192.168.1.13:8000';
+import { API_BASE } from "./apiConfig";
 
 const persistSession = async (result: TokenResponse, email?: string) => {
     // AsyncStorage supports app flows while SecureStore keeps a durable access token copy.

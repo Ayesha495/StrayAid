@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { View, Alert, Text, Pressable } from "react-native";
-import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import { router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { mapSelectStyles as styles } from "../../styles/MapSelectStyles";
+import LocationMapPicker from "../../components/LocationMapPicker";
 
 export default function SelectLocationScreen() {
   const [location, setLocation] = useState<{
@@ -38,7 +38,7 @@ export default function SelectLocationScreen() {
     });
   };
 
-  const handleMapPress = (e: any) => {
+  const handleMapPress = (e: { nativeEvent: { coordinate: { latitude: number; longitude: number } } }) => {
     const { latitude, longitude } = e.nativeEvent.coordinate;
     setMarkerPosition({ latitude, longitude });
   };
@@ -62,24 +62,11 @@ export default function SelectLocationScreen() {
   return (
     <View style={styles.container}>
       {location && (
-        <MapView
-          style={styles.map}
-          initialRegion={{
-            latitude: location.latitude,
-            longitude: location.longitude,
-            latitudeDelta: 0.0922,
-            longitudeDelta: 0.0421,
-          }}
+        <LocationMapPicker
+          location={location}
+          markerPosition={markerPosition}
           onPress={handleMapPress}
-        >
-          {markerPosition && (
-            <Marker
-              coordinate={markerPosition}
-              title="Selected Location"
-              description="Pinned location"
-            />
-          )}
-        </MapView>
+        />
       )}
 
       <View style={styles.bottomPanel}>

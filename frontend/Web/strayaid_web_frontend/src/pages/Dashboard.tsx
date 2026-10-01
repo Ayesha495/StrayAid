@@ -44,6 +44,9 @@ function Dashboard() {
     getOrganizationProfile().then(() => setNeedsProfile(false)).catch(() => setNeedsProfile(true));
     loadCasesAndDashboard();
     getOrganizationAnimals().then(setAnimals).catch(() => setAnimals([]));
+
+    const interval = setInterval(loadCasesAndDashboard, 30_000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {

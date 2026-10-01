@@ -30,6 +30,7 @@ urlpatterns = [
     path('api/organizations/', include('organizations.urls')),
     path('api/animals/', include('animals.urls')),
     path('api/posts/', include('posts.urls')),
+    path('api/notifications/', include('notifications.urls')),
 ]
 
 # Serve uploaded media in development.
