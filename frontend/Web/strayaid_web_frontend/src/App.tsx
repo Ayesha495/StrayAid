@@ -26,12 +26,17 @@ function App() {
         <Route path="/login" element={<Login />}></Route>
         <Route path="/register" element={<Register />}></Route>
         <Route path="/feed" element={<PostFeed />}></Route>
-        <Route path="/animals/browse" element={<AnimalDirectory />}></Route>
-        <Route path="/animals/:animalId" element={<AnimalDetail />}></Route>
-        <Route path="/organizations/:organizationId" element={<OrganizationPublicProfile />}></Route>
         {/* Authenticated setup flow */}
         <Route element={<ProtectedRoute />}>
           <Route path="/organization/register" element={<OrganizationRegistration />}></Route>
+        </Route>
+        {/* Authenticated browsing (any logged-in user) */}
+        <Route element={<ProtectedRoute />}>
+          <Route element={<DashboardLayout />}>
+            <Route path="/animals/browse" element={<AnimalDirectory />}></Route>
+            <Route path="/animals/:animalId" element={<AnimalDetail />}></Route>
+            <Route path="/organizations/:organizationId" element={<OrganizationPublicProfile />}></Route>
+          </Route>
         </Route>
         {/* Organization workspace */}
         <Route element={<ProtectedRoute />}>
