@@ -1,0 +1,77 @@
+.cases-map-shell {
+  height: 360px;
+  margin-top: 12px;
+}
+
+.cases-map-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.cases-map-pin-dot {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.45);
+}
+
+.cases-map-popup-status {
+  margin-top: 4px;
+  color: #6b7686;
+  font-size: 12px;
+  text-transform: capitalize;
+}
+
+.cases-map-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(9, 12, 20, 0.55);
+  z-index: 999;
+}
+
+.cases-map-card.is-fullscreen {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  bottom: 24px;
+  left: 24px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 60px rgba(8, 10, 20, 0.35);
+  overflow: auto;
+}
+
+.cases-map-card.is-fullscreen .cases-map-shell {
+  flex: 1;
+  height: auto;
+  min-height: 0;
+}
+
+.cases-map-card.is-fullscreen .cases-map {
+  height: 100%;
+}
+
+/* Keep the fixed left sidebar (268px) visible instead of covering it. */
+@media (min-width: 901px) {
+  .cases-map-card.is-fullscreen {
+    left: 292px;
+  }
+}
+
+@media (max-width: 720px) {
+  .cases-map-card.is-fullscreen {
+    top: 12px;
+    right: 12px;
+    bottom: 12px;
+    left: 12px;
+  }
+
+  .cases-map-shell {
+    height: 320px;
+  }
+}

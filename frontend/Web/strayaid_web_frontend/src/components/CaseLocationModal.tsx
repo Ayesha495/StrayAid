@@ -1,9 +1,10 @@
 import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 import L from "leaflet";
-import { X } from "lucide-react";
+import { MapPin, X } from "lucide-react";
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
+import { caseLabel } from "../utils/identifiers";
 
 const defaultIcon = L.icon({
   iconRetinaUrl: markerIcon2x,
@@ -26,9 +27,14 @@ function CaseLocationModal({ caseId, description, latitude, longitude, onClose }
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal-card case-location-modal" onClick={(event) => event.stopPropagation()}>
         <div className="modal-header">
-          <div>
-            <p className="modal-eyebrow">Case #R-{caseId}</p>
-            <h2>Case Location</h2>
+          <div className="cases-heading-row">
+            <span className="cases-heading-icon cases-heading-icon-blue">
+              <MapPin size={18} />
+            </span>
+            <div>
+              <p className="modal-eyebrow">{caseLabel(caseId)}</p>
+              <h2>Case Location</h2>
+            </div>
           </div>
           <button type="button" className="icon-btn" onClick={onClose} aria-label="Close map">
             <X size={18} />
@@ -42,7 +48,7 @@ function CaseLocationModal({ caseId, description, latitude, longitude, onClose }
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
             <Marker position={[latitude, longitude]} icon={defaultIcon}>
-              <Popup>Case #R-{caseId}</Popup>
+              <Popup>{caseLabel(caseId)}</Popup>
             </Marker>
           </MapContainer>
         </div>

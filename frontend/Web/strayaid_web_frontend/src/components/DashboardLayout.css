@@ -1,4 +1,5 @@
 .dashboard-shell {
+  --shell-pad: clamp(1rem, 0.6rem + 1.6vw, 2rem);
   position: relative;
   min-height: 100vh;
   background: #f5f6f8;
@@ -25,13 +26,17 @@
   padding: 20px 16px;
   background: linear-gradient(180deg, #12251d 0%, #1c3a2e 100%);
   color: #fff;
-  box-shadow: 0 24px 60px rgba(4, 8, 16, 0.35);
+  box-shadow: none;
   transform: translateX(-100%);
-  transition: transform 0.22s ease;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, visibility 0s linear 0.22s;
+  visibility: hidden;
   border-right: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .dashboard-shell.sidebar-open .dashboard-sidebar {
+  visibility: visible;
+  box-shadow: 0 24px 60px rgba(4, 8, 16, 0.35);
+  transition-delay: 0s;
   transform: translateX(0);
 }
 
@@ -168,7 +173,7 @@
 }
 
 .dashboard-content {
-  padding: 0 24px 24px;
+  padding: 0 var(--shell-pad) var(--shell-pad);
   transition: margin-left 0.22s ease;
 }
 
@@ -180,6 +185,8 @@
 
 .dashboard-content-body {
   padding-top: 20px;
+  max-width: 1680px;
+  margin-inline: auto;
 }
 
 .dashboard-topbar {
@@ -189,8 +196,8 @@
   display: flex;
   align-items: center;
   gap: 20px;
-  margin: 0 -24px;
-  padding: 16px 24px;
+  margin: 0 calc(var(--shell-pad) * -1);
+  padding: 16px var(--shell-pad);
   background: rgba(245, 246, 248, 0.92);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid #e6e8ec;
@@ -202,9 +209,11 @@
   gap: 8px;
   font-size: 15px;
   white-space: nowrap;
+  min-width: 0;
 }
 
 .dashboard-breadcrumb-brand {
+  flex-shrink: 0;
   font-weight: 800;
   color: #12151c;
 }
@@ -214,6 +223,9 @@
 }
 
 .dashboard-breadcrumb-current {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-weight: 600;
   color: #6b7686;
 }
@@ -276,30 +288,43 @@
     width: min(280px, calc(100vw - 24px));
   }
 
-  .dashboard-content {
-    padding: 0 16px 20px;
-  }
-
-  .dashboard-content-body {
-    padding-top: 20px;
-  }
-
+  /* Row 1: [menu] breadcrumb ... actions   Row 2: full-width search */
   .dashboard-topbar {
-    margin: 0 -16px;
-    padding: 16px 16px 16px 72px;
+    padding: 14px var(--shell-pad) 14px 72px;
     flex-wrap: wrap;
+    gap: 12px;
   }
 
   .dashboard-breadcrumb {
-    width: 100%;
+    flex: 1 1 0;
+    order: 1;
+  }
+
+  .dashboard-topbar-actions {
+    order: 2;
   }
 
   .dashboard-search {
+    order: 3;
+    flex: 1 1 100%;
     max-width: none;
   }
 
   .sidebar-reopen-btn {
-    top: 16px;
-    left: 16px;
+    top: 14px;
+    left: var(--shell-pad);
+  }
+}
+
+/* Phones: the section name is enough — drop the brand prefix */
+@media (max-width: 30rem) {
+  .dashboard-breadcrumb-brand,
+  .dashboard-breadcrumb-sep {
+    display: none;
+  }
+
+  .dashboard-breadcrumb-current {
+    color: #12151c;
+    font-weight: 700;
   }
 }

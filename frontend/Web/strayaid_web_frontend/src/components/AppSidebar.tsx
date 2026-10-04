@@ -16,21 +16,31 @@ function AppSidebar({ isCollapsed, isMobile, onToggle }: AppSidebarProps) {
   const currentUser = useCurrentUser();
   const isOrganization = currentUser?.role === "organization";
   const [organizationName, setOrganizationName] = useState<string | null>(null);
+  const [organizationId, setOrganizationId] = useState<number | null>(null);
 
   useEffect(() => {
     if (!isOrganization) {
       setOrganizationName(null);
+      setOrganizationId(null);
       return;
     }
 
     getOrganizationProfile()
-      .then((profile) => setOrganizationName(profile.name))
-      .catch(() => setOrganizationName(null));
+      .then((profile) => {
+        setOrganizationName(profile.name);
+        setOrganizationId(profile.id);
+      })
+      .catch(() => {
+        setOrganizationName(null);
+        setOrganizationId(null);
+      });
   }, [isOrganization]);
 
   const displayName = isOrganization
     ? (organizationName || "Organization Account")
     : (currentUser?.username || "Rescue Account");
+
+  const profileLink = organizationId ? `/organizations/${organizationId}` : "/organization/register";
 
   const handleLogout = () => {
     const shouldLogout = window.confirm("Are you sure you want to log out?");
@@ -50,7 +60,7 @@ function AppSidebar({ isCollapsed, isMobile, onToggle }: AppSidebarProps) {
   return (
     <aside className={`dashboard-sidebar${isCollapsed ? " is-collapsed" : ""}`}>
       <div className="dashboard-sidebar-top">
-        <Link to="/organization/register" className="dashboard-profile" title={displayName} onClick={handleLinkClick}>
+        <Link to={profileLink} className="dashboard-profile" title={displayName} onClick={handleLinkClick}>
           <span className="dashboard-profile-icon"><CircleUserRound size={22} /></span>
           <span className="dashboard-profile-name">{displayName}</span>
         </Link>
