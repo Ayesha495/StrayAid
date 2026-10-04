@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import { CalendarDays, PawPrint, ScanLine } from "lucide-react";
+import SafeImage from "./SafeImage";
 import type { Animal } from "../types/platform";
+import { animalLabel, caseLabel } from "../utils/identifiers";
 import "../styles/AnimalCard.css";
 
 const STATUS_RIBBON_CLASS: Record<string, string> = {
@@ -43,20 +45,24 @@ function AnimalCard({ animal, onStatusChange, footer, compact = false }: AnimalC
   return (
     <article className="am-animal-card">
       <div className="am-animal-media">
-        {animal.image ? (
-          <img src={animal.image} alt={animal.name} />
-        ) : (
-          <div className="am-media-placeholder"><PawPrint size={32} /></div>
-        )}
+        <SafeImage
+          src={animal.image}
+          alt={animal.name}
+          fallback={<PawPrint size={32} />}
+          fallbackClassName="am-media-placeholder"
+        />
         <span className={ribbonClass(animal.status)}>{formatStatusLabel(animal.status)}</span>
-        <span className="am-id-tag">#A-{animal.id}</span>
+        <span className="am-id-tag">{animalLabel(animal.id)}</span>
         <div className="am-media-overlay">
           <span className="am-media-overlay-stay"><CalendarDays size={12} /> Shelter Stay: {daysInCare(animal.created_at)} Days</span>
           {animal.microchip_id ? <span className="am-microchip-tag"><ScanLine size={11} /> Microchipped</span> : null}
         </div>
       </div>
       <div className="am-animal-body">
-        <h3>{animal.name}</h3>
+        <div className="am-name-row">
+          <h3>{animal.name}</h3>
+          <span className="am-case-tag">{caseLabel(animal.case_id)}</span>
+        </div>
         <p className="am-animal-breed">{animal.breed || animal.species || "Breed unknown"}</p>
         <p className="am-animal-desc">{animal.description || "No public description yet."}</p>
         {compact ? null : (

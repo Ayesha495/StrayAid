@@ -30,7 +30,7 @@ function PostFeed() {
             posts={posts}
             selectedAnimal={selectedAnimal}
             onSelectAnimal={setSelectedAnimal}
-            action={<Link className="primary-btn" to="/organization/register">Register As An Organization</Link>}
+            action={<Link className="btn btn-primary" to="/organization/register">Register As An Organization</Link>}
           />
       </AuthenticatedShell>
     );
@@ -43,7 +43,7 @@ function PostFeed() {
       selectedAnimal={selectedAnimal}
       onSelectAnimal={setSelectedAnimal}
       action={(
-        <Link className="primary-btn" to="/login">Login To Help</Link>
+        <Link className="btn btn-primary" to="/login">Login To Help</Link>
       )}
     />
   );

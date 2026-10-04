@@ -20,7 +20,7 @@ function OrganizationFeed() {
       posts={posts}
       selectedAnimal={selectedAnimal}
       onSelectAnimal={setSelectedAnimal}
-      action={<Link className="primary-btn" to="/dashboard">Back To Dashboard</Link>}
+      action={<Link className="btn btn-secondary" to="/dashboard">Back To Dashboard</Link>}
     />
   );
 }
