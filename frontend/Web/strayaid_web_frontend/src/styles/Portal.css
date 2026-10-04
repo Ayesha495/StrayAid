@@ -287,6 +287,9 @@
 }
 
 .icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: none;
   border-radius: 999px;
   width: 40px;
@@ -295,6 +298,7 @@
   color: #33404f;
   font-weight: 700;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 .sponsor-chip {
@@ -461,6 +465,14 @@
   line-height: 1.7;
   color: #33404f;
   white-space: pre-wrap;
+}
+
+.case-location-map-shell {
+  margin-top: 16px;
+}
+
+.case-location-map-shell .location-map {
+  height: 280px;
 }
 
 @media (max-width: 900px) {
