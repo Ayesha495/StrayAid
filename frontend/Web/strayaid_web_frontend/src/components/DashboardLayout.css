@@ -42,72 +42,49 @@
   gap: 12px;
 }
 
-.dashboard-brand {
+.dashboard-profile {
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
+  flex: 1;
+  padding: 11px 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
   color: #fff;
 }
 
-.dashboard-brand-icon {
+.dashboard-profile:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.dashboard-profile-icon {
   display: inline-grid;
   place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #2f6fed 0%, #4fd1c5 100%);
   color: #fff;
   flex-shrink: 0;
 }
 
-.dashboard-brand-text {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.2;
-}
-
-.dashboard-brand-full {
-  font-size: 18px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
+.dashboard-profile-name {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
   color: #fff;
-}
-
-.dashboard-brand-sub {
-  font-size: 12px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.55);
-}
-
-.dashboard-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.dashboard-user-card {
-  display: grid;
-  gap: 4px;
-  padding: 14px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.dashboard-user-card strong {
-  font-size: 14px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.dashboard-user-card span {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: #7fd6c4;
-  font-size: 12px;
-  font-weight: 600;
+.dashboard-sidebar-separator {
+  height: 1px;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.dashboard-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .dashboard-nav a {
@@ -121,43 +98,8 @@
   font-size: 14px;
 }
 
-.dashboard-nav a span:not(.dashboard-nav-badge) {
+.dashboard-nav a span {
   flex: 1;
-}
-
-.dashboard-nav-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.14);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.dashboard-nav a.active .dashboard-nav-badge,
-.dashboard-nav a:hover .dashboard-nav-badge {
-  background: #1c3a2e;
-  color: #fff;
-}
-
-.dashboard-nav-section {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.dashboard-nav-section-label {
-  padding: 0 14px;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: rgba(255, 255, 255, 0.4);
 }
 
 .sidebar-toggle-btn,

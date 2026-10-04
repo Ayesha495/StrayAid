@@ -36,9 +36,10 @@ type AnimalCardProps = {
   animal: Animal;
   onStatusChange?: (animalId: number, status: string) => void;
   footer: ReactNode;
+  compact?: boolean;
 };
 
-function AnimalCard({ animal, onStatusChange, footer }: AnimalCardProps) {
+function AnimalCard({ animal, onStatusChange, footer, compact = false }: AnimalCardProps) {
   return (
     <article className="am-animal-card">
       <div className="am-animal-media">
@@ -58,28 +59,30 @@ function AnimalCard({ animal, onStatusChange, footer }: AnimalCardProps) {
         <h3>{animal.name}</h3>
         <p className="am-animal-breed">{animal.breed || animal.species || "Breed unknown"}</p>
         <p className="am-animal-desc">{animal.description || "No public description yet."}</p>
-        <div className="am-lifecycle-row">
-          {LIFECYCLE_STEPS.map((step) => {
-            const isActive = animal.status === step.value;
-            const className = `am-lifecycle-pill${isActive ? " is-active" : ""}`;
+        {compact ? null : (
+          <div className="am-lifecycle-row">
+            {LIFECYCLE_STEPS.map((step) => {
+              const isActive = animal.status === step.value;
+              const className = `am-lifecycle-pill${isActive ? " is-active" : ""}`;
 
-            if (!onStatusChange) {
-              return <span key={step.value} className={className}>{step.label}</span>;
-            }
+              if (!onStatusChange) {
+                return <span key={step.value} className={className}>{step.label}</span>;
+              }
 
-            return (
-              <button
-                key={step.value}
-                type="button"
-                className={className}
-                onClick={() => onStatusChange(animal.id, step.value)}
-                disabled={isActive}
-              >
-                {step.label}
-              </button>
-            );
-          })}
-        </div>
+              return (
+                <button
+                  key={step.value}
+                  type="button"
+                  className={className}
+                  onClick={() => onStatusChange(animal.id, step.value)}
+                  disabled={isActive}
+                >
+                  {step.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
         {footer}
       </div>
     </article>
