@@ -12,7 +12,7 @@
 
 .overview-header h1 {
   margin: 0;
-  font-size: 32px;
+  font-size: var(--text-2xl);
   font-weight: 800;
   color: #12151c;
 }
@@ -29,52 +29,40 @@
   flex-wrap: wrap;
 }
 
-.overview-btn-outline,
-.overview-btn-filled {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  border-radius: 10px;
-  padding: 11px 18px;
-  font-weight: 700;
-  font-size: 14px;
-  border: none;
-  white-space: nowrap;
-}
-
-.overview-btn-outline {
-  background: #fff;
-  color: #12151c;
-  border: 1px solid #d9dce2;
-}
-
-.overview-btn-filled {
-  background: #1c3a2e;
-  color: #fff;
-}
-
-.overview-btn-filled:disabled {
-  opacity: 0.65;
-  cursor: default;
-}
-
+/* Layout is driven by available width (flex-wrap + minmax), not viewport
+   breakpoints, so it holds up under browser zoom and with the sidebar open. */
 .overview-stats-row {
-  display: grid;
-  grid-template-columns: 23% 77%;
+  container-type: inline-size;
+  display: flex;
+  flex-wrap: wrap;
   gap: 14px;
   align-items: stretch;
 }
 
+.overview-stats-row > * {
+  min-width: 0;
+}
+
 .overview-stats {
+  flex: 1 1 19rem;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-rows: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: 1fr;
   gap: 12px;
 }
 
+/* Stats and charts side by side need ~55rem. Below that the charts wrap
+   underneath and the stats get a full row of their own: spread them out. */
+@container (max-width: 55.9rem) {
+  .overview-stats {
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  }
+}
+
 .stat-card {
+  min-width: 0;
   padding: 14px;
-  min-height: 132px;
+  min-height: 8rem;
   border-radius: 16px;
   background: #fff;
   border: 1px solid #e6e8ec;
@@ -103,6 +91,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px 8px;
 }
 
 .stat-tag {
@@ -149,7 +139,7 @@
 }
 
 .stat-card strong {
-  font-size: 26px;
+  font-size: clamp(1.4rem, 1.15rem + 0.9vw, 1.7rem);
   font-weight: 800;
   color: #12151c;
 }
@@ -158,30 +148,46 @@
   color: #6b7686;
   font-size: 13px;
   font-weight: 600;
+  overflow-wrap: anywhere;
 }
 
 .overview-chart-col {
-  display: grid;
-  grid-template-columns: 0.42fr 0.58fr;
+  flex: 3 1 36rem;
+  display: flex;
+  flex-wrap: wrap;
   gap: 14px;
+}
+
+.overview-chart-col > * {
   min-width: 0;
 }
 
 .overview-ring-card {
+  flex: 1 1 20rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 0;
 }
 
 .overview-trend-card {
-  min-width: 0;
+  flex: 1.4 1 20rem;
 }
 
+/* Ring on the left with its legend beside it; when the card is too narrow
+   the legend drops underneath as a 2-up grid instead of overflowing. */
 .ring-chart {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 20px;
+  justify-content: center;
+  gap: 16px 24px;
+  width: 100%;
+}
+
+.ring-chart > svg {
+  flex: 0 1 auto;
+  width: min(200px, 100%);
+  height: auto;
 }
 
 .ring-center-value {
@@ -199,10 +205,12 @@
 }
 
 .ring-badge-row {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  flex: 1 1 7.5rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+  gap: 12px 16px;
   min-width: 0;
+  max-width: 100%;
 }
 
 .ring-badge {
@@ -241,11 +249,17 @@
   font-size: 12px;
   font-weight: 600;
   color: #6b7686;
-  white-space: nowrap;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .trend-chart {
   width: 100%;
+  min-width: 0;
+}
+
+.trend-chart svg {
+  display: block;
 }
 
 .trend-legend {
@@ -279,10 +293,19 @@
 
 
 .overview-split {
-  display: grid;
-  grid-template-columns: 1.5fr 1fr;
+  display: flex;
+  flex-wrap: wrap;
   gap: 14px;
-  align-items: start;
+  align-items: flex-start;
+}
+
+.overview-split > * {
+  flex: 2 1 20rem;
+  min-width: 0;
+}
+
+.overview-split > .overview-rescue-board {
+  flex: 3 1 28rem;
 }
 
 .overview-rescue-board .section-heading {
@@ -305,8 +328,10 @@
 
 .rescue-case-card {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 14px;
+  gap: 12px 14px;
+  min-width: 0;
   border: 1px solid #e6e8ec;
   border-radius: 14px;
   padding: 14px;
@@ -356,7 +381,7 @@
 }
 
 .rescue-case-content {
-  flex: 1;
+  flex: 1 1 14rem;
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -376,33 +401,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-shrink: 0;
-}
-
-.rescue-case-actions .overview-btn-filled {
-  justify-content: center;
-  padding: 10px 14px;
-  white-space: nowrap;
-}
-
-@media (max-width: 720px) {
-  .rescue-case-card {
-    flex-wrap: wrap;
-  }
-
-  .rescue-case-content {
-    order: 1;
-    width: 100%;
-  }
-
-  .rescue-case-actions {
-    order: 2;
-    width: 100%;
-  }
-
-  .rescue-case-actions .overview-btn-filled {
-    flex: 1;
-  }
+  flex: 0 0 auto;
+  margin-left: auto;
 }
 
 .activity-tabs {
@@ -478,22 +478,3 @@
   color: #b45309;
 }
 
-@media (max-width: 1180px) {
-  .overview-stats-row {
-    grid-template-columns: 1fr;
-  }
-
-  .overview-chart-col {
-    grid-template-columns: 1fr;
-  }
-
-  .overview-split {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 560px) {
-  .overview-stats {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}

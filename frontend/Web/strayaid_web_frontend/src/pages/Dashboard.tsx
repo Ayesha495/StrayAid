@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Activity,
@@ -17,8 +17,10 @@ import AnimalCard from "../components/AnimalCard";
 import ConcentricRingChart from "../components/ConcentricRingChart";
 import CasesTrendChart from "../components/CasesTrendChart";
 import CaseLocationModal from "../components/CaseLocationModal";
+import CasesMap from "../components/CasesMap";
 import { acceptCase, getCases, getDashboard, getOrganizationAnimals, getOrganizationProfile } from "../services/platformService";
 import type { Animal, Case, DashboardData } from "../types/platform";
+import { caseLabel } from "../utils/identifiers";
 import { formatRelativeTime, minutesSince } from "../utils/time";
 import "../styles/Portal.css";
 import "../styles/Dashboard.css";
@@ -38,6 +40,7 @@ function Dashboard() {
   const [cases, setCases] = useState<Case[]>([]);
   const [animals, setAnimals] = useState<Animal[]>([]);
   const [animalPreviewCount, setAnimalPreviewCount] = useState(4);
+  const underCareGridRef = useRef<HTMLDivElement>(null);
   const [needsProfile, setNeedsProfile] = useState(false);
   const [acceptingId, setAcceptingId] = useState<number | null>(null);
   const [activityFilter, setActivityFilter] = useState<ActivityFilter>("all");
@@ -57,15 +60,21 @@ function Dashboard() {
     getOrganizationAnimals().then(setAnimals).catch(() => setAnimals([]));
   }, []);
 
+  // Show one full row of animal cards: match however many columns the grid
+  // currently fits (it changes with window size, browser zoom and the sidebar).
   useEffect(() => {
-    const syncAnimalPreviewCount = () => {
-      setAnimalPreviewCount(window.innerWidth >= 1360 ? 4 : 3);
+    const grid = underCareGridRef.current;
+    if (!grid || typeof ResizeObserver === "undefined") {
+      return;
+    }
+    const syncPreviewCount = () => {
+      const columns = getComputedStyle(grid).gridTemplateColumns.split(" ").filter(Boolean).length;
+      setAnimalPreviewCount(Math.max(2, columns));
     };
-
-    syncAnimalPreviewCount();
-    window.addEventListener("resize", syncAnimalPreviewCount);
-    return () => window.removeEventListener("resize", syncAnimalPreviewCount);
-  }, []);
+    const observer = new ResizeObserver(syncPreviewCount);
+    observer.observe(grid);
+    return () => observer.disconnect();
+  }, [needsProfile]);
 
   const reportedCount = useMemo(() => cases.filter((caseItem) => caseItem.status === "reported").length, [cases]);
 
@@ -178,7 +187,7 @@ function Dashboard() {
         <div className="empty-state">
           <h1>Complete your organization profile first</h1>
           <p>Your dashboard unlocks once your rescue organization details are saved.</p>
-          <Link className="primary-btn" to="/organization/register">Create Organization Profile</Link>
+          <Link className="btn btn-primary" to="/organization/register">Create Organization Profile</Link>
         </div>
       </div>
     );
@@ -192,10 +201,10 @@ function Dashboard() {
           <p className="overview-subtitle">Here's what's happening today in your operational area.</p>
         </div>
         <div className="overview-actions">
-          <button className="overview-btn-outline" type="button" onClick={handleExportReport}>
+          <button className="btn btn-secondary" type="button" onClick={handleExportReport}>
             <Download size={16} /> Export Report
           </button>
-          <Link className="overview-btn-filled" to="/animals/manage">
+          <Link className="btn btn-primary" to="/animals/manage">
             <Plus size={16} /> New Entry
           </Link>
         </div>
@@ -254,7 +263,7 @@ function Dashboard() {
             <div className="panel-card overview-trend-card">
               <div className="section-heading">
                 <div>
-                  <h2>Case Activity</h2>
+                  <h2>Case Activity Trend</h2>
                   <p className="meta-line">Reported, active, rescued, and adopted &middot; last 14 days.</p>
                 </div>
               </div>
@@ -268,10 +277,10 @@ function Dashboard() {
         <section className="panel-card overview-rescue-board">
           <div className="section-heading">
             <div>
-              <h2>Active Rescue Board</h2>
+              <h2>Pending Rescue Requests</h2>
               <p className="meta-line">Unclaimed reports waiting for a response, oldest first.</p>
             </div>
-            <Link className="inline-link" to="/cases">View All &gt;</Link>
+            <Link className="link" to="/cases">View All &gt;</Link>
           </div>
 
           {openRescueCases.length ? (
@@ -297,7 +306,7 @@ function Dashboard() {
                   >
                     <div className="rescue-case-content">
                       <div className="rescue-case-id-row">
-                        <span className="rescue-case-number">Case #R-{caseItem.id}</span>
+                        <span className="rescue-case-number">{caseLabel(caseItem.id)}</span>
                         <span className={`priority-badge ${isHighPriority ? "priority-high" : "priority-medium"}`}>
                           {isHighPriority ? "High" : "Medium"}
                         </span>
@@ -321,7 +330,7 @@ function Dashboard() {
                         <MapPin size={18} />
                       </button>
                       <button
-                        className="overview-btn-filled"
+                        className="btn btn-primary"
                         type="button"
                         disabled={acceptingId === caseItem.id}
                         onClick={(event) => {
@@ -341,45 +350,47 @@ function Dashboard() {
           )}
         </section>
 
-        <section className="panel-card overview-activity">
-          <div className="section-heading">
-            <h2>Recent Activity</h2>
-          </div>
-          <div className="activity-tabs">
-            {(["all", "rescues", "updates"] as ActivityFilter[]).map((tab) => (
-              <button
-                key={tab}
-                type="button"
-                className={`activity-tab${activityFilter === tab ? " is-active" : ""}`}
-                onClick={() => setActivityFilter(tab)}
-              >
-                {tab === "all" ? "All" : tab === "rescues" ? "Rescues" : "Updates"}
-              </button>
-            ))}
-          </div>
-          <div className="activity-list">
-            {activityItems.length ? activityItems.map((caseItem) => {
-              const isRescued = caseItem.status === "rescued";
-              const isInProgress = ["assigned", "in_progress"].includes(caseItem.status);
-              const Icon = isRescued ? CheckCircle2 : isInProgress ? UserPlus : FileText;
-
-              return (
-                <div className="activity-item" key={caseItem.id}>
-                  <span className={`activity-icon ${isRescued ? "activity-icon-success" : isInProgress ? "activity-icon-info" : "activity-icon-warn"}`}>
-                    <Icon size={14} />
-                  </span>
-                  <div>
-                    <p className="activity-text">
-                      Case #R-{caseItem.id} {isRescued ? "marked as Rescued" : isInProgress ? "is in progress" : `filed as ${caseItem.status}`}
-                    </p>
-                    <p className="meta-line">{formatRelativeTime(caseItem.updated_at)} &middot; {caseItem.organization?.name || "Unassigned"}</p>
-                  </div>
-                </div>
-              );
-            }) : <div className="empty-state compact-state">No recent activity yet.</div>}
-          </div>
-        </section>
+        <CasesMap cases={cases} compact />
       </div>
+
+      <section className="panel-card overview-activity">
+        <div className="section-heading">
+          <h2>Recent Activity</h2>
+        </div>
+        <div className="activity-tabs">
+          {(["all", "rescues", "updates"] as ActivityFilter[]).map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              className={`activity-tab${activityFilter === tab ? " is-active" : ""}`}
+              onClick={() => setActivityFilter(tab)}
+            >
+              {tab === "all" ? "All" : tab === "rescues" ? "Rescues" : "Updates"}
+            </button>
+          ))}
+        </div>
+        <div className="activity-list">
+          {activityItems.length ? activityItems.map((caseItem) => {
+            const isRescued = caseItem.status === "rescued";
+            const isInProgress = ["assigned", "in_progress"].includes(caseItem.status);
+            const Icon = isRescued ? CheckCircle2 : isInProgress ? UserPlus : FileText;
+
+            return (
+              <div className="activity-item" key={caseItem.id}>
+                <span className={`activity-icon ${isRescued ? "activity-icon-success" : isInProgress ? "activity-icon-info" : "activity-icon-warn"}`}>
+                  <Icon size={14} />
+                </span>
+                <div>
+                  <p className="activity-text">
+                    {caseLabel(caseItem.id)} {isRescued ? "marked as Rescued" : isInProgress ? "is in progress" : `filed as ${caseItem.status}`}
+                  </p>
+                  <p className="meta-line">{formatRelativeTime(caseItem.updated_at)} &middot; {caseItem.organization?.name || "Unassigned"}</p>
+                </div>
+              </div>
+            );
+          }) : <div className="empty-state compact-state">No recent activity yet.</div>}
+        </div>
+      </section>
 
       <section className="panel-card">
         <div className="section-heading">
@@ -387,9 +398,9 @@ function Dashboard() {
             <h2>Animals Under Care</h2>
             <p className="meta-line">Rescued, recovering, and adoptable animals currently with your organization.</p>
           </div>
-          <Link className="inline-link" to="/dashboard/workflow/under-care">Show More Animals &gt;</Link>
+          <Link className="link" to="/dashboard/workflow/under-care">Show More Animals &gt;</Link>
         </div>
-        <div className="under-care-grid">
+        <div className="under-care-grid" ref={underCareGridRef}>
           {visibleAnimals.length ? visibleAnimals.map((animal) => (
             <AnimalCard
               key={animal.id}
