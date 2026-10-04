@@ -3,6 +3,19 @@ from django.db import models
 
 class Post(models.Model):
     # Posts are public-facing updates tied back to a rescued animal.
+    CATEGORY_MEDICAL = "medical"
+    CATEGORY_ADOPTION = "adoption"
+    CATEGORY_SPONSORSHIP = "sponsorship"
+    CATEGORY_FOSTER = "foster"
+
+    CATEGORY_CHOICES = [
+        (CATEGORY_MEDICAL, "Medical Recovery"),
+        (CATEGORY_ADOPTION, "Adoption Ready"),
+        (CATEGORY_SPONSORSHIP, "Sponsorship Goal"),
+        (CATEGORY_FOSTER, "Foster Found"),
+    ]
+
+    category = models.CharField(max_length=30, choices=CATEGORY_CHOICES, blank=True)
     animal = models.ForeignKey(
         "animals.Animal",
         on_delete=models.CASCADE,

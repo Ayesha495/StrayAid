@@ -17,6 +17,7 @@ class PostSerializer(serializers.ModelSerializer):
             "organization",
             "title",
             "content",
+            "category",
             "image",
             "created_at",
             "updated_at",
