@@ -126,6 +126,29 @@
   color: #12151c;
 }
 
+.am-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.am-name-row h3 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.am-case-tag {
+  flex-shrink: 0;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #eef1f5;
+  color: #536172;
+  font-size: 11px;
+  font-weight: 700;
+}
+
 .am-animal-breed {
   margin: 0;
   font-size: 12px;
@@ -183,7 +206,7 @@ span.am-lifecycle-pill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: #2563eb;
+  color: var(--color-accent-700);
   font-weight: 700;
   font-size: 13px;
   text-decoration: none;

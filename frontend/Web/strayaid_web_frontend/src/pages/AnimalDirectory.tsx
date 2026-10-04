@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import AnimalCard from "../components/AnimalCard";
 import { getPublicAnimals, getPublicOrganization } from "../services/platformService";
 import type { Animal, Organization } from "../types/platform";
 import "../styles/Portal.css";
@@ -57,13 +58,13 @@ function AnimalDirectory() {
     : "Browse the full public directory of animal profiles shared across StrayAid.";
 
   return (
-    <div className="portal-page" style={{ padding: "32px" }}>
+    <div className="portal-page">
       <div className="portal-header">
         <div>
           <h1>{title}</h1>
           <p>{copy}</p>
         </div>
-        <Link className="secondary-btn" to={organization ? `/organizations/${organization.id}` : "/feed"}>
+        <Link className="btn btn-secondary" to={organization ? `/organizations/${organization.id}` : "/feed"}>
           {organization ? "Back To Organization" : "Back To Feed"}
         </Link>
       </div>
@@ -81,28 +82,30 @@ function AnimalDirectory() {
 
         <div className="card-grid">
           {visibleAnimals.length ? visibleAnimals.map((animal) => (
-            <article className="animal-card" key={animal.id}>
-              {animal.image ? <img className="card-media" src={animal.image} alt={animal.name} /> : null}
-              <span className="badge">{animal.status}</span>
-              <h3>{animal.name}</h3>
-              <p>
-                <Link className="inline-link" to={`/organizations/${animal.organization.id}`}>
-                  {animal.organization.name}
-                </Link>
-              </p>
-              <p>{animal.description || "No public description has been shared yet."}</p>
-              <div className="feed-actions">
-                <Link className="secondary-btn" to={`/animals/${animal.id}`}>View Profile</Link>
-                <Link className="secondary-btn" to={`/organizations/${animal.organization.id}`}>View Organization</Link>
-              </div>
-            </article>
+            <AnimalCard
+              key={animal.id}
+              animal={animal}
+              footer={
+                <>
+                  <p className="meta-line">
+                    <Link className="link" to={`/organizations/${animal.organization.id}`}>
+                      {animal.organization.name}
+                    </Link>
+                  </p>
+                  <div className="feed-actions">
+                    <Link className="btn btn-secondary" to={`/animals/${animal.id}`}>View Profile</Link>
+                    <Link className="btn btn-secondary" to={`/organizations/${animal.organization.id}`}>View Organization</Link>
+                  </div>
+                </>
+              }
+            />
           )) : <div className="empty-state">No public animal profiles are available right now.</div>}
         </div>
 
         {animals.length > ANIMALS_PER_PAGE ? (
           <div className="pagination-bar">
             <button
-              className="secondary-btn"
+              className="btn btn-secondary"
               type="button"
               disabled={safePage <= 1}
               onClick={() => handlePageChange(safePage - 1)}
@@ -111,7 +114,7 @@ function AnimalDirectory() {
             </button>
             <span className="meta-line">Showing page {safePage} of {totalPages}</span>
             <button
-              className="secondary-btn"
+              className="btn btn-secondary"
               type="button"
               disabled={safePage >= totalPages}
               onClick={() => handlePageChange(safePage + 1)}
