@@ -27,6 +27,8 @@ class Organization(models.Model):
     bank_name = models.CharField(max_length=255, blank=True)
     bank_account_title = models.CharField(max_length=255, blank=True)
     bank_account_number = models.CharField(max_length=100, blank=True)
+    tax_id = models.CharField(max_length=100, blank=True)
+    payment_notes = models.CharField(max_length=255, blank=True)
 
     class Meta:
         ordering = ["name"]
