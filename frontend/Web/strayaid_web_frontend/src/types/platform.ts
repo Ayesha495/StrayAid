@@ -14,6 +14,9 @@ export interface Organization {
   bank_name?: string;
   bank_account_title?: string;
   bank_account_number?: string;
+  tax_id?: string;
+  payment_notes?: string;
+  is_verified?: boolean;
   user_email?: string;
   user_username?: string;
 }
@@ -57,7 +60,12 @@ export interface Case {
 export interface Animal {
   id: number;
   name: string;
+  species?: string;
   breed: string;
+  gender?: string;
+  age?: number | null;
+  color?: string;
+  microchip_id?: string;
   description: string;
   medical_info: string;
   donation_info: DonationInfo | null;
@@ -70,12 +78,16 @@ export interface Animal {
   created_at: string;
 }
 
+export type PostCategory = "medical" | "adoption" | "sponsorship" | "foster" | "";
+
 export interface Post {
   id: number;
   title: string;
   content: string;
+  category?: PostCategory;
   image: string | null;
   created_at: string;
+  updated_at?: string;
   animal: Animal;
   organization: Organization;
 }
