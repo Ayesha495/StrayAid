@@ -1,72 +1,77 @@
-.about-section {
-  padding: 6rem 2rem;
-  background: #ffffff; /* Clean white background */
+.about-intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: var(--space-7);
+  align-items: center;
+  margin-bottom: var(--space-7);
 }
 
-.about-container {
-  max-width: 1200px;
-  margin: 0 auto;
+.about-intro-text .eyebrow-pill {
+  margin-bottom: var(--space-4);
 }
 
-.about-header {
-  text-align: center;
-  margin-bottom: 4rem;
+.about-intro-text .lp-section-title {
+  margin-bottom: var(--space-4);
 }
 
-/* Heading updated to your specific color */
-.about-header h2 {
-  font-size: 2.5rem;
-  color: #1E6F9F; 
-  margin-bottom: 1rem;
-  font-weight: 700;
+.about-intro-text .lp-section-lead {
+  max-width: 30rem;
 }
 
-.about-header p {
-  font-size: 1.2rem;
-  color: #666;
-  max-width: 700px;
-  margin: 0 auto;
+.about-intro-image img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  max-height: 22rem;
+  object-fit: cover;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--lp-border);
+  box-shadow: var(--lp-card-shadow);
 }
 
+/* 1 column on phones, 2 (last card spanning) on tablets, 3 on desktop */
 .about-content {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-5);
 }
 
-/* Card design with the requested aesthetic */
-.about-card {
-  background: #f0f7fb; /* Light blue tint for depth */
-  padding: 2.5rem;
-  border-radius: 15px;
-  text-align: center;
-  border: 1px solid #d1e4f0;
-  transition: all 0.3s ease;
+@media (min-width: 36rem) {
+  .about-content {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .about-content > :last-child {
+    grid-column: 1 / -1;
+  }
 }
 
-/* Hover effect with the primary color glow */
-.about-card:hover {
-  transform: translateY(-10px);
-  background: #ffffff;
-  border-color: #1E6F9F;
-  /* Glow effect using 1E6F9F */
-  box-shadow: 0 15px 30px rgba(30, 111, 159, 0.2);
+@media (min-width: 60rem) {
+  .about-content {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .about-content > :last-child {
+    grid-column: auto;
+  }
 }
 
-.about-icon {
-  font-size: 3rem;
-  margin-bottom: 1.5rem;
-  display: block;
-}
+@media (max-width: 56rem) {
+  .about-intro {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-5);
+  }
 
-.about-card h3 {
-  font-size: 1.5rem;
-  color: #1E6F9F; /* Card titles in your brand color */
-  margin-bottom: 1rem;
-  font-weight: 600;
-}
+  .about-intro-image {
+    order: -1;
+  }
 
-.about-card p {
-  color: #556b78;
-  line-height: 1.6;
+  .about-intro-image img {
+    aspect-ratio: 16 / 9;
+    max-height: 18rem;
+  }
+
+  .about-intro-text .lp-section-lead {
+    max-width: none;
+  }
 }

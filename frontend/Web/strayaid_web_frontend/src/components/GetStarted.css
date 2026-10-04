@@ -1,96 +1,95 @@
-.getstarted-section {
-  padding: 6rem 2rem;
-  background: #1E6F9F;
-  position: relative;
-  overflow: hidden;
-}
-
-.getstarted-container {
-  max-width: 1200px;
-  margin: 0 auto;
+.getstarted-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
 }
 
-.getstarted-content {
-  color: white;
+.getstarted-content .getstarted-eyebrow {
+  background: var(--color-brand-700);
+  border: 1px solid #33604d;
+  color: #d1fae5;
+  margin-bottom: var(--space-4);
 }
 
-.getstarted-content h2 {
-  font-size: 2.5rem;
-  margin-bottom: 1rem; /* Tightened space above description */
+.getstarted-content .lp-section-title {
+  margin-bottom: var(--space-3);
+  color: #ffffff;
 }
 
-/* Forces the two-liner alignment and manages vertical gaps */
-.getstarted-description {
-  font-size: 1.2rem;
-  line-height: 1.6;
-  opacity: 0.95;
-  max-width: 600px; /* Adjust this to control exactly where the line breaks */
-  margin: 0 auto 2.5rem auto; /* Centers text and creates gap above buttons */
+.getstarted-content .lp-section-lead {
+  max-width: 35rem;
+  margin-bottom: var(--space-6);
+  color: rgba(255, 255, 255, 0.82);
 }
 
 .getstarted-buttons {
   display: flex;
-  gap: 1rem;
+  flex-wrap: wrap;
+  gap: var(--space-3);
   justify-content: center;
-  margin-bottom: 2.5rem; /* Symmetry: Same gap below buttons as above them */
+  margin-bottom: var(--space-7);
 }
 
-.btn-getstarted,
-.btn-contact {
-  padding: 1rem 2rem;
-  font-size: 1rem;
-  font-weight: 600;
-  border-radius: 50px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.btn-getstarted {
-  background: white;
-  color: #1E6F9F;
-  border: none;
-}
-
-.btn-getstarted:hover {
-  transform: translateY(-5px);
-  background-color: #ffffff;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-}
-
-.btn-contact {
-  background: transparent;
-  color: white;
-  border: 2px solid white;
-}
-
-.btn-contact:hover {
-  background: white;
-  color: #1E6F9F;
-  transform: translateY(-5px);
-}
-
-.stats {
+.gs-stats {
   display: flex;
-  justify-content: space-around;
-  gap: 2rem;
-  margin-top: 2rem;
-  padding-top: 2rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1); /* Optional: defines the stats area better */
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  width: 100%;
 }
 
-.stat h3 {
-  font-size: 2rem;
-  margin-bottom: 0.5rem;
+/* Solid chips on the brand band (no translucency or blur) */
+.gs-stat {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: min(100%, 12rem);
+  padding: var(--space-4) var(--space-5);
+  border-radius: 16px;
+  background: var(--color-brand-700);
+  border: 1px solid #33604d;
+  text-align: left;
 }
 
-@media (max-width: 768px) {
+.gs-stat-icon {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: var(--radius-md);
+  background: var(--color-brand-800);
+  color: #d1fae5;
+}
+
+.gs-stat h3 {
+  margin: 0;
+  font-size: var(--text-xl);
+  line-height: 1.1;
+  color: #fff;
+}
+
+.gs-stat p {
+  margin: 2px 0 0;
+  font-size: var(--text-xs);
+  color: rgba(255, 255, 255, 0.72);
+}
+
+@media (max-width: 48rem) {
   .getstarted-buttons {
     flex-direction: column;
-    align-items: center;
+    align-items: stretch;
+    width: 100%;
+    max-width: 22rem;
   }
-  .stats {
+
+  .getstarted-buttons .btn {
+    justify-content: center;
+  }
+
+  .gs-stats {
     flex-direction: column;
-    gap: 3rem;
+    align-items: stretch;
   }
 }
