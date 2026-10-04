@@ -1,6 +1,7 @@
 import React from 'react';
+import { ShieldCheck, Sparkles } from 'lucide-react';
 import './Hero.css';
-import '../assets/Group1.jpg'; // Ensure you have an image at this path or update accordingly
+import heroImage from '../assets/1.jpg';
 
 interface HeroProps {
   scrollToSection: (sectionId: string) => void;
@@ -13,33 +14,45 @@ const Hero: React.FC<HeroProps> = ({ onLogin, onSignup }) => {
     <section id="home" className="hero-section">
       <div className="hero-container">
         <div className="hero-content">
-          <div className="header-text-container">
-            <h1 className="hero-title animate-text">
-              Manage. Protect.
-              <br />
-              Transform Lives.
-            </h1>
-            <div className="hero-divider animate-text"></div>
-          </div>
-          
+          <span className="eyebrow-pill animate-text">
+            <Sparkles size={13} /> Stray Welfare, Organized
+          </span>
+
+          <h1 className="hero-title animate-text">
+            Manage. <em>Protect.</em>
+            <br />
+            Transform Lives.
+          </h1>
+
           <p className="hero-description animate-text">
-            A smarter way to manage stray animal welfare. Track cases, 
+            A smarter way to manage stray animal welfare. Track cases,
             coordinate teams, and take action faster for a better world.
           </p>
-          
+
           <div className="hero-buttons animate-text">
-            <button className="btn-login-hero" onClick={onLogin}>
-              Login
-            </button>
-            <button className="btn-signup-hero" onClick={onSignup}>
+            <button className="btn btn-primary" onClick={onSignup}>
               Sign Up
             </button>
+            <button className="btn btn-secondary" onClick={onLogin}>
+              Login
+            </button>
+          </div>
+
+          <div className="hero-trust animate-text">
+            <div className="hero-trust-icon">
+              <ShieldCheck size={16} />
+            </div>
+            <p>
+              Trusted by rescue organizations and volunteers <br />
+              working together across the community.
+            </p>
           </div>
         </div>
-        
+
         <div className="hero-image-side">
-          <div className="hero-full-bg"></div>
-          <img src="../assets/Group1.jpg" alt="Hero" className="hero-image" />
+          <div className="hero-image-frame">
+            <img src={heroImage} alt="Volunteer caring for a rescued dog" className="hero-image" />
+          </div>
         </div>
       </div>
     </section>

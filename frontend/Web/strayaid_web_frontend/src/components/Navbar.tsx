@@ -48,18 +48,24 @@ const Navbar: React.FC<NavbarProps> = ({
           </ul>
 
           <div className="nav-buttons">
-            <button className="btn-login" onClick={onLogin}>
+            <button className="btn btn-sm btn-secondary" onClick={onLogin}>
               Login
             </button>
-            <button className="btn-signup" onClick={onSignup}>
+            <button className="btn btn-sm btn-primary" onClick={onSignup}>
               Sign Up
             </button>
           </div>
         </div>
 
-        <div className="menu-icon" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+        <button
+          type="button"
+          className="menu-icon"
+          aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={isMenuOpen}
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+        >
           <span className={`hamburger ${isMenuOpen ? 'open' : ''}`}></span>
-        </div>
+        </button>
       </div>
     </nav>
   );
