@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=Manrope:wght@600;700;800&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "surface-dim": "#cbdbf4", "tertiary-fixed-dim": "#ffb4a9", "surface-bright": "#f8f9ff", "on-secondary-fixed-variant": "#00513b", "on-error": "#ffffff", "on-tertiary-fixed-variant": "#82271d", "surface-container-low": "#eef4ff", "surface-container-lowest": "#ffffff", "on-tertiary-container": "#ffcec7", "on-primary-container": "#9fe9ce", "on-error-container": "#93000a", "surface": "#f8f9ff", "surface-container-highest": "#d3e4fd", "tertiary-fixed": "#ffdad5", "on-tertiary-fixed": "#410000", "surface-variant": "#d3e4fd", "on-secondary-fixed": "#002116", "inverse-surface": "#213144", "on-secondary": "#ffffff", "on-primary-fixed": "#002118", "on-secondary-container": "#007153", "on-surface": "#0b1c2e", "primary-fixed": "#a7f1d7", "inverse-primary": "#8cd5bb", "on-background": "#0b1c2e", "tertiary-container": "#a23e32", "on-tertiary": "#ffffff", "primary": "#00523f", "secondary": "#006c4f", "primary-container": "#1e6b56", "on-surface-variant": "#3f4945", "inverse-on-surface": "#eaf1ff", "secondary-fixed": "#89f7cb", "secondary-container": "#86f4c8", "error-container": "#ffdad6", "error": "#ba1a1a", "surface-tint": "#1d6a55", "outline": "#6f7974", "on-primary-fixed-variant": "#00513f", "secondary-fixed-dim": "#6cdab0", "on-primary": "#ffffff", "surface-container": "#e5eeff", "surface-container-high": "#dbe9ff", "primary-fixed-dim": "#8cd5bb", "background": "#f8f9ff", "tertiary": "#82271e", "outline-variant": "#bec9c3" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "space-lg": "1rem", "space-sm": "0.5rem", "margin-lg": "1.5rem", "margin": "1rem", "space-xs": "0.25rem", "gutter": "1rem", "space-xl": "1.5rem", "space-md": "0.75rem", "gutter-sm": "0.75rem" }, fontFamily: { "headline-lg": ["Manrope"], "display-lg": ["Manrope"], "body-lg": ["Inter"], "label-sm": ["Inter"], "label-lg": ["Inter"], "headline-sm": ["Manrope"], "body-md": ["Inter"], "badge": ["Inter"], "headline-md": ["Manrope"], "label-md": ["Inter"], "body-sm": ["Inter"] }, fontSize: { "headline-lg": ["24px", { lineHeight: "32px", fontWeight: "700" }], "display-lg": ["32px", { lineHeight: "40px", fontWeight: "800" }], "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }], "label-sm": ["11px", { lineHeight: "14px", fontWeight: "600" }], "label-lg": ["14px", { lineHeight: "20px", fontWeight: "600" }], "headline-sm": ["18px", { lineHeight: "24px", fontWeight: "600" }], "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }], "badge": ["10px", { lineHeight: "12px", fontWeight: "700" }], "headline-md": ["20px", { lineHeight: "28px", fontWeight: "700" }], "label-md": ["12px", { lineHeight: "16px", fontWeight: "600" }], "body-sm": ["12px", { lineHeight: "16px", fontWeight: "400" }] } } } };</script><style>@layer base { html, body { width: 100%; margin: 0; padding: 0; } body { overscroll-behavior-y: none; } .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); } .pt-safe { padding-top: env(safe-area-inset-top, 0px); } } ::-webkit-scrollbar { display: none; }</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface text-on-surface font-body-md min-h-screen flex flex-col antialiased selection:bg-secondary-container selection:text-on-secondary-container"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 px-margin flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-sm min-w-0"><button aria-label="Go back" class="w-11 h-11 -ml-space-xs rounded-full flex items-center justify-center text-on-surface hover:bg-surface-container-high transition-colors" onclick="history.back()"><span class="material-symbols-outlined text-[24px]">arrow_back</span></button><h1 class="font-headline-sm text-headline-sm text-on-surface truncate">Report Case</h1></div><div class="flex items-center gap-space-xs shrink-0"><button aria-label="More options" class="w-11 h-11 rounded-full flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors"><span class="material-symbols-outlined text-[22px]">more_vert</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex-1 w-full bg-surface pt-16 pb-safe"><div class="flex flex-col w-full px-margin pb-space-xl">
+<!-- Subtle decorative ambient pattern -->
+<div class="relative w-full overflow-hidden rounded-xl bg-surface-container-low p-space-md mb-space-lg flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="material-symbols-outlined text-tertiary text-[20px] shrink-0 animate-pulse">cloud_off</span>
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md text-on-surface font-semibold truncate">Live Sync Offline</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant truncate">Queued data preserved securely</span>
+</div>
+</div>
+<span class="inline-flex items-center gap-1 px-space-sm py-0.5 rounded-full bg-surface-container-highest text-tertiary font-label-sm text-label-sm shrink-0">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+      Field Mode
+    </span>
+</div>
+<!-- Centered Hero Delight / Error Illustrative State -->
+<div class="flex flex-col items-center text-center py-space-lg px-space-sm">
+<!-- Playful Yet Empathetic Badge / Icon Vessel -->
+<div class="relative mb-space-lg">
+<div class="w-24 h-24 rounded-full bg-tertiary-fixed flex items-center justify-center shadow-md">
+<div class="w-16 h-16 rounded-full bg-error-container flex items-center justify-center">
+<span class="material-symbols-outlined text-tertiary text-[36px]" style="font-variation-settings: 'FILL' 1;">signal_disconnected</span>
+</div>
+</div>
+<div class="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-surface-container-lowest shadow-md flex items-center justify-center">
+<span class="material-symbols-outlined text-tertiary text-[20px]">priority_high</span>
+</div>
+</div>
+<!-- Error Messaging Hierarchy -->
+<h2 class="font-headline-lg text-headline-lg text-on-surface tracking-tight mb-space-xs">
+      Something went wrong
+    </h2>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-xs mb-space-lg leading-relaxed">
+      Check your network connection and try again. If the issue persists, our offline emergency reporting cache will preserve your pending reports safely on device.
+    </p>
+<!-- Diagnostics Quick Status Pill -->
+<div class="inline-flex items-center gap-space-xs px-space-md py-1.5 rounded-full bg-surface-container mb-space-xl">
+<span class="material-symbols-outlined text-on-surface-variant text-[16px]">wifi_find</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">DNS Resolution Timeout • Code ERR_NET_408</span>
+</div>
+<!-- Interactive Action Buttons -->
+<div class="w-full flex flex-col gap-space-sm max-w-sm">
+<button class="w-full h-12 rounded-full bg-primary-container text-on-primary font-label-lg text-label-lg flex items-center justify-center gap-space-xs shadow-md active:scale-95 transition-all" id="retry-btn" onclick="triggerRetry()">
+<span class="material-symbols-outlined text-[20px]" id="retry-icon">refresh</span>
+<span id="retry-text">Retry Connection</span>
+</button>
+<button class="w-full h-12 rounded-full bg-secondary-container text-on-secondary-container font-label-lg text-label-lg flex items-center justify-center gap-space-xs hover:bg-secondary-fixed transition-colors" onclick="toggleOfflineView()">
+<span class="material-symbols-outlined text-[20px]">save</span>
+<span>Access Offline Mode</span>
+</button>
+</div>
+</div>
+<!-- Pending Reports Mini-Triage Indicator -->
+<div class="w-full mt-space-md mb-space-lg bg-surface-container-lowest rounded-xl p-space-md shadow-sm">
+<div class="flex items-center justify-between mb-space-sm">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary text-[18px]">cached</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">Local Storage Queue</span>
+</div>
+<span class="font-badge text-badge px-space-xs py-0.5 rounded-full bg-secondary-container text-on-secondary-container">2 PENDING</span>
+</div>
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between p-space-xs rounded-lg bg-surface-container-low">
+<div class="flex items-center gap-space-xs min-w-0">
+<span class="material-symbols-outlined text-on-surface-variant text-[16px]">pets</span>
+<span class="font-body-sm text-body-sm text-on-surface truncate">Injured Stray Pup #2026-F8</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant shrink-0">Saved 4m ago</span>
+</div>
+<div class="flex items-center justify-between p-space-xs rounded-lg bg-surface-container-low">
+<div class="flex items-center gap-space-xs min-w-0">
+<span class="material-symbols-outlined text-on-surface-variant text-[16px]">location_on</span>
+<span class="font-body-sm text-body-sm text-on-surface truncate">Geo-tag: G-11/3 Markaz</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant shrink-0">Queued</span>
+</div>
+</div>
+</div>
+<!-- Urgent Emergency Call-out Direct Hotline Card -->
+<div class="w-full rounded-xl bg-tertiary-container text-on-tertiary p-space-md shadow-sm">
+<div class="flex items-start gap-space-sm">
+<div class="w-10 h-10 rounded-full bg-tertiary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-on-tertiary text-[22px]" style="font-variation-settings: 'FILL' 1;">phone_in_talk</span>
+</div>
+<div class="flex flex-col min-w-0 flex-1">
+<div class="flex items-center gap-space-xs">
+<span class="font-headline-sm text-headline-sm text-on-tertiary">Critical Animal Distress?</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-tertiary-container mt-0.5 leading-snug">
+          Don't wait for sync. Call Dispatch directly at 
+          <a class="font-bold underline text-on-tertiary ml-0.5 whitespace-nowrap" href="tel:+923001234567">+92 300 1234567</a>.
+          Our field response vans in Islamabad &amp; Rawalpindi are on active standby 24/7.
+        </p>
+<div class="mt-space-sm pt-space-xs flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-tertiary-container flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-secondary-fixed"></span>
+            Dispatch lines active now
+          </span>
+<a class="px-space-md py-1.5 rounded-full bg-surface-container-lowest text-tertiary font-label-md text-label-md font-bold shadow-sm inline-flex items-center gap-1 active:scale-95 transition-all" href="tel:+923001234567">
+<span class="material-symbols-outlined text-[16px]">call</span>
+            Call Now
+          </a>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+  function triggerRetry() {
+    const btn = document.getElementById('retry-btn');
+    const icon = document.getElementById('retry-icon');
+    const label = document.getElementById('retry-text');
+    if (!btn || !icon || !label) return;
+
+    icon.classList.add('animate-spin');
+    label.innerText = 'Checking Network...';
+    btn.disabled = true;
+
+    setTimeout(() => {
+      icon.classList.remove('animate-spin');
+      label.innerText = 'Retry Connection';
+      btn.disabled = false;
+      const toast = document.createElement('div');
+      toast.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 bg-inverse-surface text-inverse-on-surface px-space-md py-space-xs rounded-full font-label-md text-label-md shadow-lg z-50 transition-opacity flex items-center gap-space-xs';
+      toast.innerHTML = '<span class="material-symbols-outlined text-secondary-fixed text-[18px]">info</span> Network still unreachable. Offline cache active.';
+      document.body.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }, 1800);
+  }
+
+  function toggleOfflineView() {
+    const alertBanner = document.createElement('div');
+    alertBanner.className = 'fixed top-20 left-4 right-4 bg-secondary-container text-on-secondary-container p-space-md rounded-xl font-label-md text-label-md shadow-xl z-50 transition-all flex items-center justify-between';
+    alertBanner.innerHTML = '<div class="flex items-center gap-space-xs"><span class="material-symbols-outlined">check_circle</span> Switched to Offline Form Triage</div><button onclick="this.parentElement.remove()" class="material-symbols-outlined text-[18px]">close</button>';
+    document.body.appendChild(alertBanner);
+    setTimeout(() => {
+      alertBanner.style.opacity = '0';
+      setTimeout(() => alertBanner.remove(), 400);
+    }, 3200);
+  }
+</script></main></body></html>

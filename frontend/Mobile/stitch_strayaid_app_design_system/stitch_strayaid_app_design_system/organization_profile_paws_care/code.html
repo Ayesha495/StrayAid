@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=Manrope:wght@600;700;800&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "surface-dim": "#cbdbf4", "tertiary-fixed-dim": "#ffb4a9", "surface-bright": "#f8f9ff", "on-secondary-fixed-variant": "#00513b", "on-error": "#ffffff", "on-tertiary-fixed-variant": "#82271d", "surface-container-low": "#eef4ff", "surface-container-lowest": "#ffffff", "on-tertiary-container": "#ffcec7", "on-primary-container": "#9fe9ce", "on-error-container": "#93000a", "surface": "#f8f9ff", "surface-container-highest": "#d3e4fd", "tertiary-fixed": "#ffdad5", "on-tertiary-fixed": "#410000", "surface-variant": "#d3e4fd", "on-secondary-fixed": "#002116", "inverse-surface": "#213144", "on-secondary": "#ffffff", "on-primary-fixed": "#002118", "on-secondary-container": "#007153", "on-surface": "#0b1c2e", "primary-fixed": "#a7f1d7", "inverse-primary": "#8cd5bb", "on-background": "#0b1c2e", "tertiary-container": "#a23e32", "on-tertiary": "#ffffff", "primary": "#00523f", "secondary": "#006c4f", "primary-container": "#1e6b56", "on-surface-variant": "#3f4945", "inverse-on-surface": "#eaf1ff", "secondary-fixed": "#89f7cb", "secondary-container": "#86f4c8", "error-container": "#ffdad6", "error": "#ba1a1a", "surface-tint": "#1d6a55", "outline": "#6f7974", "on-primary-fixed-variant": "#00513f", "secondary-fixed-dim": "#6cdab0", "on-primary": "#ffffff", "surface-container": "#e5eeff", "surface-container-high": "#dbe9ff", "primary-fixed-dim": "#8cd5bb", "background": "#f8f9ff", "tertiary": "#82271e", "outline-variant": "#bec9c3" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "space-lg": "1rem", "space-sm": "0.5rem", "margin-lg": "1.5rem", "margin": "1rem", "space-xs": "0.25rem", "gutter": "1rem", "space-xl": "1.5rem", "space-md": "0.75rem", "gutter-sm": "0.75rem" }, fontFamily: { "headline-lg": ["Manrope"], "display-lg": ["Manrope"], "body-lg": ["Inter"], "label-sm": ["Inter"], "label-lg": ["Inter"], "headline-sm": ["Manrope"], "body-md": ["Inter"], "badge": ["Inter"], "headline-md": ["Manrope"], "label-md": ["Inter"], "body-sm": ["Inter"] }, fontSize: { "headline-lg": ["24px", { lineHeight: "32px", fontWeight: "700" }], "display-lg": ["32px", { lineHeight: "40px", fontWeight: "800" }], "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }], "label-sm": ["11px", { lineHeight: "14px", fontWeight: "600" }], "label-lg": ["14px", { lineHeight: "20px", fontWeight: "600" }], "headline-sm": ["18px", { lineHeight: "24px", fontWeight: "600" }], "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }], "badge": ["10px", { lineHeight: "12px", fontWeight: "700" }], "headline-md": ["20px", { lineHeight: "28px", fontWeight: "700" }], "label-md": ["12px", { lineHeight: "16px", fontWeight: "600" }], "body-sm": ["12px", { lineHeight: "16px", fontWeight: "400" }] } } } };</script><style>@layer base { html, body { width: 100%; margin: 0; padding: 0; } body { overscroll-behavior-y: none; } .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); } .pt-safe { padding-top: env(safe-area-inset-top, 0px); } } ::-webkit-scrollbar { display: none; }</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface text-on-surface font-body-md min-h-screen flex flex-col antialiased selection:bg-secondary-container selection:text-on-secondary-container"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 px-margin flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-sm min-w-0"><button aria-label="Go back" class="w-11 h-11 -ml-space-xs rounded-full flex items-center justify-center text-on-surface hover:bg-surface-container-high transition-colors" onclick="history.back()"><span class="material-symbols-outlined text-[24px]">arrow_back</span></button><h1 class="font-headline-sm text-headline-sm text-on-surface truncate">Rescue Details</h1></div><div class="flex items-center gap-space-xs shrink-0"><button aria-label="More options" class="w-11 h-11 rounded-full flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors"><span class="material-symbols-outlined text-[22px]">more_vert</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex-1 w-full bg-surface pt-16 pb-safe"><div class="flex flex-col w-full pb-8">
+<!-- Top Action Navigation Bar -->
+<div class="px-margin pt-space-md pb-space-sm flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-md text-label-md shadow-sm">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+        Active Response Hub
+      </span>
+</div>
+<div class="flex items-center gap-space-xs">
+<button aria-label="Save shelter" class="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-primary hover:bg-secondary-container transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[20px]">bookmark</span>
+</button>
+<button aria-label="Share shelter profile" class="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[20px]">share</span>
+</button>
+</div>
+</div>
+<!-- Organization Cover & Identity Bento Card -->
+<div class="px-margin mb-space-lg">
+<div class="relative bg-surface-container-lowest rounded-xl shadow-[0_2px_8px_-2px_rgba(36,52,71,0.06),0_1px_4px_-1px_rgba(36,52,71,0.04)] overflow-hidden">
+<!-- Shelter Ambient Backdrop -->
+<div class="w-full h-36 bg-cover bg-center relative" data-alt="A warm, sunlit modern animal rescue sanctuary courtyard with lush greenery, dedicated veterinary staff caring for gentle stray dogs and rescue cats in a clean, state of the art outdoor pavilion in Islamabad." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCYA58oeOjVtutuqo5qwHsYxv4hNs7c-mzi9K-VhHXwIq-QTiPb9kendyymZ1aumFuV2rUOQOjf_VNjuo1JQI-SOcwA_JGWCXvTEjOOFcuQzNcKTuHTDWIly0PwtFOLB-ly6yco7nPxGWlQ7P_9RS4pgj5gIKdEdtZxTBck2JMEPUKitF_ZJqB13Cj2gXYu6SekDtKiXnApbPiWRXdm8JHlCx1WwzYRpMP3UmzRJe1HvnKweUpJW9hIwg')">
+<div class="absolute inset-0 bg-gradient-to-t from-inverse-surface/80 via-inverse-surface/30 to-transparent"></div>
+<div class="absolute top-3 right-3 bg-surface-container-lowest/90 backdrop-blur-md px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
+<span class="material-symbols-outlined text-[16px] text-primary" style="font-variation-settings: 'FILL' 1;">verified</span>
+<span class="font-label-sm text-label-sm text-primary">Reg #ICT-8841</span>
+</div>
+</div>
+<!-- Avatar & Title Details -->
+<div class="px-margin pt-3 pb-5">
+<div class="flex items-end justify-between -mt-12 mb-3 relative z-10">
+<div class="w-20 h-20 rounded-2xl bg-primary-container p-1 shadow-md flex items-center justify-center">
+<div class="w-full h-full rounded-xl bg-surface-container-lowest flex flex-col items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[28px]" style="font-variation-settings: 'FILL' 1;">pets</span>
+<span class="font-headline-sm text-[10px] uppercase tracking-wider text-primary font-bold">P&amp;C</span>
+</div>
+</div>
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-container-low text-on-surface font-label-sm text-label-sm shadow-sm">
+<span class="material-symbols-outlined text-[15px] text-primary" style="font-variation-settings: 'FILL' 1;">schedule</span>
+            24/7 Rapid Response
+          </span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Paws &amp; Care Rescue</h2>
+<span class="material-symbols-outlined text-[20px] text-primary" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-0.5">
+            Sector H-11 Sanctuary • Verified Welfare NGO • Islamabad &amp; Rawalpindi
+          </p>
+</div>
+<!-- Quick Numerical Impact Counters -->
+<div class="grid grid-cols-4 gap-2 mt-4 pt-3 bg-surface-container-low/70 rounded-xl p-3">
+<div class="flex flex-col items-center text-center">
+<span class="font-headline-md text-headline-md text-primary">42</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Rescued</span>
+</div>
+<div class="flex flex-col items-center text-center">
+<span class="font-headline-md text-headline-md text-primary">18</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Adopted</span>
+</div>
+<div class="flex flex-col items-center text-center">
+<span class="font-headline-md text-headline-md text-secondary">98%</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Rating</span>
+</div>
+<div class="flex flex-col items-center text-center">
+<span class="font-headline-md text-headline-md text-on-surface">12</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Caregivers</span>
+</div>
+</div>
+<!-- Dual CTA Row -->
+<div class="grid grid-cols-2 gap-3 mt-4">
+<button class="h-12 rounded-full bg-primary-container text-on-primary font-label-lg text-label-lg flex items-center justify-center gap-2 shadow-sm active:scale-[0.98] transition-transform" id="followBtn" onclick="toggleFollow()">
+<span class="material-symbols-outlined text-[18px]">favorite</span>
+<span id="followText">Follow Org</span>
+</button>
+<a class="h-12 rounded-full bg-surface-container-high text-primary font-label-lg text-label-lg flex items-center justify-center gap-2 active:scale-[0.98] transition-transform" href="tel:+92518899201">
+<span class="material-symbols-outlined text-[18px]">call</span>
+<span>Emergency Call</span>
+</a>
+</div>
+</div>
+</div>
+</div>
+<!-- About / Mission Statement -->
+<div class="px-margin mb-space-lg">
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-[0_2px_8px_-2px_rgba(36,52,71,0.06),0_1px_4px_-1px_rgba(36,52,71,0.04)] flex flex-col gap-3">
+<div class="flex items-center justify-between">
+<h3 class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">info</span>
+          Mission &amp; Protocol
+        </h3>
+<span class="font-label-sm text-label-sm text-secondary bg-secondary-container/50 px-2 py-0.5 rounded-full">Non-Profit</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+        Dedicated to emergency rescue, trauma triage, compassionate surgical rehabilitation, and permanent rehoming of stray dogs, cats, and injured street animals across twin cities.
+      </p>
+<!-- Location Card with Dynamic Map Tile -->
+<div class="mt-2 rounded-xl overflow-hidden bg-surface-container">
+<div class="w-full h-32 bg-cover bg-center relative" data-location="Sector H-11, Islamabad, Pakistan" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBWUF0nsPcjLJJMf-1De37SrrQ15TeBbj8sH0L0nNSqN2VelS-1nTTflyR5fhs5L_VIzAfuV4EEce4ZJZYfKBjDLORUtkhYtjSnHmE0a_btUjsXG0hPrpb4UEYdbykcPztkK9GXXfDJDIOBI2HswOmQsFtigY46g-2AL7m-UVs0kt_WT1EwC_3JuUYwA1BXTEGRp2_lz0Tf2esbRtJyDyMJCrsElgA0_1Xw2JqzYzpSSnk2gWIzp3bLbw')">
+<div class="absolute inset-0 bg-primary/10"></div>
+<div class="absolute bottom-2.5 left-2.5 right-2.5 bg-surface-container-lowest/95 backdrop-blur-md rounded-lg p-2 flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-2 min-w-0">
+<div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined text-[18px]">pin_drop</span>
+</div>
+<div class="min-w-0">
+<div class="font-label-md text-label-md text-on-surface truncate">Street 4, Sector H-11 Shelter Hub</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">Triage Clinic • 0.8 km away</div>
+</div>
+</div>
+<button aria-label="Open directions" class="w-8 h-8 rounded-full bg-primary-container text-on-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[16px]">navigation</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Animals Currently In Care Section -->
+<div class="flex flex-col mb-space-lg">
+<div class="px-margin flex items-center justify-between mb-3">
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Animals in Care</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">14 Active cases being rehabilitated</p>
+</div>
+<button class="font-label-md text-label-md text-primary flex items-center gap-0.5 hover:underline">
+        View All (14)
+        <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+</div>
+<!-- Filter Chips Scroll -->
+<div class="flex gap-2 overflow-x-auto px-margin pb-2 pt-1 no-scrollbar">
+<button class="category-chip px-3.5 py-1.5 rounded-full bg-primary-container text-on-primary font-label-md text-label-md whitespace-nowrap shadow-sm" onclick="filterCategory(this, 'all')">
+        All (14)
+      </button>
+<button class="category-chip px-3.5 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-md text-label-md whitespace-nowrap" onclick="filterCategory(this, 'adoptable')">
+        Ready for Adoption (6)
+      </button>
+<button class="category-chip px-3.5 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-md text-label-md whitespace-nowrap" onclick="filterCategory(this, 'critical')">
+        Intensive Care (5)
+      </button>
+<button class="category-chip px-3.5 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-md text-label-md whitespace-nowrap" onclick="filterCategory(this, 'foster')">
+        Fostered (3)
+      </button>
+</div>
+<!-- Roster Vertical Stack -->
+<div class="px-margin flex flex-col gap-3 mt-1">
+<!-- Animal 1: Max -->
+<div class="animal-card bg-surface-container-lowest rounded-xl p-3 shadow-[0_2px_8px_-2px_rgba(36,52,71,0.06),0_1px_4px_-1px_rgba(36,52,71,0.04)] flex gap-3.5 items-center">
+<div class="relative w-24 h-24 rounded-lg overflow-hidden shrink-0">
+<img alt="Max the dog" class="w-full h-full object-cover" data-alt="A smiling golden retriever mixed breed dog with alert warm brown eyes sitting patiently in a veterinary recovery garden with soft sunlight illuminating his clean fur coat." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC-fX7FX9XW1_cf_AqE41Z_-5qXa9MIVNxRCNlzXgPYmQo0qr5AFTn2K04aMHwKCopAcALm31Kyhp8Kp4TQhKTQCRmb0wjn2EOXMX2jV2WsPkhhgEgGY9xINXNfCZUcOZV4o82O7seNXq7VUF-360abD-7BCnheErNknzJg9nj-dzayyfYwP5YczkvWppbA-q9lC9Z5YhlPJ6AWNs3eoM8-oLjAHHgA2SqcUwrviHbHgwqm7on3jM0ZtA"/>
+<span class="absolute top-1.5 left-1.5 bg-primary-container/90 backdrop-blur-sm text-on-primary font-badge text-badge px-2 py-0.5 rounded-full flex items-center gap-0.5">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed"></span>
+            Adoptable
+          </span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-start justify-between">
+<div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Max</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">Golden Mix • 2.5 yrs • Male</p>
+</div>
+<button aria-label="Favorite Max" class="w-8 h-8 rounded-full bg-surface-container-low flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]">favorite_border</span>
+</button>
+</div>
+<div class="mt-2 flex items-center justify-between">
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm text-secondary bg-secondary-container/40 px-2 py-0.5 rounded-full">
+<span class="material-symbols-outlined text-[14px]">task_alt</span>
+              Treatment Complete
+            </span>
+<button class="px-3 py-1 rounded-full bg-primary-container text-on-primary font-label-sm text-label-sm shadow-sm active:scale-95 transition-transform">
+              Adopt Me
+            </button>
+</div>
+</div>
+</div>
+<!-- Animal 2: Luna -->
+<div class="animal-card bg-surface-container-lowest rounded-xl p-3 shadow-[0_2px_8px_-2px_rgba(36,52,71,0.06),0_1px_4px_-1px_rgba(36,52,71,0.04)] flex gap-3.5 items-center">
+<div class="relative w-24 h-24 rounded-lg overflow-hidden shrink-0">
+<img alt="Luna the cat" class="w-full h-full object-cover" data-alt="An adorable domestic tabby cat with bright emerald green eyes and soft grey striped markings resting comfortably on a warm knitted fleece cushion in a rehabilitation foster suite." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBTrD0SgIB-egnsJkwwfoPj_ewJuND-WnwKMx2BH0hRsO8-erfHwcKiNLk6lNUeP-fIhijIvtRbEcD9r7oVVwoegVcCrJExixVwIWVoPFj_gH6R5M5_sw4jrNK-oWy6Id2WrbP8H43UPey-HY_udQQ_KTB00BG940psaOU5w8B2T36bH-IixZoDvGX09s59aEl-REEA-3o6wAtKLho-y9F0S9z53L_atUiScnaC8XluUURopzm0yBecgg"/>
+<span class="absolute top-1.5 left-1.5 bg-surface-container-highest/90 backdrop-blur-sm text-on-surface font-badge text-badge px-2 py-0.5 rounded-full flex items-center gap-0.5">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+            Reviewing
+          </span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-start justify-between">
+<div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Luna</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">Domestic Short Hair • 1 yr • Female</p>
+</div>
+<button aria-label="Favorite Luna" class="w-8 h-8 rounded-full bg-surface-container-low flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]">favorite_border</span>
+</button>
+</div>
+<div class="mt-2 flex items-center justify-between">
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm text-on-surface-variant bg-surface-container-high px-2 py-0.5 rounded-full">
+<span class="material-symbols-outlined text-[14px]">assignment</span>
+              3 Applications In
+            </span>
+<button class="px-3 py-1 rounded-full bg-surface-container-high text-on-surface font-label-sm text-label-sm active:scale-95 transition-transform">
+              Sponsor
+            </button>
+</div>
+</div>
+</div>
+<!-- Animal 3: Bella -->
+<div class="animal-card bg-surface-container-lowest rounded-xl p-3 shadow-[0_2px_8px_-2px_rgba(36,52,71,0.06),0_1px_4px_-1px_rgba(36,52,71,0.04)] flex gap-3.5 items-center">
+<div class="relative w-24 h-24 rounded-lg overflow-hidden shrink-0">
+<img alt="Bella the beagle puppy" class="w-full h-full object-cover" data-alt="A courageous young Beagle mix puppy with expressive tri-color ears wearing a supportive soft surgical collar, playfully resting after leg wound therapy in a bright sanctuary nursery." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD2tVy_SorKOVvgdN37FsLP3O8EwAhYLU7hchcrqgMReqyLnytesKck1BCEA_W1TtF-EevEQI0Vv5OGGY6itmBoJrX3MtrXIl4rl5xCis2zKTzOOAl3asFhOu5ABg9I8--X-lYjGs4NBLALtNrFnxh1Pc4MJKThKwHVOd2I3vF4FQohjHwaTozSNTc1dmG44Rqr3C5AryMLNdQD3CZD1_k_nqRnkVwIQp0QjirZP-KtCs7xh2K7u0tG7Q"/>
+<span class="absolute top-1.5 left-1.5 bg-error-container text-on-error-container font-badge text-badge px-2 py-0.5 rounded-full flex items-center gap-0.5">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+            Recovering
+          </span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-start justify-between">
+<div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Bella</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">Beagle Pup • 6 mos • Female</p>
+</div>
+<button aria-label="Favorite Bella" class="w-8 h-8 rounded-full bg-surface-container-low flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]">favorite_border</span>
+</button>
+</div>
+<div class="mt-2 flex items-center justify-between">
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm text-tertiary-container bg-error-container/40 px-2 py-0.5 rounded-full">
+<span class="material-symbols-outlined text-[14px]">healing</span>
+              Day 8 of Meds
+            </span>
+<button class="px-3 py-1 rounded-full bg-primary-container text-on-primary font-label-sm text-label-sm shadow-sm active:scale-95 transition-transform">
+              Send Aid
+            </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Support Our Work: Shelter Aid Pledges -->
+<div class="px-margin">
+<div class="bg-gradient-to-br from-primary to-primary-container rounded-xl p-space-lg text-on-primary shadow-lg relative overflow-hidden">
+<!-- Decorative Backdrop Paw Accent -->
+<span class="material-symbols-outlined absolute -right-6 -bottom-6 text-[140px] text-white/5 pointer-events-none select-none">volunteer_activism</span>
+<div class="relative z-10">
+<div class="flex items-center gap-2 mb-2">
+<span class="p-1.5 bg-white/15 backdrop-blur-md rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px] text-secondary-fixed">medication</span>
+</span>
+<span class="font-label-sm text-label-sm text-secondary-fixed uppercase tracking-wider">Direct Shelter Impact</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-primary leading-tight">Sponsor Shelter Medical Supplies</h3>
+<p class="font-body-sm text-body-sm text-on-primary/80 mt-1 mb-4">
+          Every contribution directly funds anti-rabies vaccines, wound antiseptic, and nutrient meals for street rescues.
+        </p>
+<!-- Dynamic Donation Selector Chips -->
+<div class="grid grid-cols-3 gap-2 mb-4">
+<button class="pledge-chip py-2.5 rounded-lg bg-white/10 hover:bg-white/20 active:bg-white text-center font-headline-sm text-headline-sm text-on-primary transition-all" onclick="selectPledge(this, '500')">
+<span class="block font-label-sm text-[10px] text-on-primary/70">Wound Kit</span>
+            PKR 500
+          </button>
+<button class="pledge-chip py-2.5 rounded-lg bg-secondary-fixed text-primary text-center font-headline-sm text-headline-sm shadow-sm transition-all ring-offset-0" onclick="selectPledge(this, '1000')">
+<span class="block font-label-sm text-[10px] text-primary/80">Vaccines</span>
+            PKR 1,000
+          </button>
+<button class="pledge-chip py-2.5 rounded-lg bg-white/10 hover:bg-white/20 active:bg-white text-center font-headline-sm text-headline-sm text-on-primary transition-all" onclick="selectPledge(this, '2500')">
+<span class="block font-label-sm text-[10px] text-on-primary/70">Full Surgery</span>
+            PKR 2,500
+          </button>
+</div>
+<!-- Progress Towards Monthly Operational Goal -->
+<div class="bg-black/20 rounded-lg p-3 backdrop-blur-sm mb-4">
+<div class="flex items-center justify-between text-on-primary font-label-sm text-label-sm mb-1.5">
+<span>May Medical Supply Fund</span>
+<span class="text-secondary-fixed font-bold">78% Funded</span>
+</div>
+<div class="w-full bg-white/20 rounded-full h-2 overflow-hidden">
+<div class="bg-secondary-fixed h-full rounded-full" style="width: 78%"></div>
+</div>
+<div class="flex items-center justify-between text-on-primary/70 font-body-sm text-[11px] mt-1.5">
+<span>PKR 156,000 raised</span>
+<span>Target: PKR 200,000</span>
+</div>
+</div>
+<button class="w-full h-12 rounded-full bg-secondary-fixed text-primary font-label-lg text-label-lg flex items-center justify-center gap-2 shadow-md active:scale-[0.99] transition-transform" onclick="pledgeAction()">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">volunteer_activism</span>
+<span id="pledgeButtonText">Pledge PKR 1,000 Support</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Verification Dialog / Micro Toast Placeholder -->
+<div class="fixed bottom-6 left-margin right-margin bg-inverse-surface text-inverse-on-surface px-4 py-3 rounded-xl shadow-xl flex items-center justify-between transition-all duration-300 opacity-0 pointer-events-none translate-y-4 z-50" id="toastNotification">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-secondary-fixed text-[20px]">check_circle</span>
+<span class="font-body-sm text-body-sm" id="toastMessage">Thank you for supporting stray animal welfare!</span>
+</div>
+<button class="text-inverse-on-surface/70 hover:text-inverse-on-surface" onclick="hideToast()">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+</div>
+</div>
+<script>
+  let isFollowing = false;
+  let currentPledge = '1000';
+
+  function toggleFollow() {
+    isFollowing = !isFollowing;
+    const btn = document.getElementById('followBtn');
+    const text = document.getElementById('followText');
+    if (isFollowing) {
+      btn.classList.remove('bg-primary-container', 'text-on-primary');
+      btn.classList.add('bg-secondary-container', 'text-on-secondary-container');
+      text.innerText = 'Following';
+      showToast('You are now following Paws & Care updates!');
+    } else {
+      btn.classList.add('bg-primary-container', 'text-on-primary');
+      btn.classList.remove('bg-secondary-container', 'text-on-secondary-container');
+      text.innerText = 'Follow Org';
+      showToast('Unfollowed Paws & Care Rescue.');
+    }
+  }
+
+  function filterCategory(btn, category) {
+    const chips = document.querySelectorAll('.category-chip');
+    chips.forEach(c => {
+      c.classList.remove('bg-primary-container', 'text-on-primary', 'shadow-sm');
+      c.classList.add('bg-surface-container-high', 'text-on-surface-variant');
+    });
+    btn.classList.add('bg-primary-container', 'text-on-primary', 'shadow-sm');
+    btn.classList.remove('bg-surface-container-high', 'text-on-surface-variant');
+  }
+
+  function selectPledge(btn, amount) {
+    currentPledge = amount;
+    const chips = document.querySelectorAll('.pledge-chip');
+    chips.forEach(c => {
+      c.classList.remove('bg-secondary-fixed', 'text-primary');
+      c.classList.add('bg-white/10', 'text-on-primary');
+      const sub = c.querySelector('span');
+      if (sub) {
+        sub.classList.remove('text-primary/80');
+        sub.classList.add('text-on-primary/70');
+      }
+    });
+    btn.classList.add('bg-secondary-fixed', 'text-primary');
+    btn.classList.remove('bg-white/10', 'text-on-primary');
+    const activeSub = btn.querySelector('span');
+    if (activeSub) {
+      activeSub.classList.add('text-primary/80');
+      activeSub.classList.remove('text-on-primary/70');
+    }
+    document.getElementById('pledgeButtonText').innerText = 'Pledge PKR ' + Number(amount).toLocaleString() + ' Support';
+  }
+
+  function pledgeAction() {
+    showToast('Redirecting to secure PKR ' + Number(currentPledge).toLocaleString() + ' shelter gateway...');
+  }
+
+  let toastTimer;
+  function showToast(msg) {
+    clearTimeout(toastTimer);
+    const toast = document.getElementById('toastNotification');
+    document.getElementById('toastMessage').innerText = msg;
+    toast.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-4');
+    toast.classList.add('opacity-100', 'translate-y-0');
+    toastTimer = setTimeout(hideToast, 3500);
+  }
+
+  function hideToast() {
+    const toast = document.getElementById('toastNotification');
+    toast.classList.add('opacity-0', 'pointer-events-none', 'translate-y-4');
+    toast.classList.remove('opacity-100', 'translate-y-0');
+  }
+</script></main></body></html>

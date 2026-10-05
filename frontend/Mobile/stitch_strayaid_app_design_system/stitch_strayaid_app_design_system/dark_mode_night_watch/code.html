@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=Manrope:wght@600;700;800&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "surface-dim": "#cbdbf4", "tertiary-fixed-dim": "#ffb4a9", "surface-bright": "#f8f9ff", "on-secondary-fixed-variant": "#00513b", "on-error": "#ffffff", "on-tertiary-fixed-variant": "#82271d", "surface-container-low": "#eef4ff", "surface-container-lowest": "#ffffff", "on-tertiary-container": "#ffcec7", "on-primary-container": "#9fe9ce", "on-error-container": "#93000a", "surface": "#f8f9ff", "surface-container-highest": "#d3e4fd", "tertiary-fixed": "#ffdad5", "on-tertiary-fixed": "#410000", "surface-variant": "#d3e4fd", "on-secondary-fixed": "#002116", "inverse-surface": "#213144", "on-secondary": "#ffffff", "on-primary-fixed": "#002118", "on-secondary-container": "#007153", "on-surface": "#0b1c2e", "primary-fixed": "#a7f1d7", "inverse-primary": "#8cd5bb", "on-background": "#0b1c2e", "tertiary-container": "#a23e32", "on-tertiary": "#ffffff", "primary": "#00523f", "secondary": "#006c4f", "primary-container": "#1e6b56", "on-surface-variant": "#3f4945", "inverse-on-surface": "#eaf1ff", "secondary-fixed": "#89f7cb", "secondary-container": "#86f4c8", "error-container": "#ffdad6", "error": "#ba1a1a", "surface-tint": "#1d6a55", "outline": "#6f7974", "on-primary-fixed-variant": "#00513f", "secondary-fixed-dim": "#6cdab0", "on-primary": "#ffffff", "surface-container": "#e5eeff", "surface-container-high": "#dbe9ff", "primary-fixed-dim": "#8cd5bb", "background": "#f8f9ff", "tertiary": "#82271e", "outline-variant": "#bec9c3" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "space-lg": "1rem", "space-sm": "0.5rem", "margin-lg": "1.5rem", "margin": "1rem", "space-xs": "0.25rem", "gutter": "1rem", "space-xl": "1.5rem", "space-md": "0.75rem", "gutter-sm": "0.75rem" }, fontFamily: { "headline-lg": ["Manrope"], "display-lg": ["Manrope"], "body-lg": ["Inter"], "label-sm": ["Inter"], "label-lg": ["Inter"], "headline-sm": ["Manrope"], "body-md": ["Inter"], "badge": ["Inter"], "headline-md": ["Manrope"], "label-md": ["Inter"], "body-sm": ["Inter"] }, fontSize: { "headline-lg": ["24px", { lineHeight: "32px", fontWeight: "700" }], "display-lg": ["32px", { lineHeight: "40px", fontWeight: "800" }], "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }], "label-sm": ["11px", { lineHeight: "14px", fontWeight: "600" }], "label-lg": ["14px", { lineHeight: "20px", fontWeight: "600" }], "headline-sm": ["18px", { lineHeight: "24px", fontWeight: "600" }], "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }], "badge": ["10px", { lineHeight: "12px", fontWeight: "700" }], "headline-md": ["20px", { lineHeight: "28px", fontWeight: "700" }], "label-md": ["12px", { lineHeight: "16px", fontWeight: "600" }], "body-sm": ["12px", { lineHeight: "16px", fontWeight: "400" }] } } } };</script><style>@layer base { html, body { width: 100%; margin: 0; padding: 0; } body { overscroll-behavior-y: none; } .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); } .pt-safe { padding-top: env(safe-area-inset-top, 0px); } } ::-webkit-scrollbar { display: none; }</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface text-on-surface font-body-md min-h-screen flex flex-col antialiased selection:bg-secondary-container selection:text-on-secondary-container"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 px-margin flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-sm min-w-0"><div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container shrink-0"><span class="material-symbols-outlined text-[22px]">pets</span></div><div class="flex flex-col min-w-0"><span class="font-label-sm text-secondary uppercase tracking-wider font-semibold truncate">StrayAid Rescue</span><h1 class="font-headline-sm text-headline-sm text-on-surface truncate">Home</h1></div></div><div class="flex items-center gap-space-xs shrink-0"><button aria-label="Search cases" class="w-11 h-11 rounded-full flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors"><span class="material-symbols-outlined text-[22px]">search</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex-1 w-full bg-surface pt-16 pb-24"><div class="flex flex-col w-full px-margin pb-6 gap-space-lg selection:bg-secondary-fixed-dim selection:text-on-secondary-fixed">
+<!-- Ambient Obsidian Night Card Top Container -->
+<div class="w-full rounded-xl bg-inverse-surface text-inverse-on-surface p-space-md shadow-xl relative overflow-hidden">
+<!-- Subtle luminous background glow -->
+<div class="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-primary-container/30 blur-3xl pointer-events-none"></div>
+<div class="absolute -bottom-8 -left-8 w-40 h-40 rounded-full bg-secondary/20 blur-2xl pointer-events-none"></div>
+<!-- Header status within dark module -->
+<div class="relative z-10 flex items-center justify-between gap-space-sm mb-space-md">
+<div class="flex items-center gap-space-xs">
+<div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-fixed shadow-md">
+<span class="material-symbols-outlined text-[18px]">bedtime</span>
+</div>
+<div>
+<div class="flex items-center gap-1.5">
+<h2 class="font-headline-sm text-headline-sm text-surface-bright tracking-tight">StrayAid Night Watch</h2>
+<span class="inline-block w-2 h-2 rounded-full bg-secondary-fixed animate-ping"></span>
+</div>
+<p class="font-label-sm text-label-sm text-surface-variant/80">Islamabad &amp; Rawalpindi • Active Units</p>
+</div>
+</div>
+<div class="px-space-sm py-0.5 rounded-full bg-surface-variant/20 flex items-center gap-1.5">
+<span class="material-symbols-outlined text-secondary-fixed text-[14px]">nightlight</span>
+<span class="font-label-sm text-label-sm text-secondary-fixed">Dark Mode</span>
+</div>
+</div>
+<!-- Hero Card (from showcase Dark Mode card) -->
+<div class="relative z-10 rounded-xl overflow-hidden bg-primary/20 backdrop-blur-md shadow-inner flex flex-col">
+<div class="relative w-full h-44 overflow-hidden">
+<div class="bg-cover bg-center w-full h-full" data-alt="A soulful golden street dog with warm amber eyes resting safely at twilight in an animal sanctuary garden in Islamabad, cinematic night ambiance, volumetric cool emerald rim lighting, gentle cinematic street rescue documentary style" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAbKHraHI3ZRt6eTweeq_xJ2YLirnSlCG0KCGbtBgMH5Y-y0P-xyTkGC98kkGefzqdSMA1SLB6F2ZdbppTp5D9mO1_A4N0JNi9RE5RZlmD0ACkOShqiuWgUinsQ3Xg7JlSR-j5TkrgjCt6_p1hU-VP6BUpOCyoh58hcOLZ0UKQ1VaNV-rQURkgn1J1cibS8MbnzRks11H_4CorBtSHSTnzqx3D1cF3x7icsN6uzIcbopiXqSuSOFB5fmQ')">
+</div>
+<!-- Gradient scrim overlay for pristine readability -->
+<div class="absolute inset-0 bg-gradient-to-t from-inverse-surface via-inverse-surface/60 to-transparent"></div>
+<!-- Live status chip on hero image -->
+<div class="absolute top-space-sm left-space-sm flex items-center gap-1.5 px-space-sm py-1 rounded-full bg-inverse-surface/85 backdrop-blur-md">
+<span class="w-2 h-2 rounded-full bg-secondary-fixed"></span>
+<span class="font-label-sm text-label-sm text-secondary-fixed">4 Rapid Teams Dispatched</span>
+</div>
+<div class="absolute bottom-space-xs right-space-sm">
+<span class="font-badge text-badge text-surface-variant/70 uppercase tracking-wider">Sector G-11 • F-8</span>
+</div>
+</div>
+<div class="p-space-md flex flex-col gap-1.5 bg-inverse-surface">
+<span class="font-label-md text-label-md text-secondary-fixed tracking-wide uppercase font-semibold">Night Welfare Patrol</span>
+<h3 class="font-headline-md text-headline-md text-surface-bright leading-tight">
+          A safer tomorrow for every stray.
+        </h3>
+<p class="font-body-sm text-body-sm text-surface-variant/90 leading-relaxed">
+          Night surveillance active in Islamabad sectors. Mobile vet ambulances are equipped with heated trauma cradles, warm saline fluids, and emergency GPS beaconing.
+        </p>
+</div>
+</div>
+<!-- Quick Emergency Action Bar -->
+<div class="relative z-10 mt-space-md grid grid-cols-2 gap-space-sm">
+<button class="w-full py-3 px-space-md rounded-xl bg-tertiary-container hover:bg-tertiary text-on-tertiary flex items-center justify-center gap-2 shadow-lg transition-transform active:scale-95">
+<span class="material-symbols-outlined text-[20px]">e911_emergency</span>
+<span class="font-label-lg text-label-lg">SOS Night Triage</span>
+</button>
+<button class="w-full py-3 px-space-md rounded-xl bg-primary text-on-primary hover:bg-primary-container flex items-center justify-center gap-2 shadow-md transition-transform active:scale-95">
+<span class="material-symbols-outlined text-[20px]">near_me</span>
+<span class="font-label-lg text-label-lg">Call Night Van</span>
+</button>
+</div>
+</div>
+<!-- Live Patrol Status Micro-Dashboard -->
+<div class="w-full bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[20px]">radar</span>
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Patrol Route Radar</h4>
+</div>
+<span class="font-label-sm text-label-sm text-secondary bg-secondary-container/40 px-2 py-0.5 rounded-full">Updated 1m ago</span>
+</div>
+<!-- Mini map preview card -->
+<div class="w-full h-32 bg-cover bg-center rounded-lg relative overflow-hidden shadow-inner" data-location="Sector G-11, Islamabad, Pakistan" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBXcGbXXQo5o_waCV_fNiS8orH_-lHNRB9aA_s1hANStw1oRE8QUpAjFM70B9kK88o44YLjBjTz5jIzxF5FCAXm3YM-m7KP8FoIaQWjo7qmPOQ6LQbjEbMZC18f-PihfnKvDf4ftgfJ5nZzB3V2PZuAEmCobJryBeYYvC0Mn-qpiPorZoMfYSDFY_eJ5X5OuuS1veTUF0l29-bbEWwHILDkNrduOi5Cq16psyVwMoFmbHUbotjRVtlrrg')">
+<div class="absolute inset-0 bg-primary-container/20 backdrop-brightness-95"></div>
+<div class="absolute top-2 left-2 bg-surface-container-lowest/90 backdrop-blur-md px-2 py-1 rounded-md flex items-center gap-1 shadow-sm">
+<span class="material-symbols-outlined text-primary text-[14px]">local_shipping</span>
+<span class="font-label-sm text-label-sm text-on-surface font-semibold">Van 02 • Margalla Rd</span>
+</div>
+<div class="absolute bottom-2 right-2 bg-primary text-on-primary px-2.5 py-1 rounded-full font-label-sm text-label-sm flex items-center gap-1 shadow-md">
+<span class="material-symbols-outlined text-[14px]">emergency</span>
+<span>ETA 7 mins to G-11</span>
+</div>
+</div>
+<div class="grid grid-cols-3 gap-space-xs pt-1 text-center">
+<div class="bg-surface-container-low rounded-lg p-2 flex flex-col items-center">
+<span class="font-headline-sm text-headline-sm text-primary">14</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Active Calls</span>
+</div>
+<div class="bg-surface-container-low rounded-lg p-2 flex flex-col items-center">
+<span class="font-headline-sm text-headline-sm text-secondary">3</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Rescued Today</span>
+</div>
+<div class="bg-surface-container-low rounded-lg p-2 flex flex-col items-center">
+<span class="font-headline-sm text-headline-sm text-tertiary-container">2</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Critical Post-Op</span>
+</div>
+</div>
+</div>
+<!-- In-Care Night Roster (Critical Monitored Animals) -->
+<div class="w-full flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary text-[20px]">monitor_heart</span>
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Night Critical Roster</h4>
+</div>
+<a class="font-label-md text-label-md text-primary hover:underline" href="#">View All (6)</a>
+</div>
+<!-- Animal Card 1: Max (Golden street rescue featured on showcase) -->
+<div class="w-full bg-surface-container-lowest rounded-xl p-space-sm shadow-sm flex items-center gap-space-md transition-all hover:shadow-md">
+<div class="w-20 h-20 rounded-lg overflow-hidden shrink-0 relative">
+<img class="w-full h-full object-cover" data-alt="Close up portrait photograph of Max, a rehabilitated golden brown stray dog smiling warmly with bright soulful brown eyes under gentle clinic lighting, rescue medical collar visible, soft green bokeh background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDpjLyYafaDbzsvibunFtAtFLyDBPSq_nfIXUvv0GpHMg5Ig9AxZngl2X3h6ojOpyg4kYF3dzxBlpzLFnf_8lHuKC2fEjIlxDYjDmKeOSkLUAmDh7bKgIWB-yciwuFdZZd2DvVCnmfn-2SK67CLbX1xgV7xr_W_JPmeSVBFxHKMTwxqDaOLlnsskyaakUSmMVEeLPo9DzntBMhjdhfCcWnvq1fHEoV3KYfRb-08JkprNSf1tD6WjcLLJA"/>
+<div class="absolute bottom-0 inset-x-0 bg-primary/80 py-0.5 text-center">
+<span class="font-badge text-badge text-on-primary">Stable</span>
+</div>
+</div>
+<div class="flex-1 min-w-0 flex flex-col justify-between h-full py-0.5">
+<div>
+<div class="flex items-center justify-between">
+<h5 class="font-headline-sm text-headline-sm text-on-surface truncate">Max</h5>
+<span class="px-2 py-0.5 rounded-full bg-secondary-container/50 text-on-secondary-fixed-variant font-label-sm text-label-sm font-semibold">ICU Bed 2</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">Paws &amp; Care Rescue • Islamabad</p>
+</div>
+<div class="flex items-center justify-between mt-2 pt-1 border-0">
+<div class="flex items-center gap-1 text-secondary">
+<span class="material-symbols-outlined text-[16px]">thermostat</span>
+<span class="font-label-sm text-label-sm font-semibold">38.4°C (Normal)</span>
+</div>
+<button class="w-7 h-7 rounded-full bg-surface-container flex items-center justify-center text-primary hover:bg-primary hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Animal Card 2: Injured Pup G-11 -->
+<div class="w-full bg-surface-container-lowest rounded-xl p-space-sm shadow-sm flex items-center gap-space-md transition-all hover:shadow-md">
+<div class="w-20 h-20 rounded-lg overflow-hidden shrink-0 relative">
+<img class="w-full h-full object-cover" data-alt="Young injured rescue puppy with bandaged front paw resting comfortably on a warm orthopedic fleece bed inside an animal trauma recovery ward, peaceful expression, soft ambient veterinary lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0AyhovwkXDJf0aorfDt31WGk_7P_PZucEV5jYlWTf8Mih-vNIydfyzNGnphPHCdjdvSpDYtwRuKoXQYZlFKup_QTLw0DssZNB4VGtE63_rMPp-QPgm2yANp2ppjtaFcPt_kI2bF_4AFgbmbT0KjRYOu7ARn47P1kJjp-Nh2YRF6CRypPOFFOm6QM25UBYxIr15iDLIo59BPcsS0nfbqJ3vt7YeJuBYtc-aCeCxMnP-EtUoepQmE4JwQ"/>
+<div class="absolute bottom-0 inset-x-0 bg-tertiary-container/90 py-0.5 text-center">
+<span class="font-badge text-badge text-on-tertiary">Monitoring</span>
+</div>
+</div>
+<div class="flex-1 min-w-0 flex flex-col justify-between h-full py-0.5">
+<div>
+<div class="flex items-center justify-between">
+<h5 class="font-headline-sm text-headline-sm text-on-surface truncate">Injured Pup G-11</h5>
+<span class="px-2 py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm font-semibold">High Care</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">Post-op Splint • 92% AI Verified</p>
+</div>
+<div class="flex items-center justify-between mt-2 pt-1">
+<div class="flex items-center gap-1 text-tertiary">
+<span class="material-symbols-outlined text-[16px]">water_bottle</span>
+<span class="font-label-sm text-label-sm font-semibold">Hydration IV Active</span>
+</div>
+<button class="w-7 h-7 rounded-full bg-surface-container flex items-center justify-center text-primary hover:bg-primary hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Animal Card 3: Luna (Cat - Recovered) -->
+<div class="w-full bg-surface-container-lowest rounded-xl p-space-sm shadow-sm flex items-center gap-space-md transition-all hover:shadow-md">
+<div class="w-20 h-20 rounded-lg overflow-hidden shrink-0 relative">
+<img class="w-full h-full object-cover" data-alt="Domestic shorthair tabby cat named Luna with striking emerald green eyes sitting calmly in an adoption suite enclosure, safe and tranquil, ambient warm indoor light, clean cozy blanket" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA3Adz8_VB2v8e5tOfdc1ZORWVZm0HPdTEiEDaSgSZITVA3guekGLfMTTVxWUCc0f55hsx57J_-Uqc-ia-EnyiYCExO4Ad4aBMRQrXfLFluesROTIp-GiNieG5nS4SDGq3SaRE8uoL1yVq9pxC_xRelc-iEWf26rh2guTg1YxZ1dyw5NXER1i6wXHh_Z9RjTZka5UVMj81Wh2OjxARDGrqflHgNU-u-WEjY7ivzl4y02BFtzO6E8A1-YA"/>
+<div class="absolute bottom-0 inset-x-0 bg-primary-container/90 py-0.5 text-center">
+<span class="font-badge text-badge text-on-primary">Resting</span>
+</div>
+</div>
+<div class="flex-1 min-w-0 flex flex-col justify-between h-full py-0.5">
+<div>
+<div class="flex items-center justify-between">
+<h5 class="font-headline-sm text-headline-sm text-on-surface truncate">Luna</h5>
+<span class="px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-semibold">Ready for Dawn</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">Safe Haven Shelter • Foster Assigned</p>
+</div>
+<div class="flex items-center justify-between mt-2 pt-1">
+<div class="flex items-center gap-1 text-secondary">
+<span class="material-symbols-outlined text-[16px]">check_circle</span>
+<span class="font-label-sm text-label-sm font-semibold">Meds completed 02:00</span>
+</div>
+<button class="w-7 h-7 rounded-full bg-surface-container flex items-center justify-center text-primary hover:bg-primary hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Warm Community Message Banner -->
+<div class="w-full bg-secondary-container/30 rounded-xl p-space-md flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container shrink-0">
+<span class="material-symbols-outlined text-[20px]">volunteer_activism</span>
+</div>
+<div class="flex-1 min-w-0">
+<h5 class="font-headline-sm text-headline-sm text-on-surface">Volunteer On Duty?</h5>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Check-in at G-11 Dispatch Depot to pick up warming blankets and nighttime dry rations.</p>
+</div>
+</div>
+</div></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_-4px_20px_rgba(33,49,68,0.06)]" data-active-classes="text-primary font-semibold"><div class="flex items-center justify-around h-16 px-space-xs"><a aria-current="page" class="flex flex-col items-center justify-center w-14 h-12 transition-colors text-primary font-semibold" data-path="home" href="#"><span class="material-symbols-outlined text-[24px]">home</span><span class="font-label-sm text-label-sm mt-0.5">Home</span></a><a class="flex flex-col items-center justify-center w-14 h-12 text-on-surface-variant transition-colors" data-path="explore" href="#"><span class="material-symbols-outlined text-[24px]">travel_explore</span><span class="font-label-sm text-label-sm mt-0.5">Explore</span></a><a class="flex flex-col items-center justify-center w-12 h-12 rounded-full bg-primary text-on-primary shadow-[0_4px_12px_rgba(0,82,63,0.3)] hover:bg-primary-container transition-transform active:scale-95" data-path="report-case" href="#"><span class="material-symbols-outlined text-[26px]">add</span></a><a class="flex flex-col items-center justify-center w-14 h-12 text-on-surface-variant transition-colors" data-path="activity" href="#"><span class="material-symbols-outlined text-[24px]">notifications</span><span class="font-label-sm text-label-sm mt-0.5">Activity</span></a><a class="flex flex-col items-center justify-center w-14 h-12 text-on-surface-variant transition-colors" data-path="profile" href="#"><span class="material-symbols-outlined text-[24px]">account_circle</span><span class="font-label-sm text-label-sm mt-0.5">Profile</span></a></div></nav></body></html>
