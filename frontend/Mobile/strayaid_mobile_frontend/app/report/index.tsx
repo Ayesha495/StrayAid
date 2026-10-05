@@ -20,8 +20,13 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import MapPreview from "../../components/report/MapPreview";
+import NotAnimalModal from "../../components/report/NotAnimalModal";
+import { SessionExpiredError } from "../../services/apiClient";
 import { describeLocation, findAddress, getCurrentLocation, hasLocationPermission } from "../../services/locationService";
+import { checkReportPhoto } from "../../services/mobileContentService";
 import {
+  getReportDraft,
+  ReportPhoto,
   resetReportDraft,
   setReportLocation,
   setReportLocationFromSearch,
@@ -38,6 +43,8 @@ export default function ReportPhotoLocationScreen() {
   const [locating, setLocating] = useState(false);
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // The photo the detector rejected, shown in the "no animal found" window.
+  const [rejectedUri, setRejectedUri] = useState<string | null>(null);
   const searchingRef = useRef(false);
 
   // Keep the field in sync when the location changes elsewhere (GPS, map picker).
@@ -98,10 +105,39 @@ export default function ReportPhotoLocationScreen() {
       source === "camera" ? await ImagePicker.launchCameraAsync(options) : await ImagePicker.launchImageLibraryAsync(options);
     if (result.canceled || !result.assets[0]) return;
     const asset = result.assets[0];
-    updateReportDraft({
-      photo: { uri: asset.uri, name: asset.fileName || "report.jpg", type: asset.mimeType || "image/jpeg" },
-    });
     setError(null);
+    verifyPhoto({ uri: asset.uri, name: asset.fileName || "report.jpg", type: asset.mimeType || "image/jpeg" });
+  };
+
+  // Only photos with an animal can be reported: check as soon as it's picked, so a wrong
+  // photo can be retaken now instead of being refused at the end.
+  const verifyPhoto = async (photo: ReportPhoto) => {
+    updateReportDraft({ photo, photoCheck: { state: "checking" } });
+    try {
+      const result = await checkReportPhoto(photo);
+      if (getReportDraft().photo?.uri !== photo.uri) return; // replaced while checking
+      if (result.ok) {
+        updateReportDraft({ photoCheck: { state: "ok", animal: result.animal } });
+      } else {
+        updateReportDraft({ photo: null, photoCheck: { state: "idle" } });
+        setRejectedUri(photo.uri);
+      }
+    } catch (err) {
+      if (getReportDraft().photo?.uri !== photo.uri) return;
+      if (err instanceof SessionExpiredError) {
+        updateReportDraft({ photoCheck: { state: "error", message: "Sign in again, then tap “Check again”." } });
+        router.push("/auth-sheet");
+        return;
+      }
+      updateReportDraft({
+        photoCheck: { state: "error", message: err instanceof Error ? err.message : "We couldn't check the photo." },
+      });
+    }
+  };
+
+  const retakeAfterRejection = (source: "camera" | "library") => {
+    setRejectedUri(null);
+    takePhoto(source);
   };
 
   const choosePhoto = () => {
@@ -136,6 +172,14 @@ export default function ReportPhotoLocationScreen() {
   const next = () => {
     if (!draft.photo) {
       setError("Add a photo of the animal first.");
+      return;
+    }
+    if (draft.photoCheck.state === "checking") {
+      setError("Still checking your photo for an animal. One moment…");
+      return;
+    }
+    if (draft.photoCheck.state !== "ok") {
+      setError("The photo has to be checked for an animal before you can continue. Tap “Check again”.");
       return;
     }
     if (!draft.location) {
@@ -194,12 +238,42 @@ export default function ReportPhotoLocationScreen() {
                 style={styles.photoShade}
                 pointerEvents="none"
               />
+              {draft.photo && draft.photoCheck.state === "checking" && (
+                <View style={styles.checking} accessibilityLiveRegion="polite">
+                  <ActivityIndicator color={colors.onPrimary} />
+                  <Text style={styles.checkingText}>Checking for an animal…</Text>
+                </View>
+              )}
+              {draft.photo && draft.photoCheck.state === "ok" && (
+                <View style={styles.detectedBadge} accessibilityLiveRegion="polite">
+                  <MaterialIcons name="check-circle" size={14} color={colors.secondary} />
+                  <Text style={styles.detectedText}>
+                    {draft.photoCheck.animal
+                      ? `${draft.photoCheck.animal[0].toUpperCase()}${draft.photoCheck.animal.slice(1)} detected`
+                      : "Animal detected"}
+                  </Text>
+                </View>
+              )}
               <View style={styles.photoPill}>
                 <Ionicons name="camera-outline" size={16} color="#374151" />
                 <Text style={styles.photoPillText}>{draft.photo ? "Change photo" : "Add a photo"}</Text>
               </View>
             </Pressable>
           </View>
+
+          {draft.photo && draft.photoCheck.state === "error" && (
+            <View style={styles.checkError} accessibilityLiveRegion="polite">
+              <MaterialIcons name="cloud-off" size={16} color="#B7791F" />
+              <Text style={styles.checkErrorText}>{draft.photoCheck.message}</Text>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => draft.photo && verifyPhoto(draft.photo)}
+                hitSlop={8}
+              >
+                <Text style={styles.checkAgain}>Check again</Text>
+              </Pressable>
+            </View>
+          )}
 
           <View style={styles.locationGroup}>
             <Pressable
@@ -266,11 +340,53 @@ export default function ReportPhotoLocationScreen() {
           </Pressable>
         </View>
       </KeyboardAvoidingView>
+
+      <NotAnimalModal
+        visible={!!rejectedUri}
+        photoUri={rejectedUri}
+        canUseCamera={Platform.OS !== "web"}
+        onRetake={() => retakeAfterRejection("camera")}
+        onChooseAnother={() => retakeAfterRejection("library")}
+        onClose={() => setRejectedUri(null)}
+      />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  checking: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: "rgba(15,23,42,0.45)",
+  },
+  checkingText: { fontFamily: fonts.bodySemiBold, fontSize: 13, color: colors.onPrimary },
+  detectedBadge: {
+    position: "absolute",
+    top: 12,
+    left: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: "rgba(255,255,255,0.95)",
+  },
+  detectedText: { fontFamily: fonts.bodyBold, fontSize: 11.5, lineHeight: 16, color: colors.primary },
+  checkError: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: -6,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: "#FEF7ED",
+  },
+  checkErrorText: { flex: 1, fontFamily: fonts.bodyMedium, fontSize: 12.5, lineHeight: 17, color: "#8A5A12" },
+  checkAgain: { fontFamily: fonts.bodyBold, fontSize: 12.5, color: colors.primary },
   safeArea: { flex: 1, backgroundColor: colors.surface },
   flex: { flex: 1 },
   nav: {

@@ -1,5 +1,5 @@
 import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
-import { router, useLocalSearchParams } from "expo-router";
+import { Href, router, useLocalSearchParams } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Animated, BackHandler, Easing, Pressable, StyleSheet, Text, View } from "react-native";
@@ -98,11 +98,8 @@ export default function ReportSuccessScreen() {
     }
   };
 
-  const viewCase = () => {
-    // Opens your reports until the case details screen (Stitch 10) exists.
-    router.dismissAll();
-    router.replace("/(tabs)/activity");
-  };
+  // The case page replaces this screen, so its back button returns to the tabs.
+  const viewCase = () => router.replace(`/cases/${params.caseId}` as Href);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>

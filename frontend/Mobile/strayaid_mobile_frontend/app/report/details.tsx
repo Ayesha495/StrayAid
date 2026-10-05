@@ -1,9 +1,8 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import {
-  Animated,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -15,6 +14,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import Toggle from "../../components/ui/Toggle";
 import VoiceInputButton from "../../components/VoiceInputButton";
 import { SessionExpiredError } from "../../services/apiClient";
 import { submitReport } from "../../services/mobileContentService";
@@ -31,35 +31,6 @@ const SEVERITIES: { value: Severity; label: string; color: string; text: string 
   { value: "high", label: "High", color: "#E5534B", text: colors.onPrimary },
   { value: "critical", label: "Critical", color: "#B42318", text: colors.onPrimary },
 ];
-
-function Toggle({ value, onChange, label }: { value: boolean; onChange: (value: boolean) => void; label: string }) {
-  const position = useRef(new Animated.Value(value ? 1 : 0)).current;
-
-  useEffect(() => {
-    Animated.timing(position, { toValue: value ? 1 : 0, duration: 160, useNativeDriver: false }).start();
-  }, [position, value]);
-
-  return (
-    <Pressable
-      accessibilityRole="switch"
-      accessibilityLabel={label}
-      accessibilityState={{ checked: value }}
-      onPress={() => onChange(!value)}
-      hitSlop={8}
-    >
-      <Animated.View
-        style={[
-          styles.track,
-          { backgroundColor: position.interpolate({ inputRange: [0, 1], outputRange: ["#CBD5E1", colors.primary] }) },
-        ]}
-      >
-        <Animated.View
-          style={[styles.knob, { transform: [{ translateX: position.interpolate({ inputRange: [0, 1], outputRange: [0, 20] }) }] }]}
-        />
-      </Animated.View>
-    </Pressable>
-  );
-}
 
 export default function ReportDetailsScreen() {
   const draft = useReportDraft();
@@ -353,18 +324,6 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(248,250,252,0.7)",
   },
   updatesText: { flex: 1, paddingRight: 8 },
-  track: { width: 44, height: 24, borderRadius: 12, padding: 2 },
-  knob: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: colors.surface,
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.15,
-    shadowRadius: 2,
-    elevation: 2,
-  },
   note: {
     flexDirection: "row",
     alignItems: "flex-start",

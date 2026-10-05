@@ -71,6 +71,14 @@ export async function getTrendingCases(limit = 3): Promise<TrendingCase[]> {
   return cases.map((item) => ({ ...item, image: resolveMediaUrl(item.image) }));
 }
 
+// Open cases for the rescue map (Stitch 12), most urgent first. With a position, only
+// cases within radiusKm of it.
+export async function getMapCases(near?: { latitude: number; longitude: number }, radiusKm = 25): Promise<TrendingCase[]> {
+  const query = near ? `?lat=${near.latitude}&lng=${near.longitude}&radius_km=${radiusKm}` : "";
+  const cases = await getPublic<TrendingCase[]>(`/api/cases/map/${query}`);
+  return cases.map((item) => ({ ...item, image: resolveMediaUrl(item.image) }));
+}
+
 export async function getStoryGroups(): Promise<StoryGroup[]> {
   const groups = await getPublic<StoryGroup[]>("/api/posts/stories/");
   return groups.map((group) => ({
