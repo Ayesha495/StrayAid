@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=Manrope:wght@600;700;800&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "surface-dim": "#cbdbf4", "tertiary-fixed-dim": "#ffb4a9", "surface-bright": "#f8f9ff", "on-secondary-fixed-variant": "#00513b", "on-error": "#ffffff", "on-tertiary-fixed-variant": "#82271d", "surface-container-low": "#eef4ff", "surface-container-lowest": "#ffffff", "on-tertiary-container": "#ffcec7", "on-primary-container": "#9fe9ce", "on-error-container": "#93000a", "surface": "#f8f9ff", "surface-container-highest": "#d3e4fd", "tertiary-fixed": "#ffdad5", "on-tertiary-fixed": "#410000", "surface-variant": "#d3e4fd", "on-secondary-fixed": "#002116", "inverse-surface": "#213144", "on-secondary": "#ffffff", "on-primary-fixed": "#002118", "on-secondary-container": "#007153", "on-surface": "#0b1c2e", "primary-fixed": "#a7f1d7", "inverse-primary": "#8cd5bb", "on-background": "#0b1c2e", "tertiary-container": "#a23e32", "on-tertiary": "#ffffff", "primary": "#00523f", "secondary": "#006c4f", "primary-container": "#1e6b56", "on-surface-variant": "#3f4945", "inverse-on-surface": "#eaf1ff", "secondary-fixed": "#89f7cb", "secondary-container": "#86f4c8", "error-container": "#ffdad6", "error": "#ba1a1a", "surface-tint": "#1d6a55", "outline": "#6f7974", "on-primary-fixed-variant": "#00513f", "secondary-fixed-dim": "#6cdab0", "on-primary": "#ffffff", "surface-container": "#e5eeff", "surface-container-high": "#dbe9ff", "primary-fixed-dim": "#8cd5bb", "background": "#f8f9ff", "tertiary": "#82271e", "outline-variant": "#bec9c3" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "space-lg": "1rem", "space-sm": "0.5rem", "margin-lg": "1.5rem", "margin": "1rem", "space-xs": "0.25rem", "gutter": "1rem", "space-xl": "1.5rem", "space-md": "0.75rem", "gutter-sm": "0.75rem" }, fontFamily: { "headline-lg": ["Manrope"], "display-lg": ["Manrope"], "body-lg": ["Inter"], "label-sm": ["Inter"], "label-lg": ["Inter"], "headline-sm": ["Manrope"], "body-md": ["Inter"], "badge": ["Inter"], "headline-md": ["Manrope"], "label-md": ["Inter"], "body-sm": ["Inter"] }, fontSize: { "headline-lg": ["24px", { lineHeight: "32px", fontWeight: "700" }], "display-lg": ["32px", { lineHeight: "40px", fontWeight: "800" }], "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }], "label-sm": ["11px", { lineHeight: "14px", fontWeight: "600" }], "label-lg": ["14px", { lineHeight: "20px", fontWeight: "600" }], "headline-sm": ["18px", { lineHeight: "24px", fontWeight: "600" }], "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }], "badge": ["10px", { lineHeight: "12px", fontWeight: "700" }], "headline-md": ["20px", { lineHeight: "28px", fontWeight: "700" }], "label-md": ["12px", { lineHeight: "16px", fontWeight: "600" }], "body-sm": ["12px", { lineHeight: "16px", fontWeight: "400" }] } } } };</script><style>@layer base { html, body { width: 100%; margin: 0; padding: 0; } body { overscroll-behavior-y: none; } .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); } .pt-safe { padding-top: env(safe-area-inset-top, 0px); } } ::-webkit-scrollbar { display: none; }</style></head><body class="bg-surface text-on-surface font-body-md min-h-screen flex flex-col antialiased selection:bg-secondary-container selection:text-on-secondary-container"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 px-margin flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-sm min-w-0"><div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container shrink-0"><span class="material-symbols-outlined text-[22px]">pets</span></div><div class="flex flex-col min-w-0"><span class="font-label-sm text-secondary uppercase tracking-wider font-semibold truncate">StrayAid Rescue</span><h1 class="font-headline-sm text-headline-sm text-on-surface truncate">Explore</h1></div></div><div class="flex items-center gap-space-xs shrink-0"><button aria-label="Search cases" class="w-11 h-11 rounded-full flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors"><span class="material-symbols-outlined text-[22px]">search</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex-1 w-full bg-surface pt-16 pb-24"><div class="flex flex-col w-full">
+<!-- Search & Filter Controls -->
+<div class="px-margin pt-space-md pb-space-sm flex flex-col gap-space-md">
+<!-- Search Bar Row -->
+<div class="flex items-center gap-space-sm w-full">
+<div class="relative flex-1 flex items-center">
+<span class="material-symbols-outlined absolute left-3.5 text-on-surface-variant text-[20px] pointer-events-none select-none">search</span>
+<input class="w-full h-12 pl-10 pr-10 rounded-xl bg-surface-container-low text-on-surface font-body-md text-body-md placeholder:text-on-surface-variant/60 focus:bg-surface-container-lowest focus:outline-none transition-all shadow-[0_2px_8px_-2px_rgba(36,52,71,0.06)]" id="explore-search-input" placeholder="Search animals, organizations, cases..." type="text" value="Injured puppy"/>
+<button aria-label="Clear query" class="absolute right-3 w-6 h-6 rounded-full bg-surface-variant flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors" id="clear-search-btn">
+<span class="material-symbols-outlined text-[15px]">close</span>
+</button>
+</div>
+<!-- Filter Toggle Trigger -->
+<button aria-label="Open filter preferences" class="w-12 h-12 rounded-xl bg-secondary-container text-on-secondary-container flex items-center justify-center shrink-0 active:scale-95 transition-transform shadow-[0_2px_8px_-2px_rgba(0,113,83,0.15)]">
+<span class="material-symbols-outlined text-[22px]">tune</span>
+</button>
+</div>
+<!-- Animal Species Category Chips (Horizontal Carousel) -->
+<div class="flex items-center gap-space-xs overflow-x-auto -mx-margin px-margin py-0.5 no-scrollbar">
+<button class="flex items-center gap-1.5 px-4 h-9 rounded-full bg-primary-container text-on-primary font-label-md text-label-md shrink-0 shadow-sm transition-transform active:scale-95">
+<span class="material-symbols-outlined text-[16px]">apps</span>
+<span>All</span>
+</button>
+<button class="flex items-center gap-1.5 px-3.5 h-9 rounded-full bg-surface-container-lowest text-on-surface font-label-md text-label-md shrink-0 shadow-[0_1px_4px_rgba(0,0,0,0.04)] hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[17px] text-primary">sound_detection_dog_barking</span>
+<span>Dogs</span>
+</button>
+<button class="flex items-center gap-1.5 px-3.5 h-9 rounded-full bg-surface-container-lowest text-on-surface font-label-md text-label-md shrink-0 shadow-[0_1px_4px_rgba(0,0,0,0.04)] hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[17px] text-primary">pets</span>
+<span>Cats</span>
+</button>
+<button class="flex items-center gap-1.5 px-3.5 h-9 rounded-full bg-surface-container-lowest text-on-surface font-label-md text-label-md shrink-0 shadow-[0_1px_4px_rgba(0,0,0,0.04)] hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[17px] text-primary">raven</span>
+<span>Birds</span>
+</button>
+<button class="flex items-center gap-1.5 px-3.5 h-9 rounded-full bg-surface-container-lowest text-on-surface font-label-md text-label-md shrink-0 shadow-[0_1px_4px_rgba(0,0,0,0.04)] hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[17px] text-primary">cruelty_free</span>
+<span>Other</span>
+</button>
+</div>
+<!-- Quick Operational Filter Pills -->
+<div class="flex items-center gap-space-xs overflow-x-auto -mx-margin px-margin no-scrollbar">
+<div class="flex items-center gap-1 px-3 py-1 rounded-lg bg-surface-container text-on-surface-variant font-label-sm text-label-sm shrink-0">
+<span class="material-symbols-outlined text-[14px] text-secondary">near_me</span>
+<span>Near Me (&lt;5km)</span>
+</div>
+<div class="flex items-center gap-1 px-3 py-1 rounded-lg bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm shrink-0">
+<span class="w-1.5 h-1.5 rounded-full bg-error shrink-0 animate-ping"></span>
+<span class="w-1.5 h-1.5 rounded-full bg-error shrink-0 -ml-2.5"></span>
+<span>Critical Triage</span>
+</div>
+<div class="flex items-center gap-1 px-3 py-1 rounded-lg bg-secondary-container text-on-secondary-fixed-variant font-label-sm text-label-sm shrink-0">
+<span class="material-symbols-outlined text-[14px]">favorite</span>
+<span>Ready for Adoption</span>
+</div>
+<div class="flex items-center gap-1 px-3 py-1 rounded-lg bg-surface-container text-on-surface-variant font-label-sm text-label-sm shrink-0">
+<span class="material-symbols-outlined text-[14px]">history</span>
+<span>Recently Reported</span>
+</div>
+</div>
+</div>
+<!-- Recent Searches Drawer / Section -->
+<section class="px-margin pt-space-xs pb-space-sm">
+<div class="flex items-center justify-between mb-2">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold">Recent Searches</span>
+<button class="font-label-sm text-label-sm text-secondary hover:text-primary transition-colors font-medium" id="clear-all-recent">Clear All</button>
+</div>
+<div class="flex flex-wrap gap-2" id="recent-chips-container">
+<button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container-low text-on-surface font-body-sm text-body-sm active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant">schedule</span>
+<span>Injured puppy G-11</span>
+<span class="material-symbols-outlined text-[13px] text-on-surface-variant ml-0.5 hover:text-error">close</span>
+</button>
+<button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container-low text-on-surface font-body-sm text-body-sm active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant">schedule</span>
+<span>Kitten adoption</span>
+<span class="material-symbols-outlined text-[13px] text-on-surface-variant ml-0.5 hover:text-error">close</span>
+</button>
+<button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container-low text-on-surface font-body-sm text-body-sm active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant">schedule</span>
+<span>Paws &amp; Care shelter</span>
+<span class="material-symbols-outlined text-[13px] text-on-surface-variant ml-0.5 hover:text-error">close</span>
+</button>
+</div>
+</section>
+<!-- Featured Urgently Needed Card -->
+<section class="px-margin my-space-sm">
+<div class="relative w-full rounded-2xl bg-surface-container-lowest p-space-md shadow-[0_2px_12px_-2px_rgba(36,52,71,0.08)] overflow-hidden flex flex-col gap-3">
+<!-- Top Urgency Accent Banner -->
+<div class="flex items-center justify-between">
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-error-container text-on-error-container font-badge text-badge tracking-wide uppercase">
+<span class="w-1.5 h-1.5 rounded-full bg-error animate-pulse"></span>
+          Emergency Foster Needed
+        </div>
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-error">fmd_bad</span>
+          Sector F-7, Islamabad
+        </span>
+</div>
+<!-- Card Core: Thumbnail + Bio Details -->
+<div class="flex gap-space-md items-center">
+<div class="relative w-24 h-24 rounded-xl overflow-hidden shrink-0 shadow-inner bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="A portrait photograph of Rocky, an energetic and gentle young mongrel dog with amber brown eyes, alert ears, and a warm caramel coat, looking directly at the camera with optimism in Sector F-7, soft natural sunlight, StrayAid rescue aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDmB58WFfdhAdQv-foqArzdkdDPQ5eaxfCml4tHaGV-kryObp5sd8UdGy8BnaArmYcxBkyEtmM3CyWJyOiUHhTNKxVRB5SPXizdPBR0KvuHZgfJhjqC3ONPNPt50dQlltTTZOCqveHiZiDPVmUlNJih50pT6hOfsXCMVBIuTbA2CpNsYGDmiy5mOwLsNH0FidDTx3w0vVZI3zqDb36f_2oi9LMhsUJnJTDVVXk9L9zpRXk6w4_uXxRB2g"/>
+<div class="absolute bottom-1 right-1 px-1.5 py-0.5 rounded bg-inverse-surface/80 backdrop-blur text-inverse-on-surface font-badge text-badge">
+            2 yrs
+          </div>
+</div>
+<div class="flex flex-col justify-center min-w-0 flex-1">
+<div class="flex items-center justify-between">
+<h2 class="font-headline-sm text-headline-sm text-on-surface truncate">Rocky</h2>
+<button aria-label="Bookmark Rocky" class="text-on-surface-variant hover:text-error transition-colors p-1">
+<span class="material-symbols-outlined text-[20px]">favorite_border</span>
+</button>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Mixed Breed • Post-Surgery Recovery</p>
+<p class="font-label-sm text-label-sm text-primary font-semibold mt-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">volunteer_activism</span>
+            Requires 2-week quiet shelter
+          </p>
+</div>
+</div>
+<!-- Bottom Interactive Button -->
+<div class="pt-1 flex items-center gap-2">
+<button class="flex-1 h-10 rounded-xl bg-primary text-on-primary font-label-lg text-label-lg flex items-center justify-center gap-1.5 active:scale-98 transition-transform shadow-sm">
+<span class="material-symbols-outlined text-[18px]">handshake</span>
+          Foster Rocky
+        </button>
+<button aria-label="Share profile" class="w-10 h-10 rounded-xl bg-surface-container-low text-on-surface-variant hover:text-on-surface flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[18px]">share</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Directory Section Header -->
+<div class="px-margin pt-space-md pb-space-xs flex items-center justify-between">
+<div class="flex items-center gap-2">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Community Cases</h3>
+<span class="px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-semibold">3 Active</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">swap_vert</span>
+      Sort: Distance
+    </span>
+</div>
+<!-- Animal Directory Cards List -->
+<div class="px-margin flex flex-col gap-space-md pb-space-lg">
+<!-- Card 1: Max (Golden Retriever Mix) -->
+<div class="w-full rounded-2xl bg-surface-container-lowest p-space-md shadow-[0_2px_8px_-2px_rgba(36,52,71,0.06)] flex flex-col gap-3">
+<div class="flex gap-space-md">
+<div class="relative w-20 h-20 rounded-xl overflow-hidden shrink-0 bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="A portrait shot of Max, an endearing Golden Retriever mix with a gentle smile and golden honey fur sitting happily on a vet rescue mat, sunny natural lighting, warm tones matching the StrayAid rescue palette" src="https://lh3.googleusercontent.com/aida-public/AB6AXuASZjbUyN4ySHstzPMsb2Zl9edK04kvEFbOC2RdYNAZpqhGFlx4D2gQgoO5K-9GuEgJ-PR3jFZnqQuO9OB2ddNlSaqbnQn7B6F7OJqJvAtI5CYlCyJkzfj0yYa32qdYkn9bJ6RAiHmo5hxmR7EVM5LplJ5C3rDO7NvaB9W0xNwYTEXCedLX9O79vtLPM5nq1tvHOzrjb8DaL0lz5mWzqLt_7oSJjgnHu7IthmiF_51bMyYwAHk_CKiCzA"/>
+<span class="absolute top-1 left-1 px-1.5 py-0.5 rounded-md bg-secondary text-on-secondary font-badge text-badge">
+            Rescued
+          </span>
+</div>
+<div class="flex flex-col justify-between min-w-0 flex-1">
+<div>
+<div class="flex items-center justify-between">
+<h4 class="font-headline-sm text-headline-sm text-on-surface truncate">Max</h4>
+<span class="font-label-sm text-label-sm text-on-surface-variant">1.4 km</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">Golden Retriever Mix • 3 yrs</p>
+</div>
+<div class="flex items-center justify-between pt-1">
+<div class="inline-flex items-center gap-1 text-secondary font-label-sm text-label-sm font-semibold bg-secondary-container/60 px-2 py-0.5 rounded-full">
+<span class="material-symbols-outlined text-[14px]">savings</span>
+              PKR 1,000/mo Sponsor
+            </div>
+<span class="material-symbols-outlined text-primary text-[20px]">chevron_right</span>
+</div>
+</div>
+</div>
+<!-- Mini Progress Track -->
+<div class="w-full bg-surface-container-low rounded-full h-1.5 overflow-hidden">
+<div class="bg-primary h-full rounded-full" style="width: 75%;"></div>
+</div>
+</div>
+<!-- Card 2: Luna (Domestic Longhair Cat) -->
+<div class="w-full rounded-2xl bg-surface-container-lowest p-space-md shadow-[0_2px_8px_-2px_rgba(36,52,71,0.06)] flex flex-col gap-3">
+<div class="flex gap-space-md">
+<div class="relative w-20 h-20 rounded-xl overflow-hidden shrink-0 bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="Close up portrait photograph of Luna, an adorable domestic longhair kitten with expressive sage-green eyes and soft grey fluffy fur, relaxed inside a clean warm foster home basket, peaceful compassionate mood" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAY8vlHh4qOpOHS3yj3eGAUfzrfj1Wo-EREfrem9rLgaw1f3EvKhwTvWS4WQHivxtB-7b7i5OFqcf8n2_m0uUSs2rC40LyIxKrmkoe_yT4Vla3KCUloMM3r_lHySv_zqYRzDVKh8dOL08eYuU041pbmlPrmN2hXvrL6NVC1wOZfblYM2KWif9vEoEIMJM344d8_C5zRtRbw2rfEmRMt_gh2TLmv_LSRmJdMuFsTHLWvZ7xx_fP3sKTocQ"/>
+<span class="absolute top-1 left-1 px-1.5 py-0.5 rounded-md bg-secondary-container text-on-secondary-container font-badge text-badge">
+            Pending
+          </span>
+</div>
+<div class="flex flex-col justify-between min-w-0 flex-1">
+<div>
+<div class="flex items-center justify-between">
+<h4 class="font-headline-sm text-headline-sm text-on-surface truncate">Luna</h4>
+<span class="font-label-sm text-label-sm text-on-surface-variant">3.2 km</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">Domestic Longhair • 8 mos</p>
+</div>
+<div class="flex items-center justify-between pt-1">
+<div class="inline-flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm bg-surface-container px-2 py-0.5 rounded-full">
+<span class="material-symbols-outlined text-[14px]">home</span>
+              Adoption Review Stage 2
+            </div>
+<span class="material-symbols-outlined text-primary text-[20px]">chevron_right</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 3: Bella (Beagle Mix) -->
+<div class="w-full rounded-2xl bg-surface-container-lowest p-space-md shadow-[0_2px_8px_-2px_rgba(36,52,71,0.06)] flex flex-col gap-3">
+<div class="flex gap-space-md">
+<div class="relative w-20 h-20 rounded-xl overflow-hidden shrink-0 bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="Heartwarming photo of Bella, a tri-color Beagle mix with floppy ears and a gentle inquiring gaze resting on soft grass during therapy walk, rescue environment in Islamabad, professional warm documentary photography" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBUDHINRP42u6IKGKhUQ5hvv-dao-_X3BcfnWtoxW9sfnNBzHEVN6qiFZ_kwrkJBB9Xyd9AOTwaiTEqLdoJB4ZwH4_UHSQQzCpp6WfxJdS2NhwxxItt4W1enGC3QqtPEErTKtaQmuqlQLZ416i_6sL6pBUiXZmCnqPG3LRHphuK0McptShx_NwS7pQxJc2USZjbW4oCzCoPC1vRfovI_WJ2jtKZqwc04jkmR29f-aQVXh4Viu5tYmYSBA"/>
+<span class="absolute top-1 left-1 px-1.5 py-0.5 rounded-md bg-primary-fixed text-on-primary-fixed-variant font-badge text-badge">
+            In Care
+          </span>
+</div>
+<div class="flex flex-col justify-between min-w-0 flex-1">
+<div>
+<div class="flex items-center justify-between">
+<h4 class="font-headline-sm text-headline-sm text-on-surface truncate">Bella</h4>
+<span class="font-label-sm text-label-sm text-on-surface-variant">4.8 km</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">Beagle Mix • 1 yr</p>
+</div>
+<div class="flex items-center justify-between pt-1">
+<div class="inline-flex items-center gap-1 text-primary font-label-sm text-label-sm bg-surface-container-high px-2 py-0.5 rounded-full font-medium">
+<span class="material-symbols-outlined text-[14px]">medical_services</span>
+              Vaccination Complete
+            </div>
+<span class="material-symbols-outlined text-primary text-[20px]">chevron_right</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Organization Spotlight Banner -->
+<section class="px-margin pb-space-xl">
+<div class="w-full rounded-2xl bg-surface-container-low p-space-md flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-12 h-12 rounded-xl bg-primary text-on-primary flex items-center justify-center font-headline-sm text-headline-sm font-bold shadow-sm">
+          P&amp;C
+        </div>
+<div class="flex flex-col">
+<span class="font-label-lg text-label-lg text-on-surface font-semibold">Paws &amp; Care Rescue</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Sector H-11 Shelter • Verified Org</span>
+</div>
+</div>
+<button class="h-9 px-3.5 rounded-full bg-surface-container-lowest text-primary font-label-sm text-label-sm font-semibold shadow-sm active:scale-95 transition-transform">
+        View Hub
+      </button>
+</div>
+</section>
+</div>
+<script>
+  // Simple interactive micro-actions for client search demo
+  const clearBtn = document.getElementById('clear-search-btn');
+  const searchInput = document.getElementById('explore-search-input');
+  const clearAllRecent = document.getElementById('clear-all-recent');
+  const recentChipsContainer = document.getElementById('recent-chips-container');
+
+  if (clearBtn && searchInput) {
+    clearBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      searchInput.focus();
+    });
+  }
+
+  if (clearAllRecent && recentChipsContainer) {
+    clearAllRecent.addEventListener('click', () => {
+      recentChipsContainer.innerHTML = '<span class="font-body-sm text-body-sm text-on-surface-variant/60 italic">No recent searches</span>';
+      clearAllRecent.style.display = 'none';
+    });
+  }
+</script></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_-4px_20px_rgba(33,49,68,0.06)]" data-active-classes="text-primary font-semibold"><div class="flex items-center justify-around h-16 px-space-xs"><a class="flex flex-col items-center justify-center w-14 h-12 text-on-surface-variant transition-colors" data-path="home" href="#"><span class="material-symbols-outlined text-[24px]">home</span><span class="font-label-sm text-label-sm mt-0.5">Home</span></a><a aria-current="page" class="flex flex-col items-center justify-center w-14 h-12 transition-colors text-primary font-semibold" data-path="explore" href="#"><span class="material-symbols-outlined text-[24px]">travel_explore</span><span class="font-label-sm text-label-sm mt-0.5">Explore</span></a><a class="flex flex-col items-center justify-center w-12 h-12 rounded-full bg-primary text-on-primary shadow-[0_4px_12px_rgba(0,82,63,0.3)] hover:bg-primary-container transition-transform active:scale-95" data-path="report-case" href="#"><span class="material-symbols-outlined text-[26px]">add</span></a><a class="flex flex-col items-center justify-center w-14 h-12 text-on-surface-variant transition-colors" data-path="activity" href="#"><span class="material-symbols-outlined text-[24px]">notifications</span><span class="font-label-sm text-label-sm mt-0.5">Activity</span></a><a class="flex flex-col items-center justify-center w-14 h-12 text-on-surface-variant transition-colors" data-path="profile" href="#"><span class="material-symbols-outlined text-[24px]">account_circle</span><span class="font-label-sm text-label-sm mt-0.5">Profile</span></a></div></nav></body></html>
