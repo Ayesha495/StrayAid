@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 from accounts.models import User
 
 class CaseQuerySet(models.QuerySet):
@@ -13,6 +14,7 @@ SEVERITY_CHOICES = [
     ("high", "High"),
     ("critical", "Critical"),
 ]
+SEVERITY_ORDER = [value for value, _ in SEVERITY_CHOICES]
 
 
 class Case(models.Model):
@@ -64,6 +66,12 @@ class Case(models.Model):
     def __str__(self):
         return f"Case #{self.pk} - {self.status}"
 
+    @property
+    def reference(self):
+        # Human-readable case number shown to reporters, e.g. "SA-2026-0042".
+        year = (self.created_at or timezone.now()).year
+        return f"SA-{year}-{self.pk:04d}"
+
 class Report(models.Model):
     # Multiple public reports can roll up into the same case.
     case = models.ForeignKey(Case, on_delete= models.CASCADE, related_name = "reports")
@@ -73,6 +81,8 @@ class Report(models.Model):
     latitude = models.FloatField()
     longitude = models.FloatField()
     severity = models.CharField(max_length=10, choices=SEVERITY_CHOICES, default="medium")
+    # "Keep me updated" on the report form: push this reporter the case's status changes.
+    notify_reporter = models.BooleanField(default=True)
     # Highest animal-class confidence from the image detector (0-1).
     ai_animal_confidence = models.FloatField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

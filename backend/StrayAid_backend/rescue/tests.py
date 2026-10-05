@@ -110,6 +110,115 @@ class RescueApiTests(MediaEnabledAPITestCase):
         self.case.refresh_from_db()
         self.assertEqual(self.case.area, "G-9, Islamabad")
 
+    def test_report_sets_severity_and_keep_updated(self):
+        self.client.force_authenticate(user=self.public_user)
+
+        response = self.client.post(
+            "/api/cases/report/",
+            {
+                "description": "Hit by a car",
+                "latitude": "31.5200",
+                "longitude": "74.3200",
+                "severity": "Critical",
+                "keep_updated": "false",
+                "image": make_test_image(),
+            },
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        report = Report.objects.get(pk=response.data["report_id"])
+        self.assertEqual((report.severity, report.notify_reporter), ("critical", False))
+        self.assertEqual(report.case.severity, "critical")
+
+    def test_report_defaults_to_medium_and_updates_on(self):
+        self.client.force_authenticate(user=self.public_user)
+
+        response = self.client.post(
+            "/api/cases/report/",
+            {"description": "Stray", "latitude": "31.5200", "longitude": "74.3200", "image": make_test_image()},
+            format="multipart",
+        )
+
+        report = Report.objects.get(pk=response.data["report_id"])
+        self.assertEqual((report.severity, report.notify_reporter), ("medium", True))
+
+    def test_report_rejects_unknown_severity(self):
+        self.client.force_authenticate(user=self.public_user)
+
+        response = self.client.post(
+            "/api/cases/report/",
+            {"description": "x", "latitude": "31.52", "longitude": "74.32", "severity": "urgent", "image": make_test_image()},
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Report.objects.count(), 0)
+
+    def test_nearby_report_raises_case_severity_but_never_lowers_it(self):
+        self.client.force_authenticate(user=self.public_user)
+        payload = {"description": "Seen again", "latitude": "31.5100", "longitude": "74.3100"}
+
+        self.client.post("/api/cases/report/", {**payload, "severity": "high", "image": make_test_image()}, format="multipart")
+        self.case.refresh_from_db()
+        self.assertEqual(self.case.severity, "high")
+
+        self.client.post("/api/cases/report/", {**payload, "severity": "low", "image": make_test_image()}, format="multipart")
+        self.case.refresh_from_db()
+        self.assertEqual(self.case.severity, "high")
+
+    def test_status_updates_skip_reporters_who_opted_out(self):
+        from unittest.mock import patch
+
+        other = User.objects.create_user(email="other@example.com", username="other", password="x")
+        Report.objects.create(case=self.case, user=self.public_user, image=make_test_image(), description="a",
+                              latitude=31.51, longitude=74.31, notify_reporter=False)
+        Report.objects.create(case=self.case, user=other, image=make_test_image(), description="b",
+                              latitude=31.51, longitude=74.31, notify_reporter=True)
+
+        with patch("notifications.services.notify_users") as notify_users:
+            self.case.status = "assigned"
+            self.case.save()
+
+        notified = set(notify_users.call_args.args[0])
+        self.assertEqual(notified, {other.id})
+
+    def test_report_response_has_case_summary(self):
+        self.client.force_authenticate(user=self.public_user)
+
+        response = self.client.post(
+            "/api/cases/report/",
+            {"description": "Dog", "latitude": "31.5200", "longitude": "74.3200", "area": "G-11, Islamabad",
+             "severity": "high", "image": make_test_image()},
+            format="multipart",
+        )
+
+        case = Case.objects.get(pk=response.data["case_id"])
+        self.assertEqual(response.data["case"], {
+            "id": case.id,
+            "reference": f"SA-{case.created_at.year}-{case.id:04d}",
+            "area": "G-11, Islamabad",
+            "severity": "high",
+            "confidence_score": None,
+            "status": "reported",
+        })
+        self.assertTrue(response.data["keep_updated"])
+
+    def test_keep_me_updated_turns_updates_on_for_own_report_only(self):
+        report = Report.objects.create(case=self.case, user=self.public_user, image=make_test_image(),
+                                       description="a", latitude=31.51, longitude=74.31, notify_reporter=False)
+        stranger = User.objects.create_user(email="s@example.com", username="s", password="x")
+
+        self.client.force_authenticate(user=stranger)
+        self.assertEqual(self.client.post(f"/api/cases/reports/{report.id}/keep-updated/").status_code, 404)
+
+        self.client.force_authenticate(user=self.public_user)
+        response = self.client.post(f"/api/cases/reports/{report.id}/keep-updated/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        report.refresh_from_db()
+        self.assertTrue(report.notify_reporter)
+
     def test_report_case_requires_image(self):
         self.client.force_authenticate(user=self.public_user)
 

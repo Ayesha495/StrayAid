@@ -7,7 +7,7 @@ from django.utils import timezone
 from animals.models import Animal
 from organizations.permissions import IsOrganizationUser
 
-from .models import Case, Report
+from .models import SEVERITY_ORDER, Case, Report
 from .serializers import CaseSerializer, TrendingCaseSerializer
 from .utils.case_matcher import find_nearby_case
 from .utils.location_utils import calculate_distance
@@ -44,11 +44,20 @@ def report_case(request):
     image = request.FILES.get('image')
     # Readable place name picked on the phone (e.g. "F-7, Islamabad"); shown instead of coordinates.
     area = (request.data.get('area') or '').strip()[:100]
+    severity = (request.data.get('severity') or 'medium').strip().lower()
+    # Multipart sends booleans as text; anything but an explicit "no" keeps updates on.
+    notify_reporter = str(request.data.get('keep_updated', 'true')).strip().lower() not in ('false', '0', 'no', 'off')
 
     # Basic validation before we try duplicate matching or file creation.
     if not latitude or not longitude:
         return Response(
             {"error": "Latitude and longitude are required"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    if severity not in SEVERITY_ORDER:
+        return Response(
+            {"error": "Severity must be low, medium, high or critical"},
             status=status.HTTP_400_BAD_REQUEST
         )
 
@@ -72,9 +81,17 @@ def report_case(request):
 
     if existing_case:
         case = existing_case
+        changed = []
         if area and not case.area:
             case.area = area
-            case.save(update_fields=["area"])
+            changed.append("area")
+        # A new sighting can raise the urgency of a case, never lower it.
+        current = SEVERITY_ORDER.index(case.severity) if case.severity in SEVERITY_ORDER else 0
+        if SEVERITY_ORDER.index(severity) > current:
+            case.severity = severity
+            changed.append("severity")
+        if changed:
+            case.save(update_fields=changed)
         message = "Report attached to existing case"
     else:
         case = Case.objects.create(
@@ -82,6 +99,7 @@ def report_case(request):
             latitude=latitude,
             longitude=longitude,
             area=area,
+            severity=severity,
             reported_by=user
         )
         message = "New case created and report added"
@@ -94,16 +112,41 @@ def report_case(request):
         description=description,
         latitude=latitude,
         longitude=longitude,
+        severity=severity,
+        notify_reporter=notify_reporter,
     )
 
     return Response(
         {
             "message": message,
             "case_id": case.id,
-            "report_id": report.id
+            "report_id": report.id,
+            "keep_updated": report.notify_reporter,
+            # Summary for the "Report submitted" screen.
+            "case": {
+                "id": case.id,
+                "reference": case.reference,
+                "area": case.area,
+                "severity": case.severity,
+                "confidence_score": case.confidence_score,
+                "status": case.status,
+            },
         },
         status=status.HTTP_201_CREATED
     )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def keep_me_updated(request, report_id):
+    """Turn on status updates for one of your own reports (the success screen's button)."""
+    report = Report.objects.filter(pk=report_id, user=request.user).first()
+    if not report:
+        return Response({"error": "Report not found"}, status=status.HTTP_404_NOT_FOUND)
+    if not report.notify_reporter:
+        report.notify_reporter = True
+        report.save(update_fields=["notify_reporter"])
+    return Response({"keep_updated": True})
 
 
 @api_view(["GET"])

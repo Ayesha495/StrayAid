@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+from datetime import timedelta
 from pathlib import Path
 import os
 
@@ -108,6 +109,10 @@ DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER or "StrayAi
 
 SIMPLE_JWT = {
     "TOKEN_OBTAIN_SERIALIZER": "accounts.serializers.UsernameOrEmailTokenObtainPairSerializer",
+    # The library default is 5 minutes, which logged phones out mid-task. Clients renew the
+    # access token with the refresh token, so people stay signed in for a month of inactivity.
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=1),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
 }
 
 SOCIALACCOUNT_PROVIDERS = {

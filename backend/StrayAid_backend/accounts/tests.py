@@ -334,3 +334,20 @@ class SignUpTests(APITestCase):
 
         self.assertTrue(response.data["avatar"].startswith("http://testserver/media/avatars/"))
         user.avatar.delete(save=False)
+
+
+
+class TokenLifetimeTests(APITestCase):
+    def test_access_token_lasts_an_hour_and_can_be_refreshed(self):
+        from rest_framework_simplejwt.tokens import AccessToken
+
+        User.objects.create_user(email="p@example.com", username="p", password="secret123")
+        tokens = self.client.post("/auth/jwt/create/", {"email": "p@example.com", "password": "secret123"}, format="json").data
+
+        access = AccessToken(tokens["access"])
+        self.assertEqual(access["exp"] - access["iat"], 3600)
+
+        refreshed = self.client.post("/auth/jwt/refresh/", {"refresh": tokens["refresh"]}, format="json")
+        self.assertEqual(refreshed.status_code, status.HTTP_200_OK)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refreshed.data['access']}")
+        self.assertEqual(self.client.get("/auth/me/").status_code, status.HTTP_200_OK)

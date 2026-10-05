@@ -17,6 +17,7 @@ class CaseSerializer(serializers.ModelSerializer):
     reports = ReportSerializer(many = True, read_only = True)
     organization = OrganizationSerializer(read_only=True)
     distance_km = serializers.SerializerMethodField()
+    reference = serializers.ReadOnlyField()
 
     class Meta:
         model = Case
