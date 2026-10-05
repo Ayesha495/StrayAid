@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>StrayAid - Animal Profile (Luna)</title>
+<!-- Tailwind CSS CDN with forms and container queries plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Google Fonts: Manrope -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind Configuration -->
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Manrope', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              DEFAULT: '#1E6B56', // StrayAid primary rescue green
+              dark: '#165242',
+              light: '#EAF3F0',
+              accent: '#35A982',
+              surface: '#F8FAF9',
+              muted: '#71827D'
+            }
+          }
+        }
+      }
+    }
+  </script>
+<!-- Typography and Base Styles -->
+<style data-purpose="base-styles">
+    body {
+      font-family: 'Manrope', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      background-color: #E5E7EB;
+    }
+    /* Hide scrollbar for clean UI appearance */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="flex justify-center items-center min-h-screen sm:py-8 antialiased selection:bg-brand-light selection:text-brand">
+<!-- BEGIN: PhoneContainer -->
+<!-- Mobile canvas simulating iPhone iOS viewport -->
+<div class="relative w-full max-w-[414px] h-[896px] max-h-screen sm:max-h-[896px] bg-[#F9FBFA] sm:rounded-[44px] shadow-2xl overflow-hidden flex flex-col border border-gray-100/60" data-purpose="mobile-viewport">
+<!-- BEGIN: iOSStatusBar -->
+<header class="absolute top-0 left-0 right-0 z-30 flex justify-between items-center px-7 pt-3 pb-2 text-white pointer-events-none drop-shadow-sm" data-purpose="ios-status-bar">
+<!-- Time display -->
+<span class="text-sm font-semibold tracking-tight text-white/95">9:41</span>
+<!-- iOS Right Status Icons -->
+<div class="flex items-center space-x-2 text-white/95">
+<!-- Cellular bars -->
+<svg class="w-4 h-3.5 fill-current" viewbox="0 0 17 11">
+<rect height="4" rx="0.7" width="2.5" x="0" y="7"></rect>
+<rect height="6" rx="0.7" width="2.5" x="4.5" y="5"></rect>
+<rect height="8.5" rx="0.7" width="2.5" x="9" y="2.5"></rect>
+<rect height="11" rx="0.7" width="2.5" x="13.5" y="0"></rect>
+</svg>
+<!-- Wifi icon -->
+<svg class="w-4 h-3.5 fill-current" viewbox="0 0 16 12">
+<path d="M8 2.5C10.5 2.5 12.8 3.5 14.5 5.1L15.6 4C13.6 2 11 0.8 8 0.8C5 0.8 2.4 2 0.4 4L1.5 5.1C3.2 3.5 5.5 2.5 8 2.5ZM8 6.5C9.7 6.5 11.2 7.2 12.4 8.3L13.5 7.2C12 5.8 10.1 5 8 5C5.9 5 4 5.8 2.5 7.2L3.6 8.3C4.8 7.2 6.3 6.5 8 6.5ZM8 10.5C8.8 10.5 9.5 11.2 9.5 12C9.5 12.8 8.8 13.5 8 13.5C7.2 13.5 6.5 12.8 6.5 12C6.5 11.2 7.2 10.5 8 10.5Z"></path>
+</svg>
+<!-- Battery icon -->
+<div class="flex items-center">
+<div class="w-5 h-2.5 rounded-[3px] border border-white/90 p-0.5 flex items-center">
+<div class="h-full w-3.5 bg-white rounded-[1.5px]"></div>
+</div>
+<div class="w-0.5 h-1 bg-white/90 rounded-r-sm"></div>
+</div>
+</div>
+</header>
+<!-- END: iOSStatusBar -->
+<!-- BEGIN: ScrollableContent -->
+<main class="flex-1 overflow-y-auto no-scrollbar pb-28" data-purpose="profile-scroll-container">
+<!-- BEGIN: HeroMediaSection -->
+<section class="relative w-full h-[370px] bg-slate-100" data-purpose="hero-carousel">
+<!-- Main Pet Photography (Luna) -->
+<img alt="Close-up portrait of an adorable fluffy domestic cat named Luna" class="w-full h-full object-cover object-center" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBAGPPFeeT-fZakFtexbe2bi4rN50ciPEFpNR9EZfor2wy_QMhchsUwR6N7o8BEYjl3MsFdOZASyNY-sqFoSwbR3aBO3BZfeFy9e4zF2-pGjm5AB5wpcaJ6EgtzBEOoECE0QweTIpuMk91MtYyHfhSmNmGz_tHfLQOZVvOQR6orwRQJ8XXhUi8DZhSZhmL70s9te_pD04T6gQcF7k2jlDpk3q-JwxESz5xKtpVXIqbdKmRhDByHNCUBSw"/>
+<!-- Top overlay gradient for button contrast -->
+<div class="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/45 via-black/15 to-transparent pointer-events-none"></div>
+<!-- Floating Top Navigation Controls -->
+<div class="absolute top-12 left-0 right-0 px-5 flex justify-between items-center z-20" data-purpose="top-navigation-buttons">
+<!-- Back button -->
+<button aria-label="Go back" class="w-10 h-10 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-gray-800 shadow-md transition-all active:scale-95 hover:bg-white" type="button">
+<svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" stroke-width="2.5" viewbox="0 0 24 24">
+<path d="M15 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+<!-- Favorite / Bookmark Button -->
+<button aria-label="Add to favorites" class="w-10 h-10 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-gray-700 shadow-md transition-all active:scale-95 hover:bg-white hover:text-red-500" type="button">
+<svg class="w-5 h-5 stroke-current fill-transparent" stroke-width="2.2" viewbox="0 0 24 24">
+<path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+</div>
+<!-- Carousel Pagination Dots -->
+<div class="absolute bottom-4 left-0 right-0 flex justify-center items-center space-x-1.5 z-10" data-purpose="carousel-indicator">
+<span class="w-6 h-1.5 rounded-full bg-white transition-all shadow-sm"></span>
+<span class="w-1.5 h-1.5 rounded-full bg-white/60 transition-all"></span>
+<span class="w-1.5 h-1.5 rounded-full bg-white/60 transition-all"></span>
+<span class="w-1.5 h-1.5 rounded-full bg-white/60 transition-all"></span>
+</div>
+</section>
+<!-- END: HeroMediaSection -->
+<!-- BEGIN: ProfileDetailsSheet -->
+<section class="relative -mt-4 bg-[#F9FBFA] rounded-t-[28px] px-6 pt-5 pb-4 shadow-sm border-t border-emerald-950/5" data-purpose="profile-details-content">
+<!-- Header row: Pet Name & Verified Status -->
+<div class="flex items-center justify-between mb-2">
+<div class="flex items-center space-x-2">
+<h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Luna</h1>
+<!-- Verified Rescue Status Shield -->
+<span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-100 text-brand" title="Verified Rescue Profile">
+<svg class="w-4 h-4 fill-brand" viewbox="0 0 24 24">
+<path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3zm-1.2 14.5l-4-4 1.41-1.41L10.8 13.68l6.09-6.09 1.41 1.41-7.5 7.5z"></path>
+</svg>
+</span>
+</div>
+<!-- Share icon shortcut -->
+<button aria-label="Share profile" class="p-2 text-gray-400 hover:text-gray-600 transition-colors" type="button">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+</div>
+<!-- Tags / Badges Row -->
+<div class="flex flex-wrap items-center gap-2 mb-4" data-purpose="pet-status-chips">
+<span class="px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">Cat</span>
+<span class="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-brand">Rescued</span>
+<span class="px-3 py-1 rounded-full text-xs font-semibold bg-[#DCF2EA] text-[#13614C] flex items-center space-x-1">
+<span class="w-1.5 h-1.5 rounded-full bg-[#13614C] inline-block mr-1"></span>
+            Adoption Available
+          </span>
+</div>
+<!-- Shelter & Location Card -->
+<div class="p-3.5 bg-white rounded-2xl border border-gray-100/90 shadow-sm flex items-center justify-between mb-4" data-purpose="shelter-info-card">
+<div class="flex items-center space-x-3">
+<!-- Shelter Avatar / Icon -->
+<div class="w-10 h-10 rounded-xl bg-brand/10 text-brand flex items-center justify-center font-bold text-sm">
+<svg class="w-5 h-5 fill-current" viewbox="0 0 24 24">
+<path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path>
+</svg>
+</div>
+<div>
+<h2 class="text-sm font-bold text-gray-900 leading-tight">Paws &amp; Care Rescue</h2>
+<p class="text-xs text-brand-muted flex items-center mt-0.5">
+<svg class="w-3.5 h-3.5 text-gray-400 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" stroke-linecap="round" stroke-linejoin="round"></path>
+<path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+                Islamabad, Pakistan
+              </p>
+</div>
+</div>
+<!-- Contact or Info Arrow -->
+<span class="w-7 h-7 rounded-full bg-gray-50 flex items-center justify-center text-gray-400">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</span>
+</div>
+<!-- Key Attributes Summary Row -->
+<div class="px-2 py-1 mb-4 flex items-center text-xs font-semibold text-gray-600 space-x-2" data-purpose="pet-attributes">
+<span class="text-brand">●</span>
+<span>Healthy</span>
+<span class="text-gray-300">•</span>
+<span>Vaccinated</span>
+<span class="text-gray-300">•</span>
+<span>2 years old</span>
+<span class="text-gray-300">•</span>
+<span>Female</span>
+</div>
+<!-- Story / Bio -->
+<div class="mb-5" data-purpose="rescue-story-description">
+<h3 class="text-sm font-bold text-gray-900 uppercase tracking-wider mb-1.5 text-[11px] text-gray-400">About Luna</h3>
+<p class="text-sm leading-relaxed text-gray-600">
+            Rescued from a construction site. Now looking for a forever home. Extremely gentle, curious, and comfortable around gentle humans. Fully litter-trained and vaccinated.
+          </p>
+</div>
+<!-- Community / Engagement Stats Row (Dual Cards) -->
+<div class="grid grid-cols-2 gap-3 mb-2" data-purpose="community-stats-grid">
+<!-- Card 1: Sponsors -->
+<div class="bg-white p-3.5 rounded-2xl border border-gray-100 shadow-sm flex items-center space-x-3">
+<div class="w-9 h-9 rounded-xl bg-rose-50 flex items-center justify-center text-rose-500">
+<svg class="w-5 h-5 fill-current" viewbox="0 0 24 24">
+<path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path>
+</svg>
+</div>
+<div>
+<div class="text-base font-extrabold text-gray-900 leading-tight">12</div>
+<div class="text-[11px] font-medium text-gray-500">Sponsors</div>
+</div>
+</div>
+<!-- Card 2: Applications -->
+<div class="bg-white p-3.5 rounded-2xl border border-gray-100 shadow-sm flex items-center space-x-3">
+<div class="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center text-brand">
+<svg class="w-5 h-5 fill-current" viewbox="0 0 24 24">
+<path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"></path>
+</svg>
+</div>
+<div>
+<div class="text-base font-extrabold text-gray-900 leading-tight">45</div>
+<div class="text-[11px] font-medium text-gray-500">Applications</div>
+</div>
+</div>
+</div>
+</section>
+<!-- END: ProfileDetailsSheet -->
+</main>
+<!-- END: ScrollableContent -->
+<!-- BEGIN: FloatingActionBar -->
+<!-- Fixed bottom CTA bar matching design system specifications -->
+<footer class="absolute bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-gray-100 px-6 pt-3.5 pb-7 z-30 shadow-[0_-4px_20px_rgba(0,0,0,0.04)]" data-purpose="floating-bottom-bar">
+<!-- Dual CTA buttons -->
+<div class="flex items-center space-x-3">
+<!-- Primary Action: Adopt -->
+<button class="flex-1 py-3.5 px-4 bg-brand hover:bg-brand-dark active:scale-[0.98] transition-all text-white font-bold rounded-2xl text-center shadow-lg shadow-brand/20 flex items-center justify-center space-x-2" type="button">
+<span>Adopt Luna</span>
+</button>
+<!-- Secondary Action: Sponsor -->
+<button class="flex-1 py-3.5 px-4 bg-brand-light hover:bg-[#DDF0E8] active:scale-[0.98] transition-all text-brand font-bold rounded-2xl text-center border border-brand/10 flex items-center justify-center space-x-1.5" type="button">
+<svg class="w-4 h-4 fill-brand" viewbox="0 0 24 24">
+<path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path>
+</svg>
+<span>Sponsor</span>
+</button>
+</div>
+<!-- iOS Home Bar Indicator -->
+<div class="w-36 h-1 bg-gray-300 rounded-full mx-auto mt-4"></div>
+</footer>
+<!-- END: FloatingActionBar -->
+</div>
+<!-- END: PhoneContainer -->
+</body></html>

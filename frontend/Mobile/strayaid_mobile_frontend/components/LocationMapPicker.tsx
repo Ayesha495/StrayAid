@@ -10,7 +10,8 @@ type LocationMapPickerProps = {
   onPress: (e: { nativeEvent: { coordinate: Coordinate } }) => void;
 };
 
-// Uses OpenStreetMap tiles via Leaflet — no API key or billing required.
+// Uses OpenStreetMap tiles via Leaflet — no API key or billing required. Same tiles as the
+// report screen's map preview.
 export default function LocationMapPicker({ location, markerPosition, onPress }: LocationMapPickerProps) {
   const initLat = markerPosition?.latitude ?? location.latitude;
   const initLng = markerPosition?.longitude ?? location.longitude;

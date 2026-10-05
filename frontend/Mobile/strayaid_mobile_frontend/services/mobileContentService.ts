@@ -1,7 +1,7 @@
 import { getToken } from "../utils/tokenStorage";
 import { API_BASE } from "./apiConfig";
 
-const resolveMediaUrl = (value: string | null | undefined) => {
+export const resolveMediaUrl = (value: string | null | undefined) => {
   // The API can return relative media paths during local development.
   if (!value) {
     return value ?? null;
@@ -28,6 +28,7 @@ export type MobileOrganization = {
   bank_account_title?: string;
   bank_account_number?: string;
   user_email?: string;
+  is_verified?: boolean;
 };
 export type MobileUser = {
   id: number;
@@ -81,10 +82,24 @@ export type MobileCase = {
   reports: MobileReport[];
 };
 
+// API errors come back as {"error": ...}, {"detail": ...} or {field: [messages]}; show the
+// first readable message instead of raw JSON.
+function errorMessage(data: unknown, status: number) {
+  if (typeof data === "string" && data) return data;
+  if (data && typeof data === "object") {
+    const record = data as Record<string, unknown>;
+    const first = record.error ?? record.detail ?? Object.values(record)[0];
+    const message = Array.isArray(first) ? first[0] : first;
+    if (typeof message === "string" && message) return message;
+  }
+  if (status === 401) return "Please sign in again to continue.";
+  return "Something went wrong. Please try again.";
+}
+
 async function parseJson<T>(response: Response): Promise<T> {
-  const data = await response.json();
+  const data = await response.json().catch(() => null);
   if (!response.ok) {
-    throw new Error(typeof data === "string" ? data : JSON.stringify(data));
+    throw new Error(errorMessage(data, response.status));
   }
   return data as T;
 }
@@ -101,7 +116,7 @@ const normalizeAnimal = (animal: MobileAnimal): MobileAnimal => ({
   organization: normalizeOrganization(animal.organization),
 });
 
-const normalizePost = (post: MobilePost): MobilePost => ({
+export const normalizePost = (post: MobilePost): MobilePost => ({
   ...post,
   image: resolveMediaUrl(post.image),
   animal: normalizeAnimal(post.animal),

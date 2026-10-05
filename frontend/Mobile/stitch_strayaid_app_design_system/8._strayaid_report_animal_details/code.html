@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>StrayAid — Report Animal Details</title>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Google Fonts: Plus Jakarta Sans / Manrope -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<!-- Custom Configuration -->
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#f0f9f6',
+              100: '#dbf0e9',
+              500: '#2b8f72',
+              600: '#1e6b56',
+              700: '#175645',
+              800: '#114235',
+            },
+            coral: {
+              50: '#fff1f0',
+              100: '#fee2e0',
+              500: '#e5534b',
+              600: '#d43d35',
+            }
+          }
+        }
+      }
+    }
+  </script>
+<!-- BEGIN: Custom Styles -->
+<style data-purpose="base-styling">
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      background-color: #f1f5f9;
+    }
+    /* Hide default scrollbar */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+<!-- END: Custom Styles -->
+</head>
+<body class="flex justify-center items-center min-h-screen p-0 sm:p-6 text-slate-800">
+<!-- BEGIN: MobileDeviceFrame -->
+<div class="relative w-full max-w-[400px] h-[844px] bg-white sm:rounded-[48px] shadow-2xl overflow-hidden flex flex-col border-[6px] border-slate-900/10" data-purpose="mobile-container">
+<!-- BEGIN: iOSStatusBar -->
+<div class="w-full pt-3 px-7 pb-2 flex justify-between items-center bg-white z-20 shrink-0 select-none" data-purpose="status-bar">
+<span class="text-sm font-semibold tracking-tight text-slate-900">9:41</span>
+<!-- Speaker Notch representation -->
+<div class="w-20 h-4 bg-slate-900/5 rounded-full absolute left-1/2 -translate-x-1/2 top-2"></div>
+<!-- System Icons -->
+<div class="flex items-center space-x-2 text-slate-900">
+<!-- Cellular Signal Icon -->
+<svg class="w-4 h-3.5 fill-current" viewbox="0 0 16 12">
+<rect height="3" rx="0.5" width="2.5" x="0" y="9"></rect>
+<rect height="6" rx="0.5" width="2.5" x="4.5" y="6"></rect>
+<rect height="9" rx="0.5" width="2.5" x="9" y="3"></rect>
+<rect height="12" rx="0.5" width="2.5" x="13.5" y="0"></rect>
+</svg>
+<!-- WiFi Icon -->
+<svg class="w-4 h-3.5 fill-current" viewbox="0 0 16 12">
+<path d="M8 9.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3zM4.75 7.25a4.596 4.596 0 016.5 0 .75.75 0 001.06-1.06 6.096 6.096 0 00-8.62 0 .75.75 0 101.06 1.06zM2.1 4.6a8.344 8.344 0 0111.8 0 .75.75 0 101.06-1.06 9.844 9.844 0 00-13.92 0 .75.75 0 101.06 1.06z"></path>
+</svg>
+<!-- Battery Icon -->
+<div class="flex items-center">
+<div class="w-5 h-2.5 rounded-sm border border-slate-900 p-0.5 flex items-center">
+<div class="w-3 h-full bg-slate-900 rounded-[1px]"></div>
+</div>
+<div class="w-0.5 h-1 bg-slate-900 rounded-r-sm"></div>
+</div>
+</div>
+</div>
+<!-- END: iOSStatusBar -->
+<!-- BEGIN: TopNavigation -->
+<header class="px-5 pt-2 pb-3 bg-white flex items-center justify-between border-b border-slate-100 shrink-0">
+<div class="flex items-center space-x-3">
+<!-- Back Button -->
+<button aria-label="Go back" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-100 transition-colors" type="button">
+<svg class="w-5 h-5 stroke-[2.5]" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M15.75 19.5L8.25 12l7.5-7.5" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+<h1 class="text-base font-bold text-slate-900 tracking-tight">Report an animal in need</h1>
+</div>
+<!-- Step Counter / Indicator -->
+<div class="flex items-center space-x-1">
+<span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+<span class="w-4 h-1.5 rounded-full bg-brand-600"></span>
+</div>
+</header>
+<!-- END: TopNavigation -->
+<!-- BEGIN: MainContentArea -->
+<main class="flex-1 overflow-y-auto px-5 py-4 space-y-5 no-scrollbar">
+<!-- Incident Description Section -->
+<section class="space-y-2" data-purpose="incident-description">
+<div class="flex justify-between items-center">
+<label class="text-sm font-bold text-slate-900" for="incident-description">
+            What happened?
+          </label>
+<span class="text-xs font-semibold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full">
+            Detailed info helps
+          </span>
+</div>
+<div class="relative">
+<textarea class="w-full text-[13.5px] leading-relaxed text-slate-700 bg-slate-50/80 border border-slate-200 rounded-2xl p-3.5 focus:bg-white focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none resize-none transition-all placeholder:text-slate-400 font-medium" id="incident-description" placeholder="Describe what you see, exact landmark, behavior..." rows="5">This dog appears to be injured and is unable to walk. I found him near the park entrance.</textarea>
+<!-- Voice to Text Indicator / Action -->
+<div class="absolute bottom-2.5 right-2.5">
+<button class="inline-flex items-center gap-1.5 text-xs font-semibold bg-white text-slate-600 hover:text-brand-600 px-2.5 py-1.5 rounded-xl border border-slate-200 shadow-sm transition-colors" type="button">
+<svg class="w-3.5 h-3.5 text-brand-600" fill="currentColor" viewbox="0 0 24 24">
+<path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"></path>
+<path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"></path>
+</svg>
+<span>Voice</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Severity Selection Section -->
+<section class="space-y-2.5" data-purpose="severity-selector">
+<div>
+<h2 class="text-sm font-bold text-slate-900">Severity</h2>
+<p class="text-xs text-slate-500 mt-0.5">Assists our AI triage and closest rescue priority</p>
+</div>
+<!-- 4-Level Severity Grid Buttons -->
+<div class="grid grid-cols-4 gap-2">
+<!-- Option 1: Low -->
+<button class="flex flex-col items-center justify-center py-2.5 px-1 rounded-xl border border-slate-200 bg-white hover:border-slate-300 text-center transition-all" type="button">
+<span class="text-xs font-semibold text-slate-700">Low</span>
+</button>
+<!-- Option 2: Medium -->
+<button class="flex flex-col items-center justify-center py-2.5 px-1 rounded-xl border border-slate-200 bg-white hover:border-slate-300 text-center transition-all" type="button">
+<span class="text-xs font-semibold text-slate-700">Medium</span>
+</button>
+<!-- Option 3: High (Selected State) -->
+<button class="flex flex-col items-center justify-center py-2.5 px-1 rounded-xl bg-coral-500 text-white font-bold shadow-sm shadow-coral-500/30 ring-2 ring-coral-500 ring-offset-1 text-center transition-all" type="button">
+<span class="text-xs font-bold tracking-tight">High</span>
+</button>
+<!-- Option 4: Critical -->
+<button class="flex flex-col items-center justify-center py-2.5 px-1 rounded-xl border border-slate-200 bg-white hover:border-slate-300 text-center transition-all" type="button">
+<span class="text-xs font-semibold text-slate-700">Critical</span>
+</button>
+</div>
+</section>
+<!-- Keep Me Updated Toggle Section -->
+<section class="bg-slate-50/70 border border-slate-100 rounded-2xl p-3.5 flex items-center justify-between" data-purpose="notifications-toggle">
+<div class="pr-2">
+<h3 class="text-sm font-bold text-slate-900">Keep me updated</h3>
+<p class="text-xs text-slate-500 mt-0.5 leading-snug">Get updates about this rescue</p>
+</div>
+<!-- Active iOS-style Switch -->
+<label class="relative inline-flex items-center cursor-pointer shrink-0">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-600"></div>
+</label>
+</section>
+<!-- Rescue Info Card / AI Confidence Banner -->
+<section class="bg-emerald-50/60 rounded-2xl p-3 border border-emerald-100/80 flex items-start space-x-2.5" data-purpose="safety-note">
+<div class="w-6 h-6 rounded-full bg-brand-600/10 text-brand-600 flex items-center justify-center shrink-0 mt-0.5">
+<svg class="w-3.5 h-3.5 fill-current" viewbox="0 0 20 20">
+<path clip-rule="evenodd" d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-2.001A11.954 11.954 0 0110 1.944zM11 14a1 1 0 11-2 0 1 1 0 012 0zm0-7a1 1 0 10-2 0v3a1 1 0 102 0V7z" fill-rule="evenodd"></path>
+</svg>
+</div>
+<p class="text-[11.5px] leading-relaxed text-slate-600 font-medium">
+          A volunteer or vet shelter nearby will be notified once reported. Stay safe and avoid moving severely injured animals.
+        </p>
+</section>
+</main>
+<!-- END: MainContentArea -->
+<!-- BEGIN: BottomActionSection -->
+<footer class="p-5 bg-white border-t border-slate-100 shrink-0 space-y-3" data-purpose="submit-footer">
+<!-- Primary Submit Button -->
+<button class="w-full h-12 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white font-bold text-sm rounded-2xl shadow-lg shadow-brand-600/25 flex items-center justify-center space-x-2 transition-all" type="button">
+<span>Submit Rescue Report</span>
+<svg class="w-4 h-4 stroke-[2.5]" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+<!-- Review Note -->
+<p class="text-[11px] font-medium text-center text-slate-400 tracking-tight">
+        Your report will be reviewed by a rescue organization.
+      </p>
+<!-- iOS Home Bar Indicator -->
+<div class="pt-1 flex justify-center">
+<div class="w-32 h-1 bg-slate-900/30 rounded-full"></div>
+</div>
+</footer>
+<!-- END: BottomActionSection -->
+</div>
+<!-- END: MobileDeviceFrame -->
+</body></html>

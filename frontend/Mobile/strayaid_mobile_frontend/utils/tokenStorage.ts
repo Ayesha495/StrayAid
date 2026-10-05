@@ -16,3 +16,11 @@ export async function saveToken(token: string) {
     await SecureStore.setItemAsync("access", token);
   }
 }
+
+export async function clearToken() {
+  if (Platform.OS === "web") {
+    localStorage.removeItem("access");
+  } else {
+    await SecureStore.deleteItemAsync("access");
+  }
+}

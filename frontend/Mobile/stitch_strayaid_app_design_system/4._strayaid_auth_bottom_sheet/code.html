@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<title>StrayAid - Auth Bottom Sheet</title>
+<!-- Google Fonts: Inter & Manrope -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Manrope:wght@500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              DEFAULT: '#1e6b56', // Rescue Green
+              dark: '#165343',
+              light: '#368972',
+              mint: '#E7F4EE',
+              emerald: '#35A982'
+            },
+            neutral: {
+              950: '#0F172A',
+              850: '#1e293b',
+              50: '#F8FAFC'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Manrope', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+<style data-purpose="custom-styling">
+    body {
+      font-family: 'Inter', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      background-color: #0b1311;
+    }
+    .font-display {
+      font-family: 'Manrope', sans-serif;
+    }
+    /* iOS home indicator dynamic safe styling */
+    .safe-bottom {
+      padding-bottom: env(safe-area-inset-bottom, 16px);
+    }
+  </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-0 sm:p-4 text-slate-800 antialiased selection:bg-brand selection:text-white">
+<!-- BEGIN: MobileDeviceFrame -->
+<div class="relative w-full max-w-[393px] h-[844px] bg-slate-900 rounded-[48px] overflow-hidden shadow-2xl border-[7px] border-slate-800 flex flex-col justify-between select-none">
+<!-- BEGIN: iOSStatusBar -->
+<header class="absolute top-0 left-0 right-0 z-40 flex items-center justify-between px-7 pt-3 pb-2 text-slate-900">
+<div class="text-[15px] font-semibold tracking-tight text-slate-900 font-sans">9:41</div>
+<!-- Island / Camera notch area simulator -->
+<div class="w-28 h-5 bg-black rounded-full absolute left-1/2 -translate-x-1/2 top-2"></div>
+<div class="flex items-center space-x-2 text-slate-900">
+<!-- Signal Icon -->
+<svg class="w-4 h-4 fill-current text-slate-900" viewbox="0 0 24 24">
+<path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 18.25C2.89 16.48 2 14.34 2 12 2 6.48 6.48 2 12 2c5.52 0 10 4.48 10 10 0 2.34-.89 4.48-2.35 6.25l-.62-.64C20.26 16.07 21 14.12 21 12c0-4.97-4.03-9-9-9zm0 4c-2.76 0-5 2.24-5 5 0 1.25.46 2.4 1.22 3.28l.62-.64C8.29 13.97 8 13.02 8 12c0-2.21 1.79-4 4-4s4 1.79 4 4c0 1.02-.29 1.97-.84 2.64l.62.64C16.54 14.4 17 13.25 17 12c0-2.76-2.24-5-5-5z"></path>
+<circle cx="12" cy="12" r="2"></circle>
+</svg>
+<!-- Wifi Icon -->
+<svg class="w-4 h-4 fill-current text-slate-900" viewbox="0 0 24 24">
+<path d="M12 4C7.31 4 3.07 5.9 0 8.98L12 21 24 8.98C20.93 5.9 16.69 4 12 4zm0 3.5c3.78 0 7.22 1.47 9.8 3.87L12 18.25 2.2 11.37C4.78 8.97 8.22 7.5 12 7.5z"></path>
+</svg>
+<!-- Battery Icon -->
+<div class="w-5 h-2.5 border border-slate-900 rounded-sm p-0.5 flex items-center">
+<div class="h-full w-3 bg-slate-900 rounded-[1px]"></div>
+</div>
+</div>
+</header>
+<!-- END: iOSStatusBar -->
+<!-- BEGIN: BackgroundGuestFeed (Subtly Dimmed) -->
+<div aria-hidden="true" class="absolute inset-0 bg-[#F4F6F5] overflow-hidden pointer-events-none">
+<!-- App Header Mock in Background -->
+<div class="pt-12 px-5 pb-3 bg-white flex items-center justify-between border-b border-slate-100">
+<div class="flex items-center space-x-2">
+<div class="w-7 h-7 rounded-lg bg-brand flex items-center justify-center text-white">
+<svg class="w-4 h-4" fill="currentColor" viewbox="0 0 24 24">
+<path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path>
+</svg>
+</div>
+<span class="font-display font-extrabold text-lg text-slate-800 tracking-tight">StrayAid</span>
+</div>
+<div class="flex items-center space-x-3">
+<div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+</div>
+<div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+</div>
+</div>
+</div>
+<!-- Stories Row in Background -->
+<div class="px-4 py-3 bg-white border-b border-slate-100">
+<p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 font-display">Stories</p>
+<div class="flex space-x-3 overflow-hidden opacity-60">
+<div class="flex flex-col items-center space-y-1">
+<div class="w-13 h-13 p-0.5 rounded-full ring-2 ring-brand bg-white">
+<div class="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center text-xl">🐶</div>
+</div>
+<span class="text-[11px] text-slate-600 font-medium">Rescue</span>
+</div>
+<div class="flex flex-col items-center space-y-1">
+<div class="w-13 h-13 p-0.5 rounded-full ring-2 ring-brand bg-white">
+<div class="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center text-xl">🐱</div>
+</div>
+<span class="text-[11px] text-slate-600 font-medium">Adoption</span>
+</div>
+<div class="flex flex-col items-center space-y-1">
+<div class="w-13 h-13 p-0.5 rounded-full ring-2 ring-slate-200 bg-white">
+<div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-xl">🏥</div>
+</div>
+<span class="text-[11px] text-slate-600 font-medium">Medical</span>
+</div>
+<div class="flex flex-col items-center space-y-1">
+<div class="w-13 h-13 p-0.5 rounded-full ring-2 ring-slate-200 bg-white">
+<div class="w-12 h-12 rounded-full bg-rose-100 flex items-center justify-center text-xl">✨</div>
+</div>
+<span class="text-[11px] text-slate-600 font-medium">Updates</span>
+</div>
+</div>
+</div>
+<!-- Trending Cases Header in Background -->
+<div class="px-5 pt-4 pb-2">
+<h2 class="text-sm font-bold text-slate-700 tracking-tight font-display">Trending Rescue Cases</h2>
+</div>
+<!-- Backdrop Overlay (Simulating modal dim effect) -->
+<div class="absolute inset-0 bg-black/45 backdrop-blur-[1.5px] transition-opacity"></div>
+</div>
+<!-- END: BackgroundGuestFeed -->
+<!-- BEGIN: AuthBottomSheet -->
+<section aria-label="Authentication modal sheet" class="relative z-30 mt-auto w-full bg-white rounded-t-[34px] shadow-[0_-12px_32px_rgba(0,0,0,0.18)] pt-3 pb-4 px-6 flex flex-col animate-in slide-in-from-bottom duration-300" data-purpose="bottom-sheet">
+<!-- Top Grab Handle Pill -->
+<div class="w-full flex justify-center pb-5 pt-1">
+<div aria-hidden="true" class="w-10 h-1.2 bg-slate-300 rounded-full"></div>
+</div>
+<!-- Content Area -->
+<div class="text-center px-1">
+<!-- Title -->
+<h1 class="font-display font-extrabold text-[23px] text-slate-900 tracking-tight leading-snug mb-2.5">
+          Help make a difference.
+        </h1>
+<!-- Subtitle description -->
+<p class="text-[13.5px] text-slate-500 font-normal leading-relaxed mb-6 max-w-[290px] mx-auto">
+          Create a free <span class="font-semibold text-slate-700">StrayAid</span> account to report animals, follow rescues, chat with organizations, and help animals find homes.
+        </p>
+<!-- Action Buttons Container -->
+<div class="space-y-3 w-full">
+<!-- Button 1: Continue with Google -->
+<button class="w-full h-[48px] rounded-xl border border-slate-200 bg-white hover:bg-slate-50 active:bg-slate-100 transition-colors flex items-center justify-center space-x-3 shadow-sm text-[14px] font-semibold text-slate-700" type="button">
+<!-- Colorful Google G SVG Icon -->
+<svg class="w-5 h-5 flex-shrink-0" viewbox="0 0 24 24">
+<path d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z" fill="#4285F4"></path>
+<path d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.24v3.15C3.26 21.36 7.33 24 12 24z" fill="#34A853"></path>
+<path d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.24C.45 8.15 0 9.92 0 12s.45 3.85 1.24 5.42l4.04-3.15z" fill="#FBBC05"></path>
+<path d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.24 6.58l4.04 3.15c.95-2.83 3.6-4.98 6.72-4.98z" fill="#EA4335"></path>
+</svg>
+<span>Continue with Google</span>
+</button>
+<!-- Button 2: Continue with Email (Rescue Green Brand Color) -->
+<button class="w-full h-[48px] rounded-xl bg-brand hover:bg-brand-dark active:bg-brand-dark text-white font-semibold text-[14px] shadow-sm transition-colors flex items-center justify-center space-x-2" type="button">
+<svg class="w-4 h-4 text-white/90" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span>Continue with Email</span>
+</button>
+</div>
+<!-- Log In Link Section -->
+<div class="mt-4 pt-1 mb-2">
+<button class="text-[13.5px] font-semibold text-brand hover:text-brand-dark transition-colors py-1 px-3" type="button">
+            Log In
+          </button>
+</div>
+</div>
+<!-- BEGIN: iOSHomeIndicator -->
+<div aria-hidden="true" class="w-full flex justify-center pt-2 pb-1">
+<div class="w-32 h-1 bg-slate-900/80 rounded-full"></div>
+</div>
+<!-- END: iOSHomeIndicator -->
+</section>
+<!-- END: AuthBottomSheet -->
+</div>
+<!-- END: MobileDeviceFrame -->
+</body></html>

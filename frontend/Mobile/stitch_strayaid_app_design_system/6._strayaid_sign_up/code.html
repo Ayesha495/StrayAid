@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>StrayAid - Sign Up</title>
+<!-- Tailwind CSS CDN with forms plugin -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration for StrayAid Design System -->
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            rescue: {
+              DEFAULT: '#1E6B56',
+              dark: '#165242',
+              light: '#EBF4F1',
+              emerald: '#35A982',
+              mint: '#E7F4EE'
+            },
+            neutral: {
+              surface: '#FBFBFB',
+              border: '#E8ECEB',
+              muted: '#7A8682',
+              heading: '#1C2723'
+            }
+          },
+          fontFamily: {
+            sans: ['Manrope', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+          },
+          boxShadow: {
+            soft: '0 4px 20px -2px rgba(27, 77, 62, 0.06)',
+            input: '0 1px 2px 0 rgba(0, 0, 0, 0.03)'
+          }
+        }
+      }
+    };
+  </script>
+<!-- Typography styles -->
+<style data-purpose="typography">
+    @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+    body {
+      font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+  </style>
+<!-- Layout & Custom utilities -->
+<style data-purpose="custom-layout">
+    .ios-safe-bottom {
+      padding-bottom: env(safe-area-inset-bottom, 20px);
+    }
+    .custom-scroll::-webkit-scrollbar {
+      display: none;
+    }
+    .custom-scroll {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-0 sm:p-4">
+<!-- BEGIN: PhoneContainer -->
+<!-- Mimics mobile device casing for iOS viewport -->
+<div class="w-full max-w-[393px] min-h-[852px] bg-white sm:rounded-[44px] shadow-2xl overflow-hidden flex flex-col justify-between border sm:border-gray-200/80 relative" data-purpose="phone-wrapper">
+<!-- Top Content Section -->
+<div class="flex-1 flex flex-col custom-scroll overflow-y-auto">
+<!-- BEGIN: IOSStatusBar -->
+<div class="w-full pt-3 px-7 pb-2 flex justify-between items-center text-xs font-semibold text-neutral-heading tracking-tight select-none" data-purpose="status-bar">
+<!-- Time -->
+<span>9:41</span>
+<!-- Dynamic Island / Sensor Notch Placeholder for visual balance -->
+<div class="w-24 h-4 bg-transparent"></div>
+<!-- Status Icons -->
+<div class="flex items-center space-x-1.5">
+<!-- Cellular signal -->
+<svg class="w-3.5 h-3.5 fill-current" viewbox="0 0 24 24">
+<path d="M2 17h3v4H2v-4zm5-4h3v8H7v-8zm5-4h3v12h-3V9zm5-5h3v17h-3V4z"></path>
+</svg>
+<!-- Wifi -->
+<svg class="w-3.5 h-3.5 fill-current" viewbox="0 0 24 24">
+<path d="M12 4C7.31 4 3.07 5.9 0 8.98L12 21 24 8.98C20.93 5.9 16.69 4 12 4zm0 3.5c3.5 0 6.74 1.34 9.17 3.55L12 19.33 2.83 11.05C5.26 8.84 8.5 7.5 12 7.5z"></path>
+</svg>
+<!-- Battery -->
+<div class="w-5 h-2.5 border border-current rounded-sm p-0.5 flex items-center">
+<div class="h-full w-3.5 bg-current rounded-2xs"></div>
+</div>
+</div>
+</div>
+<!-- END: IOSStatusBar -->
+<!-- BEGIN: NavigationBar -->
+<nav class="px-5 pt-1 pb-3 flex items-center relative" data-purpose="top-navigation">
+<!-- Back Button -->
+<button aria-label="Go back" class="p-1.5 -ml-1.5 text-neutral-heading hover:bg-neutral-light rounded-full transition-colors active:scale-95" type="button">
+<svg class="w-5 h-5 text-neutral-heading" fill="none" stroke="currentColor" stroke-width="2.5" viewbox="0 0 24 24">
+<path d="M15 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+<!-- Brand Logo & Name Centered or Offset matching Screen 6 -->
+<div class="ml-2 flex items-center space-x-2">
+<!-- Paw + Heart Green Icon Badge -->
+<div class="w-8 h-8 rounded-lg bg-rescue flex items-center justify-center text-white shadow-sm">
+<svg class="w-5 h-5 fill-current" viewbox="0 0 24 24">
+<!-- Heart with stylized animal paw pad silhouette -->
+<path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" opacity="0.95"></path>
+</svg>
+</div>
+<span class="font-extrabold text-xl tracking-tight text-neutral-heading">StrayAid</span>
+</div>
+</nav>
+<!-- END: NavigationBar -->
+<!-- BEGIN: HeaderTitles -->
+<section class="px-6 pt-3 pb-1" data-purpose="screen-header">
+<h1 class="text-2xl font-bold tracking-tight text-neutral-heading">Create your account</h1>
+<p class="text-sm text-neutral-muted mt-1 font-medium">Join a community that cares</p>
+</section>
+<!-- END: HeaderTitles -->
+<!-- BEGIN: AvatarUploadSection -->
+<section class="flex flex-col items-center justify-center my-4" data-purpose="profile-photo-upload">
+<div class="relative group cursor-pointer">
+<!-- Avatar Circular Placeholder -->
+<div class="w-20 h-20 rounded-full border-2 border-dashed border-rescue/40 bg-rescue-mint/40 flex items-center justify-center overflow-hidden transition-all duration-150 group-hover:border-rescue">
+<!-- Person / User Silhouette Icon -->
+<svg class="w-10 h-10 text-rescue/50" fill="currentColor" viewbox="0 0 24 24">
+<path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path>
+</svg>
+</div>
+<!-- Add Photo Mini Camera / Plus Badge -->
+<div class="absolute bottom-0 right-0 bg-rescue text-white rounded-full p-1.5 shadow-sm border-2 border-white flex items-center justify-center">
+<svg class="w-3.5 h-3.5 fill-current" viewbox="0 0 20 20">
+<path clip-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" fill-rule="evenodd"></path>
+</svg>
+</div>
+</div>
+<!-- Sub-caption -->
+<span class="text-xs font-semibold text-rescue mt-2 tracking-wide cursor-pointer hover:underline">Add photo</span>
+</section>
+<!-- END: AvatarUploadSection -->
+<!-- BEGIN: SignUpForm -->
+<form class="px-6 flex flex-col space-y-3.5 mt-1" data-purpose="registration-form" onsubmit="event.preventDefault();">
+<!-- Input Field: Full Name -->
+<div class="flex flex-col space-y-1">
+<label class="text-xs font-semibold text-neutral-heading" for="fullName">Full name</label>
+<div class="relative">
+<input class="w-full px-3.5 py-2.5 rounded-xl border border-neutral-border bg-white text-sm text-neutral-heading font-medium placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rescue/30 focus:border-rescue shadow-input transition-all" id="fullName" name="fullName" placeholder="e.g. Ayesha Tabassum" required="" type="text" value="Ayesha Tabassum"/>
+</div>
+</div>
+<!-- Input Field: Email Address -->
+<div class="flex flex-col space-y-1">
+<label class="text-xs font-semibold text-neutral-heading" for="email">Email address</label>
+<div class="relative">
+<input class="w-full px-3.5 py-2.5 rounded-xl border border-neutral-border bg-white text-sm text-neutral-heading font-medium placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rescue/30 focus:border-rescue shadow-input transition-all" id="email" name="email" placeholder="you@example.com" required="" type="email"/>
+</div>
+</div>
+<!-- Input Field: Password -->
+<div class="flex flex-col space-y-1">
+<div class="flex justify-between items-center">
+<label class="text-xs font-semibold text-neutral-heading" for="password">Password</label>
+</div>
+<div class="relative flex items-center">
+<input class="w-full px-3.5 py-2.5 pr-14 rounded-xl border border-neutral-border bg-white text-sm text-neutral-heading tracking-widest font-mono placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rescue/30 focus:border-rescue shadow-input transition-all" id="password" name="password" placeholder="••••••••••••" required="" type="password" value="secretPass123"/>
+<!-- Show/Hide Password Toggle -->
+<button class="absolute right-3.5 text-xs font-semibold text-neutral-muted hover:text-rescue tracking-normal transition-colors" id="togglePassword" type="button">
+              Show
+            </button>
+</div>
+</div>
+<!-- Input Field: Confirm Password -->
+<div class="flex flex-col space-y-1">
+<label class="text-xs font-semibold text-neutral-heading" for="confirmPassword">Confirm password</label>
+<div class="relative">
+<input class="w-full px-3.5 py-2.5 rounded-xl border border-neutral-border bg-white text-sm text-neutral-heading tracking-widest font-mono placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rescue/30 focus:border-rescue shadow-input transition-all" id="confirmPassword" name="confirmPassword" placeholder="••••••••••••" required="" type="password" value="secretPass123"/>
+</div>
+</div>
+</form>
+<!-- END: SignUpForm -->
+</div>
+<!-- /Top Content Section -->
+<!-- BEGIN: FormActionsAndFooter -->
+<div class="px-6 pt-3 pb-2 flex flex-col space-y-4 bg-white" data-purpose="bottom-actions-container">
+<!-- Create Account Primary Button -->
+<button class="w-full py-3.5 px-4 bg-rescue hover:bg-rescue-dark active:scale-[0.99] text-white font-semibold text-sm rounded-xl shadow-md shadow-rescue/20 transition-all duration-150 flex items-center justify-center tracking-wide" type="submit">
+        Create account
+      </button>
+<!-- Terms & Policy Notice -->
+<p class="text-[11px] text-center text-neutral-muted px-2">
+        By creating an account, you agree to our 
+        <a class="underline hover:text-rescue" href="#">Terms of Service</a> and 
+        <a class="underline hover:text-rescue" href="#">Privacy Policy</a>.
+      </p>
+<!-- iOS Home Bar Indicator -->
+<div class="w-full flex justify-center pt-2 pb-1 ios-safe-bottom" data-purpose="home-indicator">
+<div class="w-32 h-1 bg-gray-300 rounded-full"></div>
+</div>
+</div>
+<!-- END: FormActionsAndFooter -->
+</div>
+<!-- END: PhoneContainer -->
+<!-- Script for toggle password visibility -->
+<script data-purpose="event-handlers">
+    document.addEventListener('DOMContentLoaded', () => {
+      const toggleBtn = document.getElementById('togglePassword');
+      const passwordInput = document.getElementById('password');
+
+      if (toggleBtn && passwordInput) {
+        toggleBtn.addEventListener('click', () => {
+          const isPassword = passwordInput.getAttribute('type') === 'password';
+          passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+          toggleBtn.textContent = isPassword ? 'Hide' : 'Show';
+        });
+      }
+    });
+  </script>
+</body></html>

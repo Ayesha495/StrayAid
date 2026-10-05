@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>StrayAid - Rescue Map</title>
+<!-- Tailwind CSS CDN with plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Google Fonts: Manrope -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind Configuration -->
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Manrope', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              green: '#1E6B56',
+              greenDark: '#165242',
+              greenLight: '#E8F3F0',
+              emerald: '#35A982',
+              mint: '#E7F4EE',
+              coral: '#F47C6C',
+              coralLight: '#FDECE9',
+              amber: '#F4B360',
+              amberLight: '#FEF6EC',
+              slate: '#243447',
+              muted: '#767C86',
+              bgLight: '#F5F7FA'
+            }
+          },
+          boxShadow: {
+            'card': '0 8px 30px rgba(0, 0, 0, 0.12)',
+            'float': '0 4px 20px rgba(0, 0, 0, 0.08)',
+            'pin': '0 4px 12px rgba(30, 107, 86, 0.35)',
+          }
+        }
+      }
+    }
+  </script>
+<!-- BEGIN: Custom Map Styles -->
+<style data-purpose="map-patterns">
+    /* Stylized vector map styling mimicking clean iOS Islamabad grid */
+    .map-grid-bg {
+      background-color: #EBF1E9;
+      background-image: 
+        radial-gradient(#d3e2d1 20%, transparent 20%),
+        linear-gradient(to right, #e2ebd8 2px, transparent 2px),
+        linear-gradient(to bottom, #e2ebd8 2px, transparent 2px);
+      background-size: 80px 80px, 40px 40px, 40px 40px;
+    }
+    
+    /* Road Network Overlays */
+    .map-road-primary {
+      position: absolute;
+      background-color: #FFFFFF;
+      box-shadow: 0 0 2px rgba(0,0,0,0.06);
+    }
+    .map-road-secondary {
+      position: absolute;
+      background-color: #F8FAFC;
+    }
+    .map-park {
+      position: absolute;
+      background-color: #D8EAD3;
+      border-radius: 28px;
+    }
+    .map-water {
+      position: absolute;
+      background-color: #D6E7FA;
+      border-radius: 40px;
+    }
+
+    /* Pulse animation for active pin */
+    @keyframes subtle-pulse {
+      0%, 100% {
+        transform: scale(1);
+        opacity: 0.4;
+      }
+      50% {
+        transform: scale(1.35);
+        opacity: 0;
+      }
+    }
+    .pulse-ring {
+      animation: subtle-pulse 2.2s cubic-bezier(0.24, 0, 0.38, 1) infinite;
+    }
+    
+    /* Hide scrollbars */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+<!-- END: Custom Map Styles -->
+</head>
+<body class="bg-slate-100 flex items-center justify-center min-h-screen p-0 sm:p-4 text-brand-slate font-sans antialiased select-none">
+<!-- BEGIN: Mobile Device Container (iPhone Form Factor) -->
+<main class="w-full max-w-[390px] h-[844px] max-h-screen bg-white relative overflow-hidden flex flex-col shadow-2xl sm:rounded-[44px] border border-gray-200" data-purpose="mobile-viewport">
+<!-- BEGIN: iOS Status Bar -->
+<header class="absolute top-0 left-0 right-0 z-40 flex justify-between items-center px-7 pt-3 pb-2 text-brand-slate pointer-events-none" data-purpose="status-bar">
+<span class="text-[15px] font-bold tracking-tight">9:41</span>
+<div class="flex items-center space-x-2">
+<!-- Cellular Signal -->
+<svg class="w-4 h-3.5 fill-current" viewbox="0 0 17 11">
+<rect height="3" rx="0.75" width="2.5" x="0" y="8"></rect>
+<rect height="5.5" rx="0.75" width="2.5" x="4.5" y="5.5"></rect>
+<rect height="8" rx="0.75" width="2.5" x="9" y="3"></rect>
+<rect height="11" rx="0.75" width="2.5" x="13.5" y="0"></rect>
+</svg>
+<!-- Wi-Fi Icon -->
+<svg class="w-4 h-3.5 fill-current" viewbox="0 0 16 12">
+<path d="M8 2.8C5.2 2.8 2.7 3.9 0.9 5.7L0 4.8C2.1 2.7 5 1.4 8 1.4c3 0 5.9 1.3 8 3.4l-0.9 0.9C13.3 3.9 10.8 2.8 8 2.8zM8 6.2c-1.8 0-3.4 0.8-4.6 2l-0.9-0.9C3.9 5.8 5.8 5 8 5s4.1 0.8 5.5 2.3l-0.9 0.9C11.4 7 9.8 6.2 8 6.2zM8 9.6c-0.8 0-1.5 0.4-2.1 1l-0.9-0.9c1.2-1.2 3.1-1.4 4.5-0.3l-0.4 0.7C8.7 9.8 8.4 9.6 8 9.6zM8 12c-0.6 0-1-0.4-1-1s0.4-1 1-1 1 0.4 1 1-0.4 1-1 1z"></path>
+</svg>
+<!-- Battery Icon -->
+<div class="flex items-center space-x-0.5">
+<div class="w-5 h-2.5 rounded-[4px] border border-current p-0.5 flex items-center">
+<div class="h-full w-full bg-current rounded-[1px]"></div>
+</div>
+<div class="w-0.5 h-1 bg-current rounded-r"></div>
+</div>
+</div>
+</header>
+<!-- END: iOS Status Bar -->
+<!-- BEGIN: Interactive Map Surface Canvas -->
+<div class="absolute inset-0 z-0 map-grid-bg overflow-hidden" data-purpose="interactive-map">
+<!-- Vector Map Geometry & Sectors (Islamabad Grid Styling) -->
+<!-- Green Park Spaces -->
+<div class="map-park w-64 h-48 -top-8 -left-16 rotate-12 opacity-80"></div>
+<div class="map-park w-52 h-44 top-[280px] -right-10 rounded-full opacity-70"></div>
+<div class="map-park w-40 h-32 bottom-36 left-4 rounded-3xl opacity-60"></div>
+<!-- Sector Water Reservoirs -->
+<div class="map-water w-36 h-28 top-[140px] right-2 rotate-45 opacity-70"></div>
+<!-- Primary Avenue Roads -->
+<div class="map-road-primary h-7 w-[600px] top-[180px] -left-20 rotate-[-18deg]"></div>
+<div class="map-road-primary h-6 w-[700px] top-[370px] -left-32 rotate-[26deg]"></div>
+<div class="map-road-primary w-6 h-[900px] left-[130px] -top-20 rotate-[12deg]"></div>
+<div class="map-road-primary w-5 h-[900px] right-[100px] -top-10 rotate-[-8deg]"></div>
+<!-- Minor Sector Road Connections -->
+<div class="map-road-secondary h-3 w-full top-[270px] left-0 rotate-[-6deg]"></div>
+<div class="map-road-secondary h-3 w-full top-[490px] left-0 rotate-[15deg]"></div>
+<div class="map-road-secondary w-3 h-full left-[220px] top-0"></div>
+<!-- Sector Labels on Map -->
+<div class="absolute top-[160px] left-6 text-[10px] font-bold tracking-widest text-[#97A794] uppercase">Sector F-10</div>
+<div class="absolute top-[340px] left-8 text-[11px] font-extrabold tracking-widest text-[#7D917A] uppercase bg-[#EBF1E9]/70 px-1 rounded">Sector G-11</div>
+<div class="absolute top-[290px] right-8 text-[10px] font-bold tracking-widest text-[#97A794] uppercase">Sector G-10</div>
+<div class="absolute bottom-[230px] right-14 text-[10px] font-bold tracking-widest text-[#97A794] uppercase">Sector H-11</div>
+<!-- Floating Map Control: Re-center / GPS reticle Button (Top Right below filters) -->
+<button aria-label="Re-center map" class="absolute right-4 top-[148px] z-20 w-10 h-10 rounded-full bg-white shadow-float flex items-center justify-center text-brand-slate hover:bg-gray-50 active:scale-95 transition-transform">
+<svg class="w-5 h-5 text-brand-slate" fill="none" stroke="currentColor" stroke-width="2.2" viewbox="0 0 24 24">
+<circle cx="12" cy="12" r="7" stroke="currentColor"></circle>
+<line x1="12" x2="12" y1="2" y2="5"></line>
+<line x1="12" x2="12" y1="19" y2="22"></line>
+<line x1="2" x2="5" y1="12" y2="12"></line>
+<line x1="19" x2="22" y1="12" y2="12"></line>
+<circle cx="12" cy="12" fill="currentColor" r="2"></circle>
+</svg>
+</button>
+<!-- Map Case Pin: Coral (High Severity 1 - North) -->
+<div class="absolute top-[195px] right-[135px] flex flex-col items-center -translate-x-1/2 -translate-y-full cursor-pointer hover:scale-110 transition-transform">
+<div class="w-7 h-7 rounded-full bg-[#F47C6C] shadow-md flex items-center justify-center text-white ring-2 ring-white">
+<div class="w-2.5 h-2.5 rounded-full bg-white"></div>
+</div>
+<div class="w-1.5 h-2 bg-[#F47C6C] -mt-0.5 rounded-b-sm"></div>
+</div>
+<!-- Map Case Pin: Amber (Medium Severity - West) -->
+<div class="absolute top-[230px] left-[78px] flex flex-col items-center -translate-x-1/2 -translate-y-full cursor-pointer hover:scale-110 transition-transform">
+<div class="w-7 h-7 rounded-full bg-[#F4B360] shadow-md flex items-center justify-center text-white ring-2 ring-white">
+<div class="w-2.5 h-2.5 rounded-full bg-white"></div>
+</div>
+<div class="w-1.5 h-2 bg-[#F4B360] -mt-0.5 rounded-b-sm"></div>
+</div>
+<!-- Map Case Pin: Mint/Green (Low Severity - East) -->
+<div class="absolute top-[280px] right-[65px] flex flex-col items-center -translate-x-1/2 -translate-y-full cursor-pointer hover:scale-110 transition-transform">
+<div class="w-6 h-6 rounded-full bg-[#35A982] shadow-sm flex items-center justify-center text-white ring-2 ring-white">
+<div class="w-2 h-2 rounded-full bg-white"></div>
+</div>
+<div class="w-1.5 h-1.5 bg-[#35A982] -mt-0.5 rounded-b-sm"></div>
+</div>
+<!-- Map Case Pin: Mint/Green (Low Severity - Central South) -->
+<div class="absolute top-[430px] right-[125px] flex flex-col items-center -translate-x-1/2 -translate-y-full cursor-pointer hover:scale-110 transition-transform">
+<div class="w-6 h-6 rounded-full bg-[#35A982] shadow-sm flex items-center justify-center text-white ring-2 ring-white">
+<div class="w-2 h-2 rounded-full bg-white"></div>
+</div>
+<div class="w-1.5 h-1.5 bg-[#35A982] -mt-0.5 rounded-b-sm"></div>
+</div>
+<!-- Map Case Pin: Amber (Medium Severity - Southwest) -->
+<div class="absolute top-[490px] left-[90px] flex flex-col items-center -translate-x-1/2 -translate-y-full cursor-pointer hover:scale-110 transition-transform">
+<div class="w-6 h-6 rounded-full bg-[#F4B360] shadow-sm flex items-center justify-center text-white ring-2 ring-white">
+<div class="w-2 h-2 rounded-full bg-white"></div>
+</div>
+<div class="w-1.5 h-1.5 bg-[#F4B360] -mt-0.5 rounded-b-sm"></div>
+</div>
+<!-- PROMINENT ACTIVE PIN: Target Case "Injured Dog — G-11" (Center Focal Point) -->
+<div class="absolute top-[335px] left-[175px] -translate-x-1/2 -translate-y-full flex flex-col items-center z-10 cursor-pointer" data-purpose="active-target-pin">
+<!-- Animated Wave Pulse Ring -->
+<div class="absolute -top-3 w-16 h-16 rounded-full bg-brand-green/30 pulse-ring"></div>
+<!-- Pin Head Bubble -->
+<div class="relative w-11 h-11 rounded-full bg-brand-green p-1 shadow-pin ring-4 ring-white flex items-center justify-center">
+<!-- Paw / Cross Animal Alert Icon -->
+<svg class="w-6 h-6 text-white" fill="currentColor" viewbox="0 0 24 24">
+<path d="M12 8.5c-.8 0-1.5-.7-1.5-1.5S11.2 5.5 12 5.5s1.5.7 1.5 1.5-.7 1.5-1.5 1.5zm-3.5 1c-.8 0-1.5-.7-1.5-1.5S7.7 6.5 8.5 6.5 10 7.2 10 8s-.7 1.5-1.5 1.5zm7 0c-.8 0-1.5-.7-1.5-1.5s.7-1.5 1.5-1.5 1.5.7 1.5 1.5-.7 1.5-1.5 1.5zm-7 3.5c-.8 0-1.5-.7-1.5-1.5S7.7 10 8.5 10s1.5.7 1.5 1.5-.7 1.5-1.5 1.5zm7 0c-.8 0-1.5-.7-1.5-1.5s.7-1.5 1.5-1.5 1.5.7 1.5 1.5-.7 1.5-1.5 1.5zm-3.5 4.5c-2.2 0-3.5-1.3-3.5-2.2 0-.8.8-1.8 3.5-1.8s3.5 1 3.5 1.8c0 .9-1.3 2.2-3.5 2.2z"></path>
+</svg>
+</div>
+<!-- Pin Needle Arrow -->
+<div class="w-2.5 h-2.5 bg-brand-green rotate-45 -mt-1.5 ring-2 ring-white"></div>
+<!-- Shadow Base -->
+<div class="w-5 h-1.5 bg-black/25 rounded-full blur-[1px] mt-1"></div>
+</div>
+</div>
+<!-- END: Interactive Map Surface Canvas -->
+<!-- BEGIN: Floating Top Search and Filter Bar -->
+<section class="relative z-30 pt-12 px-4 space-y-2.5 pointer-events-auto" data-purpose="top-search-and-filters">
+<!-- Search Input Container -->
+<div class="relative w-full shadow-card rounded-2xl bg-white overflow-hidden border border-gray-100">
+<div class="flex items-center px-4 py-3">
+<!-- Search Magnifying Glass Icon -->
+<svg class="w-5 h-5 text-gray-400 mr-2.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewbox="0 0 24 24">
+<path d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<input class="w-full bg-transparent border-none p-0 text-[14px] font-medium text-brand-slate placeholder-gray-400 focus:ring-0 focus:outline-none" placeholder="Search nearby cases" readonly="" type="text" value=""/>
+</div>
+</div>
+<!-- Severity Filter Chips -->
+<div class="flex items-center space-x-1.5 overflow-x-auto no-scrollbar py-0.5" data-purpose="severity-filter-chips">
+<!-- 'All' Filter (Active Selected State) -->
+<button class="px-4 py-1.5 rounded-full text-[12px] font-semibold bg-brand-green text-white shadow-sm transition-colors shrink-0">
+          All
+        </button>
+<!-- 'High' Filter Pill -->
+<button class="flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-[12px] font-semibold bg-white text-gray-700 shadow-sm border border-gray-100 shrink-0 hover:bg-gray-50 active:scale-95 transition-all">
+<span class="w-2 h-2 rounded-full bg-brand-coral"></span>
+<span>High</span>
+</button>
+<!-- 'Medium' Filter Pill -->
+<button class="flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-[12px] font-semibold bg-white text-gray-700 shadow-sm border border-gray-100 shrink-0 hover:bg-gray-50 active:scale-95 transition-all">
+<span class="w-2 h-2 rounded-full bg-brand-amber"></span>
+<span>Medium</span>
+</button>
+<!-- 'Low' Filter Pill -->
+<button class="flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-[12px] font-semibold bg-white text-gray-700 shadow-sm border border-gray-100 shrink-0 hover:bg-gray-50 active:scale-95 transition-all">
+<span class="w-2 h-2 rounded-full bg-brand-emerald"></span>
+<span>Low</span>
+</button>
+</div>
+</section>
+<!-- END: Floating Top Search and Filter Bar -->
+<!-- BEGIN: Floating Rescue Case Card (Injured Dog - G-11) -->
+<div class="mt-auto px-4 pb-3 z-30 pointer-events-auto" data-purpose="floating-rescue-card">
+<article class="bg-white rounded-3xl p-3.5 shadow-card border border-gray-100">
+<div class="flex items-start space-x-3.5">
+<!-- Left: Animal Thumbnail Image -->
+<div class="relative w-[76px] h-[76px] rounded-2xl overflow-hidden shrink-0 bg-slate-100">
+<img alt="Injured Rescue Dog in G-11" class="w-full h-full object-cover object-center" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDPPAOiUib5RYWh23uQ_rS0IscT4gqHxWu3zrQr7lRm6HJNsn_pB6N_SB5w1U6WBmd6m-y_CpcGPdsH-t5J-4jc4nPLNWhrGRipquYCYq5mgwMFlSkUeFi0_XXGK8H_bm_HGUD7mx8XDULFUc7qG_wQKpg-BwUDonvkcTEPKrplzInOn1auZVwa36Q0sPO3a3E85TsFv8ygA659XB_ngWzWXX7BySrOL04EBklCZdETAofRWzP0h0U49Q"/>
+</div>
+<!-- Right: Rescue Details -->
+<div class="flex-1 min-w-0 pr-1 pt-0.5">
+<div class="flex items-center justify-between">
+<!-- Title -->
+<h2 class="text-[15px] font-bold text-brand-slate tracking-tight truncate">
+                Injured Dog — G-11
+              </h2>
+<!-- Arrow Icon -->
+<button aria-label="Details" class="text-gray-400 hover:text-gray-600">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewbox="0 0 24 24">
+<path d="M8.25 4.5l7.5 7.5-7.5 7.5" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+</div>
+<!-- Severity & AI Confidence Tags -->
+<div class="flex items-center space-x-2 mt-1.5">
+<!-- Severity: High -->
+<span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full bg-brand-coralLight text-brand-coral text-[10.5px] font-bold tracking-tight">
+<span class="w-1.5 h-1.5 rounded-full bg-brand-coral"></span>
+<span>High</span>
+</span>
+<!-- AI Confidence: 93% -->
+<span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full bg-[#EBF7F2] text-brand-green text-[10.5px] font-bold tracking-tight">
+<span>93% confidence</span>
+</span>
+</div>
+<!-- Distance Indicator -->
+<div class="flex items-center text-brand-muted text-[11.5px] font-medium mt-2">
+<svg class="w-3.5 h-3.5 mr-1 text-gray-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round"></path>
+<path d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span>2.4 km away</span>
+</div>
+</div>
+</div>
+<!-- Full-Width "View Case" Primary Button -->
+<button class="w-full mt-3.5 py-3 rounded-2xl bg-brand-green hover:bg-brand-greenDark active:scale-[0.99] text-white text-[14px] font-bold tracking-wide transition-all shadow-md shadow-brand-green/20 text-center flex items-center justify-center">
+          View Case
+        </button>
+</article>
+</div>
+<!-- END: Floating Rescue Case Card -->
+<!-- BEGIN: Bottom Navigation Tab Bar -->
+<nav class="relative z-30 bg-white border-t border-gray-100 px-6 pt-2 pb-5 flex justify-between items-center" data-purpose="tab-navigation-bar">
+<!-- Tab 1: Home / Feed -->
+<a class="flex flex-col items-center space-y-1 text-gray-400 hover:text-brand-slate transition-colors" data-purpose="tab-feed" href="#">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="text-[10px] font-medium tracking-tight">Home</span>
+</a>
+<!-- Tab 2: Explore / Map (ACTIVE TAB) -->
+<a class="flex flex-col items-center space-y-1 text-brand-green" data-purpose="tab-explore-active" href="#">
+<div class="relative">
+<svg class="w-5 h-5" fill="currentColor" viewbox="0 0 24 24">
+<path clip-rule="evenodd" d="M8.161 2.58a1.875 1.875 0 011.678 0l4.997 2.499a1.875 1.875 0 001.678 0l3.87-1.935A1.875 1.875 0 0123 4.82v11.838a1.875 1.875 0 01-1.042 1.677l-4.996 2.499a1.875 1.875 0 01-1.678 0l-4.997-2.499a1.875 1.875 0 00-1.678 0l-3.87 1.935A1.875 1.875 0 011 19.18V7.342a1.875 1.875 0 011.042-1.677l4.996-2.499l1.123-.586zM9 5.862l-6 3v9.276l6-3V5.862zm2 0v9.276l6 3V8.862l-6-3z" fill-rule="evenodd"></path>
+</svg>
+</div>
+<span class="text-[10px] font-bold tracking-tight">Explore</span>
+</a>
+<!-- Tab 3: Post / Report Emergency (+) -->
+<a class="flex flex-col items-center -mt-3.5 group" data-purpose="tab-post-action" href="#">
+<div class="w-11 h-11 rounded-full bg-brand-green text-white shadow-lg flex items-center justify-center group-active:scale-95 transition-transform">
+<svg class="w-6 h-6 stroke-white" fill="none" stroke-width="2.5" viewbox="0 0 24 24">
+<path d="M12 4.5v15m7.5-7.5h-15" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+<span class="text-[10px] font-medium tracking-tight text-gray-500 mt-0.5">Report</span>
+</a>
+<!-- Tab 4: Saved / Activity -->
+<a class="flex flex-col items-center space-y-1 text-gray-400 hover:text-brand-slate transition-colors" data-purpose="tab-saved" href="#">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="text-[10px] font-medium tracking-tight">Saved</span>
+</a>
+<!-- Tab 5: Profile / Org -->
+<a class="flex flex-col items-center space-y-1 text-gray-400 hover:text-brand-slate transition-colors" data-purpose="tab-profile" href="#">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="text-[10px] font-medium tracking-tight">Profile</span>
+</a>
+</nav>
+<!-- END: Bottom Navigation Tab Bar -->
+<!-- BEGIN: iOS Home Bar Indicator -->
+<div class="absolute bottom-1 left-0 right-0 flex justify-center pointer-events-none z-40" data-purpose="ios-home-indicator">
+<div class="w-32 h-1 bg-gray-900/30 rounded-full"></div>
+</div>
+<!-- END: iOS Home Bar Indicator -->
+</main>
+<!-- END: Mobile Device Container -->
+</body></html>
