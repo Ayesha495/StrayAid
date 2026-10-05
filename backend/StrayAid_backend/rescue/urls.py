@@ -1,7 +1,7 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from .views import CaseViewSet, community_stats, my_reports, report_case, trending_cases
+from .views import CaseViewSet, community_stats, keep_me_updated, my_reports, report_case, trending_cases
 
 router = DefaultRouter()
 router.register("", CaseViewSet, basename="case")
@@ -9,6 +9,7 @@ router.register("", CaseViewSet, basename="case")
 urlpatterns = [
     path('report/', report_case),
     path('my-reports/', my_reports),
+    path('reports/<int:report_id>/keep-updated/', keep_me_updated),
     # Public endpoints for the home screen; listed before the router's detail routes.
     path('trending/', trending_cases),
     path('stats/', community_stats),

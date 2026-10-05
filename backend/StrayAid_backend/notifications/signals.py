@@ -34,8 +34,11 @@ def _post_save_case(sender, instance, created, **kwargs):
     from notifications.services import notify_users
 
     label = dict(sender.STATUS_CHOICES).get(instance.status, instance.status)
-    reporter_ids = set(instance.reports.values_list("user_id", flat=True))
-    reporter_ids.add(instance.reported_by_id)
+    # Reporters who turned off "Keep me updated" on every report they made are skipped.
+    reports = list(instance.reports.values_list("user_id", "notify_reporter"))
+    reporter_ids = {user_id for user_id, wants_updates in reports if wants_updates}
+    if instance.reported_by_id not in {user_id for user_id, _ in reports}:
+        reporter_ids.add(instance.reported_by_id)
 
     notify_users(
         list(reporter_ids),
