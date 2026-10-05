@@ -1,5 +1,5 @@
 import { Platform } from "react-native";
-import { API_BASE } from "./apiConfig";
+import { authFetch } from "./apiClient";
 import { getToken } from "../utils/tokenStorage";
 
 export async function registerForPushNotifications(): Promise<string | null> {
@@ -44,79 +44,61 @@ export async function registerForPushNotifications(): Promise<string | null> {
   }
 }
 
-async function authHeader(): Promise<Record<string, string>> {
-  const token = await getToken();
-  return token ? { Authorization: `Bearer ${token}` } : {};
+// Follow and push-token calls are best-effort: signed out (or a dead session) means "not following".
+async function signedIn() {
+  return !!(await getToken());
 }
 
 export async function sendPushTokenToBackend(token: string): Promise<void> {
-  const headers = await authHeader();
-  if (!headers.Authorization) return;
+  if (!(await signedIn())) return;
 
-  await fetch(`${API_BASE}/api/notifications/register-token/`, {
+  await authFetch("/api/notifications/register-token/", {
     method: "POST",
-    headers: { "Content-Type": "application/json", ...headers },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ token }),
-  });
+  }).catch(() => null);
 }
 
 export async function followAnimal(animalId: number): Promise<boolean> {
-  const headers = await authHeader();
-  if (!headers.Authorization) return false;
+  if (!(await signedIn())) return false;
 
-  const res = await fetch(`${API_BASE}/api/notifications/follow/animal/${animalId}/`, {
-    method: "POST",
-    headers,
-  });
+  const res = await authFetch(`/api/notifications/follow/animal/${animalId}/`, { method: "POST" });
   const data = await res.json();
   return data.following ?? false;
 }
 
 export async function unfollowAnimal(animalId: number): Promise<boolean> {
-  const headers = await authHeader();
-  if (!headers.Authorization) return false;
+  if (!(await signedIn())) return false;
 
-  const res = await fetch(`${API_BASE}/api/notifications/follow/animal/${animalId}/`, {
-    method: "DELETE",
-    headers,
-  });
+  const res = await authFetch(`/api/notifications/follow/animal/${animalId}/`, { method: "DELETE" });
   const data = await res.json();
   return data.following ?? false;
 }
 
 export async function followOrganization(orgId: number): Promise<boolean> {
-  const headers = await authHeader();
-  if (!headers.Authorization) return false;
+  if (!(await signedIn())) return false;
 
-  const res = await fetch(`${API_BASE}/api/notifications/follow/organization/${orgId}/`, {
-    method: "POST",
-    headers,
-  });
+  const res = await authFetch(`/api/notifications/follow/organization/${orgId}/`, { method: "POST" });
   const data = await res.json();
   return data.following ?? false;
 }
 
 export async function unfollowOrganization(orgId: number): Promise<boolean> {
-  const headers = await authHeader();
-  if (!headers.Authorization) return false;
+  if (!(await signedIn())) return false;
 
-  const res = await fetch(`${API_BASE}/api/notifications/follow/organization/${orgId}/`, {
-    method: "DELETE",
-    headers,
-  });
+  const res = await authFetch(`/api/notifications/follow/organization/${orgId}/`, { method: "DELETE" });
   const data = await res.json();
   return data.following ?? false;
 }
 
 export async function getFollowStatus(params: { animalId?: number; orgId?: number }): Promise<{ followingAnimal?: boolean; followingOrg?: boolean }> {
-  const headers = await authHeader();
-  if (!headers.Authorization) return {};
+  if (!(await signedIn())) return {};
 
   const qs = new URLSearchParams();
   if (params.animalId) qs.set("animal_id", String(params.animalId));
   if (params.orgId) qs.set("organization_id", String(params.orgId));
 
-  const res = await fetch(`${API_BASE}/api/notifications/follow-status/?${qs}`, { headers });
+  const res = await authFetch(`/api/notifications/follow-status/?${qs}`);
   const data = await res.json();
   return {
     followingAnimal: data.following_animal,

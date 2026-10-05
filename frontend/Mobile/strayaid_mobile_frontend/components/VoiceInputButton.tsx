@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, StyleSheet } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { ActivityIndicator, Alert, Pressable, StyleSheet, Text } from "react-native";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { mobileTheme as theme } from "../styles/mobileTheme";
+import { colors, fonts } from "../theme/tokens";
 
 // Loaded lazily: the native module only exists in a development/production build,
 // so importing it directly would crash the screen inside Expo Go.
@@ -16,6 +17,8 @@ type Props = {
   value: string;
   onChangeText: (text: string) => void;
   lang?: string;
+  // "pill": the small white "Voice" button inside the report description box (Stitch 8).
+  variant?: "icon" | "pill";
 };
 
 const joinText = (base: string, spoken: string) => {
@@ -25,7 +28,7 @@ const joinText = (base: string, spoken: string) => {
   return trimmedBase ? `${trimmedBase} ${trimmedSpoken}` : trimmedSpoken;
 };
 
-export default function VoiceInputButton({ value, onChangeText, lang = "en-US" }: Props) {
+export default function VoiceInputButton({ value, onChangeText, lang = "en-US", variant = "icon" }: Props) {
   const [listening, setListening] = useState(false);
   const [starting, setStarting] = useState(false);
   // Text that was already in the box when recording started; speech is appended to it.
@@ -103,6 +106,25 @@ export default function VoiceInputButton({ value, onChangeText, lang = "en-US" }
     });
   };
 
+  if (variant === "pill") {
+    return (
+      <Pressable
+        style={({ pressed }) => [styles.pill, listening && styles.pillActive, pressed && styles.pillPressed]}
+        onPress={toggleListening}
+        accessibilityRole="button"
+        accessibilityLabel={listening ? "Stop voice input" : "Start voice input"}
+        hitSlop={4}
+      >
+        {starting ? (
+          <ActivityIndicator size="small" color={colors.primary} />
+        ) : (
+          <MaterialIcons name={listening ? "stop" : "mic"} size={14} color={listening ? colors.onPrimary : colors.primary} />
+        )}
+        <Text style={[styles.pillText, listening && styles.pillTextActive]}>{listening ? "Stop" : "Voice"}</Text>
+      </Pressable>
+    );
+  }
+
   return (
     <Pressable
       style={[styles.micButton, listening && styles.micButtonActive]}
@@ -133,4 +155,24 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   micButtonActive: { backgroundColor: theme.colors.danger },
+  pill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    backgroundColor: colors.surface,
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  pillActive: { backgroundColor: colors.critical, borderColor: colors.critical },
+  pillPressed: { backgroundColor: "#F8FAFC" },
+  pillText: { fontFamily: fonts.bodySemiBold, fontSize: 12, lineHeight: 16, color: "#475569" },
+  pillTextActive: { color: colors.onPrimary },
 });

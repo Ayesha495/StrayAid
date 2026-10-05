@@ -1,4 +1,4 @@
-import { getToken } from "../utils/tokenStorage";
+import { authFetch } from "./apiClient";
 import { API_BASE } from "./apiConfig";
 
 export const resolveMediaUrl = (value: string | null | undefined) => {
@@ -134,26 +134,17 @@ export async function getPublicAnimals() {
 }
 
 export async function getMyReports() {
-  const token = await getToken();
-  const response = await fetch(`${API_BASE}/api/cases/my-reports/`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const response = await authFetch(`/api/cases/my-reports/`);
   return parseJson<MobileCase[]>(response);
 }
 
 export async function getCurrentUser() {
-  const token = await getToken();
-  const response = await fetch(`${API_BASE}/auth/me/`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const response = await authFetch(`/auth/me/`);
   return parseJson<MobileUser>(response);
 }
 
 export async function getMyOrganizationProfile() {
-  const token = await getToken();
-  const response = await fetch(`${API_BASE}/api/organizations/me/`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const response = await authFetch(`/api/organizations/me/`);
   return normalizeOrganization(await parseJson<MobileOrganization>(response));
 }
 
@@ -178,19 +169,33 @@ export async function getOrganizationAnimals(organizationId: string | number) {
 }
 
 export async function getMyFollows(): Promise<{ followed_animals: number[]; followed_organizations: number[] }> {
-  const token = await getToken();
-  const response = await fetch(`${API_BASE}/api/notifications/my-follows/`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const response = await authFetch(`/api/notifications/my-follows/`);
   return parseJson(response);
 }
 
+export type SubmittedReport = {
+  message: string;
+  case_id: number;
+  report_id: number;
+  keep_updated: boolean;
+  case: {
+    id: number;
+    reference: string;
+    area: string;
+    severity: "low" | "medium" | "high" | "critical";
+    // 0-100, or null until the image detector has scored the case.
+    confidence_score: number | null;
+    status: string;
+  };
+};
+
 export async function submitReport(formData: FormData) {
-  const token = await getToken();
-  const response = await fetch(`${API_BASE}/api/cases/report/`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
-    body: formData,
-  });
-  return parseJson<{ message: string; case_id: number; report_id: number }>(response);
+  const response = await authFetch("/api/cases/report/", { method: "POST", body: formData });
+  return parseJson<SubmittedReport>(response);
+}
+
+// The success screen's "Keep Me Updated": status pushes for this report.
+export async function keepMeUpdated(reportId: number) {
+  const response = await authFetch(`/api/cases/reports/${reportId}/keep-updated/`, { method: "POST" });
+  return parseJson<{ keep_updated: boolean }>(response);
 }

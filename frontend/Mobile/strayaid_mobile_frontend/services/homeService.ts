@@ -1,5 +1,4 @@
-import { getToken } from "../utils/tokenStorage";
-import { API_BASE } from "./apiConfig";
+import { authFetch, optionalAuthFetch } from "./apiClient";
 import { MobilePost, normalizePost, resolveMediaUrl } from "./mobileContentService";
 
 export type FeedPost = MobilePost & {
@@ -57,17 +56,9 @@ async function parse<T>(response: Response): Promise<T> {
 }
 
 // Public endpoints work for guests. When signed in we send the token so the server can
-// personalise (e.g. liked_by_me); an expired token is rejected even on public endpoints,
-// so retry once as a guest instead of failing the whole screen.
+// personalise (e.g. liked_by_me); a dead session falls back to a guest request.
 async function getPublic<T>(path: string): Promise<T> {
-  const token = await getToken();
-  if (token) {
-    const response = await fetch(`${API_BASE}${path}`, { headers: { Authorization: `Bearer ${token}` } });
-    if (response.status !== 401) {
-      return parse<T>(response);
-    }
-  }
-  return parse<T>(await fetch(`${API_BASE}${path}`));
+  return parse<T>(await optionalAuthFetch(path));
 }
 
 export async function getHomeFeed(): Promise<FeedPost[]> {
@@ -97,10 +88,6 @@ export async function getCommunityStats(): Promise<CommunityStats> {
 }
 
 export async function setPostLiked(postId: number, liked: boolean) {
-  const token = await getToken();
-  const response = await fetch(`${API_BASE}/api/posts/${postId}/like/`, {
-    method: liked ? "POST" : "DELETE",
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const response = await authFetch(`/api/posts/${postId}/like/`, { method: liked ? "POST" : "DELETE" });
   return parse<{ liked_by_me: boolean; like_count: number }>(response);
 }

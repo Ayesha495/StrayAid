@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from "expo-router";
 import { API_BASE } from "./apiConfig";
 import { appendFile } from "../utils/formFile";
-import { clearToken, saveToken } from "../utils/tokenStorage";
+import { clearToken, saveRefreshToken, saveToken } from "../utils/tokenStorage";
 import { registerForPushNotifications, sendPushTokenToBackend } from "./notificationService";
 
 const NETWORK_ERROR = "Can't reach StrayAid right now. Check your connection and try again.";
@@ -32,10 +32,9 @@ const registerPushAfterSignIn = () => {
 };
 
 const persistSession = async (result: TokenResponse, email?: string) => {
-    // AsyncStorage supports app flows while SecureStore keeps a durable access token copy.
-    await AsyncStorage.setItem('access_token', result.access);
-    await AsyncStorage.setItem('refresh_token', result.refresh);
+    // Both tokens live in secure storage; apiClient renews the access token with the refresh one.
     await saveToken(result.access);
+    await saveRefreshToken(result.refresh);
 
     const sessionEmail = result.user?.email || email;
     if (sessionEmail) {
@@ -132,8 +131,8 @@ export const loginWithGoogleAccessToken = async (accessToken: string): Promise<T
 
 export const logoutUser = async () => {
     // Clear all stored credentials before redirecting to the auth stack.
-    await AsyncStorage.removeItem('access_token');
-    await AsyncStorage.removeItem('refresh_token');
+    // Older builds kept token copies here; clear them too.
+    await AsyncStorage.multiRemove(['access_token', 'refresh_token']);
     await AsyncStorage.removeItem('user_email');
     await clearToken();
     router.replace("/(auth)/login/page");
