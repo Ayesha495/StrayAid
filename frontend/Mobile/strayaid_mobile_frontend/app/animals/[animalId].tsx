@@ -1,258 +1,637 @@
-import { useEffect, useState } from "react";
+import { Feather, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
+import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
+import { Href, router, useFocusEffect, useLocalSearchParams } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { useCallback, useState } from "react";
 import {
-  Image,
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Linking,
   Modal,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
   Pressable,
-  RefreshControl,
   ScrollView,
+  Share,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { router, useLocalSearchParams } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import { mobileTheme as theme } from "../../styles/mobileTheme";
-import {
-  getAnimal,
-  getAnimalPosts,
-  type MobileAnimal,
-  type MobilePost,
-} from "../../services/mobileContentService";
-import {
-  followAnimal,
-  unfollowAnimal,
-  getFollowStatus,
-} from "../../services/notificationService";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const STATUS_COLORS: Record<string, string> = {
-  rescued: "#10b981",
-  recovering: "#f59e0b",
-  adoptable: "#ec4899",
-  adopted: "#6b7280",
+import { useSession } from "../../hooks/useSession";
+import { getAnimal, MobileAnimal } from "../../services/mobileContentService";
+import { followAnimal, getFollowStatus, unfollowAnimal } from "../../services/notificationService";
+import { colors, fonts } from "../../theme/tokens";
+
+// Stitch screen 13: Animal profile.
+
+const HERO_HEIGHT = 370;
+const HEALTH_LABELS: Record<string, string> = {
+  healthy: "Healthy",
+  minor_issues: "Minor issues",
+  under_treatment: "Under treatment",
+  special_needs: "Special needs",
 };
-
-const STATUS_LABELS: Record<string, string> = {
+const STATUS_CHIP: Record<string, string> = {
   rescued: "Rescued",
   recovering: "Recovering",
-  adoptable: "Ready for Adoption",
+  adoptable: "Rescued",
   adopted: "Adopted",
 };
 
-export default function AnimalDetailPage() {
+const capitalize = (value?: string) => (value ? value[0].toUpperCase() + value.slice(1) : "");
+
+function ageLabel(age?: number | null) {
+  if (age == null) return null;
+  if (age < 1) return "Under 1 year";
+  return `${age} ${age === 1 ? "year" : "years"} old`;
+}
+
+export default function AnimalProfileScreen() {
   const { animalId } = useLocalSearchParams<{ animalId: string }>();
+  const { isSignedIn } = useSession();
+  const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
   const [animal, setAnimal] = useState<MobileAnimal | null>(null);
-  const [posts, setPosts] = useState<MobilePost[]>([]);
-  const [showDonate, setShowDonate] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [following, setFollowing] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
+  const [page, setPage] = useState(0);
+  const [showSponsor, setShowSponsor] = useState(false);
 
-  const load = async () => {
-    if (!animalId) return;
-    const [animalData, postData, followData] = await Promise.all([
-      getAnimal(animalId),
-      getAnimalPosts(animalId),
-      getFollowStatus({ animalId: Number(animalId) }),
-    ]);
-    setAnimal(animalData);
-    setPosts(postData);
-    if (followData.followingAnimal !== undefined) setFollowing(followData.followingAnimal);
-  };
+  const load = useCallback(async () => {
+    try {
+      const [data, follow] = await Promise.all([
+        getAnimal(animalId),
+        getFollowStatus({ animalId: Number(animalId) }).catch(() => ({ followingAnimal: false })),
+      ]);
+      setAnimal(data);
+      setFollowing(!!follow.followingAnimal);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "We couldn't load this animal.");
+    }
+  }, [animalId]);
 
-  useEffect(() => { load().catch(console.error); }, [animalId]);
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load])
+  );
 
-  const onRefresh = async () => {
-    setRefreshing(true);
-    try { await load(); } finally { setRefreshing(false); }
-  };
+  const goBack = () => (router.canGoBack() ? router.back() : router.replace("/(tabs)/home"));
 
   const toggleFollow = async () => {
     if (!animal) return;
-    const next = following
-      ? await unfollowAnimal(animal.id)
-      : await followAnimal(animal.id);
+    if (!isSignedIn) {
+      router.push("/auth-sheet");
+      return;
+    }
+    const next = !following;
     setFollowing(next);
+    try {
+      setFollowing(next ? await followAnimal(animal.id) : await unfollowAnimal(animal.id));
+    } catch {
+      setFollowing(!next);
+    }
   };
 
-  const color = animal ? (STATUS_COLORS[animal.status] ?? theme.colors.primary) : theme.colors.primary;
+  const share = () => {
+    if (!animal) return;
+    Share.share({
+      message: `Meet ${animal.name}, a rescued ${animal.species?.toLowerCase() || "animal"} with ${animal.organization.name} on StrayAid.`,
+    }).catch(() => null);
+  };
 
-  const statChips = [
-    animal?.species && { label: "Species", value: animal.species },
-    animal?.breed && { label: "Breed", value: animal.breed },
-    animal?.gender && { label: "Gender", value: animal.gender },
-    animal?.age != null && { label: "Age", value: `${animal.age} yr${animal.age !== 1 ? "s" : ""}` },
-    animal?.color && { label: "Color", value: animal.color },
-  ].filter(Boolean) as { label: string; value: string }[];
+  // The adoption form is Stitch 14; until then, people contact the organization directly.
+  const adopt = () => {
+    if (!animal) return;
+    if (!isSignedIn) {
+      router.push("/auth-sheet");
+      return;
+    }
+    const info = animal.adoption_info;
+    const options = [
+      info?.phone && { text: `Call ${info.phone}`, onPress: () => Linking.openURL(`tel:${info.phone}`) },
+      info?.email && {
+        text: "Send an email",
+        onPress: () =>
+          Linking.openURL(`mailto:${info.email}?subject=${encodeURIComponent(`Adopting ${animal.name}`)}`),
+      },
+    ].filter(Boolean) as { text: string; onPress: () => void }[];
+    if (!options.length) {
+      Alert.alert(`Adopt ${animal.name}`, `${animal.organization.name} hasn't added contact details yet.`);
+      return;
+    }
+    Alert.alert(`Adopt ${animal.name}`, `${info?.message ?? "Contact"} phone or email.`, [
+      ...options,
+      { text: "Cancel", style: "cancel" },
+    ]);
+  };
+
+  const sponsor = () => {
+    if (!isSignedIn) {
+      router.push("/auth-sheet");
+      return;
+    }
+    setShowSponsor(true);
+  };
+
+  const onScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) =>
+    setPage(Math.round(event.nativeEvent.contentOffset.x / width));
+
+  if (!animal) {
+    return (
+      <View style={[styles.screen, styles.centered]}>
+        <StatusBar style="dark" />
+        {error ? (
+          <>
+            <Text style={styles.errorText}>{error}</Text>
+            <Pressable onPress={load} style={styles.retry} accessibilityRole="button">
+              <Text style={styles.retryText}>Try again</Text>
+            </Pressable>
+          </>
+        ) : (
+          <ActivityIndicator color={colors.primary} />
+        )}
+      </View>
+    );
+  }
+
+  const photos = animal.photos?.length ? animal.photos : animal.image ? [animal.image] : [];
+  const adoptable = animal.status === "adoptable";
+  const adopted = animal.status === "adopted";
+  const attributes = [
+    animal.health && HEALTH_LABELS[animal.health],
+    animal.vaccinated && "Vaccinated",
+    ageLabel(animal.age),
+    capitalize(animal.gender),
+  ].filter(Boolean) as string[];
+  const place = [animal.organization.city, "Pakistan"].filter(Boolean).join(", ");
+  const adoptLabel = adopted ? "Adopted" : adoptable ? `Adopt ${animal.name}` : "In recovery";
 
   return (
-    <SafeAreaView style={s.safe}>
-      <ScrollView
-        contentContainerStyle={s.scroll}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Hero image with overlaid back button + follow button */}
-        <View style={s.heroWrap}>
-          {animal?.image ? (
-            <Image source={{ uri: animal.image }} style={s.heroImage} />
+    <View style={styles.screen}>
+      <StatusBar style="light" />
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <View style={styles.hero}>
+          {photos.length ? (
+            <FlatList
+              data={photos}
+              keyExtractor={(uri, index) => `${uri}-${index}`}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              onMomentumScrollEnd={onScroll}
+              onScroll={onScroll}
+              scrollEventThrottle={64}
+              renderItem={({ item }) => (
+                <Image source={{ uri: item }} style={{ width, height: HERO_HEIGHT }} contentFit="cover" transition={150} />
+              )}
+            />
           ) : (
-            <View style={[s.heroImage, s.heroPlaceholder]}>
-              <Ionicons name="paw" size={60} color={theme.colors.primary} />
+            <View style={[styles.heroEmpty, { width }]}>
+              <MaterialIcons name="pets" size={56} color="#CBD5E1" />
             </View>
           )}
-          <View style={s.heroOverlay}>
-            <Pressable style={s.iconBtn} onPress={() => router.back()}>
-              <Ionicons name="chevron-back" size={22} color={theme.colors.ink} />
+          <LinearGradient
+            colors={["rgba(0,0,0,0.45)", "rgba(0,0,0,0.15)", "transparent"]}
+            style={styles.heroShade}
+            pointerEvents="none"
+          />
+          <View style={[styles.heroButtons, { top: insets.top + 8 }]}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Go back"
+              onPress={goBack}
+              style={({ pressed }) => [styles.roundButton, pressed && styles.pressed]}
+            >
+              <MaterialIcons name="chevron-left" size={28} color="#374151" />
             </Pressable>
             <Pressable
-              style={[s.iconBtn, following && s.iconBtnActive]}
+              accessibilityRole="button"
+              accessibilityLabel={following ? `Stop following ${animal.name}` : `Follow ${animal.name}`}
+              accessibilityState={{ selected: following }}
               onPress={toggleFollow}
+              style={({ pressed }) => [styles.roundButton, pressed && styles.pressed]}
             >
-              <Ionicons
-                name={following ? "notifications" : "notifications-outline"}
+              <MaterialIcons
+                name={following ? "favorite" : "favorite-border"}
                 size={22}
-                color={following ? theme.colors.primary : theme.colors.ink}
+                color={following ? "#E5484D" : "#374151"}
               />
             </Pressable>
           </View>
-        </View>
-
-        {/* Status + Name */}
-        <View style={s.nameSection}>
-          <View style={[s.statusPill, { backgroundColor: color + "18" }]}>
-            <View style={[s.statusDot, { backgroundColor: color }]} />
-            <Text style={[s.statusText, { color }]}>{STATUS_LABELS[animal?.status ?? ""] ?? animal?.status}</Text>
-          </View>
-          <Text style={s.animalName}>{animal?.name || "Loading..."}</Text>
-          {animal?.organization ? (
-            <Pressable onPress={() => router.push(`/organizations/${animal.organization.id}`)}>
-              <View style={s.orgRow}>
-                <Ionicons name="business-outline" size={14} color={theme.colors.primary} />
-                <Text style={s.orgName}>{animal.organization.name}</Text>
-              </View>
-            </Pressable>
-          ) : null}
-        </View>
-
-        {/* Stats chips */}
-        {statChips.length > 0 && (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.statsRow}>
-            {statChips.map((chip) => (
-              <View key={chip.label} style={s.statChip}>
-                <Text style={s.statLabel}>{chip.label}</Text>
-                <Text style={s.statValue}>{chip.value}</Text>
-              </View>
-            ))}
-          </ScrollView>
-        )}
-
-        {/* Description */}
-        {animal?.description ? (
-          <View style={s.card}>
-            <Text style={s.cardTitle}>About</Text>
-            <Text style={s.cardBody}>{animal.description}</Text>
-          </View>
-        ) : null}
-
-        {/* Medical info */}
-        <View style={s.card}>
-          <Text style={s.cardTitle}>Care & Medical Notes</Text>
-          <Text style={s.cardBody}>
-            {animal?.medical_info || "No medical or recovery notes have been shared yet."}
-          </Text>
-        </View>
-
-        {/* Donation CTA */}
-        {animal?.donation_info ? (
-          <Pressable style={s.donateCta} onPress={() => setShowDonate(true)}>
-            <Ionicons name="heart" size={20} color="#fff" />
-            <Text style={s.donateCtaText}>View Donation Information</Text>
-          </Pressable>
-        ) : null}
-
-        {/* Updates */}
-        <View style={s.card}>
-          <Text style={s.cardTitle}>Updates from {animal?.organization?.name}</Text>
-          {posts.length ? posts.map((post) => (
-            <View key={post.id} style={s.updateCard}>
-              {post.image ? <Image source={{ uri: post.image }} style={s.updateImage} /> : null}
-              <Text style={s.updateTitle}>{post.title}</Text>
-              <Text style={s.updateDate}>{new Date(post.created_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</Text>
-              <Text style={s.cardBody}>{post.content}</Text>
+          {photos.length > 1 && (
+            <View style={styles.dots} pointerEvents="none">
+              {photos.map((uri, index) => (
+                <View key={`${uri}-${index}`} style={[styles.dot, index === page && styles.dotActive]} />
+              ))}
             </View>
-          )) : (
-            <Text style={s.cardBody}>No updates have been posted yet.</Text>
           )}
+        </View>
+
+        <View style={styles.sheet}>
+          <View style={styles.nameRow}>
+            <View style={styles.nameLeft}>
+              <Text style={styles.name} accessibilityRole="header">
+                {animal.name}
+              </Text>
+              {animal.ai_verified && (
+                <View style={styles.verified} accessible accessibilityLabel="Rescue confirmed by the AI photo check">
+                  <MaterialCommunityIcons name="shield-check" size={16} color={colors.primary} />
+                </View>
+              )}
+            </View>
+            <Pressable accessibilityRole="button" accessibilityLabel="Share profile" onPress={share} hitSlop={8} style={styles.share}>
+              <Feather name="share-2" size={20} color="#9CA3AF" />
+            </Pressable>
+          </View>
+
+          <View style={styles.chips}>
+            {!!animal.species && <Text style={[styles.chip, styles.chipSpecies]}>{capitalize(animal.species)}</Text>}
+            <Text style={[styles.chip, adopted ? styles.chipAdopted : styles.chipStatus]}>
+              {STATUS_CHIP[animal.status] ?? capitalize(animal.status)}
+            </Text>
+            {adoptable && (
+              <View style={[styles.chipRow, styles.chipAdoption]}>
+                <View style={styles.chipDot} />
+                <Text style={styles.chipAdoptionText}>Adoption Available</Text>
+              </View>
+            )}
+          </View>
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`${animal.organization.name}, open profile`}
+            onPress={() => router.push(`/organizations/${animal.organization.id}` as Href)}
+            style={({ pressed }) => [styles.shelter, pressed && styles.shelterPressed]}
+          >
+            <View style={styles.shelterLeft}>
+              <View style={styles.shelterIcon}>
+                {animal.organization.image ? (
+                  <Image source={{ uri: animal.organization.image }} style={StyleSheet.absoluteFill} contentFit="cover" />
+                ) : (
+                  <MaterialIcons name="favorite" size={20} color={colors.primary} />
+                )}
+              </View>
+              <View style={styles.shelterText}>
+                <Text style={styles.shelterName} numberOfLines={1}>
+                  {animal.organization.name}
+                </Text>
+                <View style={styles.shelterPlace}>
+                  <Feather name="map-pin" size={13} color="#9CA3AF" />
+                  <Text style={styles.shelterPlaceText} numberOfLines={1}>
+                    {place}
+                  </Text>
+                </View>
+              </View>
+            </View>
+            <View style={styles.shelterArrow}>
+              <Feather name="chevron-right" size={16} color="#9CA3AF" />
+            </View>
+          </Pressable>
+
+          {attributes.length > 0 && (
+            <View style={styles.attributes}>
+              <View style={styles.attributeLead} />
+              {attributes.map((attribute, index) => (
+                <View key={attribute} style={styles.attributeItem}>
+                  {index > 0 && <Text style={styles.attributeSeparator}>•</Text>}
+                  <Text style={styles.attributeText}>{attribute}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {(!!animal.description || !!animal.medical_info) && (
+            <View style={styles.about}>
+              <Text style={styles.aboutTitle}>About {animal.name}</Text>
+              {!!animal.description && <Text style={styles.aboutText}>{animal.description}</Text>}
+              {!!animal.medical_info && (
+                <Text style={[styles.aboutText, styles.aboutHealth]}>
+                  <Text style={styles.aboutHealthLabel}>Health: </Text>
+                  {animal.medical_info}
+                </Text>
+              )}
+            </View>
+          )}
+
+          <View style={styles.stats}>
+            <View style={styles.stat}>
+              <View style={[styles.statIcon, { backgroundColor: "#FFF1F2" }]}>
+                <MaterialIcons name="favorite" size={20} color="#F43F5E" />
+              </View>
+              <View>
+                <Text style={styles.statValue}>{animal.sponsor_count ?? 0}</Text>
+                <Text style={styles.statLabel}>{animal.sponsor_count === 1 ? "Sponsor" : "Sponsors"}</Text>
+              </View>
+            </View>
+            <View style={styles.stat}>
+              <View style={[styles.statIcon, { backgroundColor: "#ECFDF5" }]}>
+                <MaterialIcons name="description" size={20} color={colors.primary} />
+              </View>
+              <View>
+                <Text style={styles.statValue}>{animal.application_count ?? 0}</Text>
+                <Text style={styles.statLabel}>{animal.application_count === 1 ? "Application" : "Applications"}</Text>
+              </View>
+            </View>
+          </View>
         </View>
       </ScrollView>
 
-      {/* Donation modal */}
-      <Modal visible={showDonate} transparent animationType="fade" onRequestClose={() => setShowDonate(false)}>
-        <Pressable style={s.modalBg} onPress={() => setShowDonate(false)}>
-          <Pressable style={s.modalCard} onPress={(e) => e.stopPropagation()}>
-            <View style={s.modalHandle} />
-            <Text style={s.modalEyebrow}>Donation Information</Text>
-            <Text style={s.modalTitle}>{animal?.name}</Text>
-            <Text style={s.modalBody}>{animal?.donation_info}</Text>
-            <Pressable style={s.modalCloseBtn} onPress={() => setShowDonate(false)}>
-              <Text style={s.modalCloseText}>Close</Text>
+      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 12) + 12 }]}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityState={{ disabled: !adoptable }}
+          disabled={!adoptable}
+          onPress={adopt}
+          style={({ pressed }) => [styles.adopt, pressed && styles.adoptPressed, !adoptable && styles.adoptDisabled]}
+        >
+          <Text style={styles.adoptText} numberOfLines={1}>
+            {adoptLabel}
+          </Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityState={{ disabled: adopted }}
+          disabled={adopted}
+          onPress={sponsor}
+          style={({ pressed }) => [styles.sponsor, pressed && styles.sponsorPressed, adopted && styles.sponsorDisabled]}
+        >
+          <MaterialIcons name="favorite" size={16} color={colors.primary} />
+          <Text style={styles.sponsorText}>Sponsor</Text>
+        </Pressable>
+      </View>
+
+      <Modal visible={showSponsor} transparent animationType="fade" onRequestClose={() => setShowSponsor(false)}>
+        <Pressable style={styles.modalBackdrop} onPress={() => setShowSponsor(false)}>
+          <Pressable style={[styles.modalCard, { paddingBottom: Math.max(insets.bottom, 16) + 8 }]} onPress={() => null}>
+            <View style={styles.modalHandle} />
+            <Text style={styles.modalTitle}>Sponsor {animal.name}</Text>
+            {animal.donation_info ? (
+              <>
+                <Text style={styles.modalBody}>
+                  Transfer any amount to {animal.organization.name}. It goes towards {animal.name}&apos;s food, medical care and
+                  shelter.
+                </Text>
+                <View style={styles.bank}>
+                  <Text style={styles.bankLabel}>Bank</Text>
+                  <Text style={styles.bankValue} selectable>
+                    {animal.donation_info.bank}
+                  </Text>
+                  <Text style={styles.bankLabel}>Account title</Text>
+                  <Text style={styles.bankValue} selectable>
+                    {animal.donation_info.account_name}
+                  </Text>
+                  <Text style={styles.bankLabel}>Account number</Text>
+                  <Text style={[styles.bankValue, styles.bankNumber]} selectable>
+                    {animal.donation_info.account_number}
+                  </Text>
+                </View>
+                {!!animal.adoption_info?.email && (
+                  <Text style={styles.modalNote}>
+                    After transferring, email the receipt to {animal.adoption_info.email} so they can confirm your pledge.
+                  </Text>
+                )}
+              </>
+            ) : (
+              <Text style={styles.modalBody}>
+                {animal.organization.name} hasn&apos;t added bank details yet. Contact them from their profile to help {animal.name}.
+              </Text>
+            )}
+            <Pressable accessibilityRole="button" onPress={() => setShowSponsor(false)} style={styles.modalClose}>
+              <Text style={styles.modalCloseText}>Done</Text>
             </Pressable>
           </Pressable>
         </Pressable>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 
-const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: theme.colors.surfaceMuted },
-  scroll: { paddingBottom: 48, gap: theme.spacing.md },
-
-  // Hero
-  heroWrap: { position: "relative" },
-  heroImage: { width: "100%", height: 320 },
-  heroPlaceholder: { backgroundColor: theme.colors.primarySoft, alignItems: "center", justifyContent: "center" },
-  heroOverlay: { position: "absolute", top: 0, left: 0, right: 0, flexDirection: "row", justifyContent: "space-between", padding: theme.spacing.md },
-  iconBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: "rgba(255,255,255,0.9)", alignItems: "center", justifyContent: "center", shadowColor: "#000", shadowOpacity: 0.12, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 3 },
-  iconBtnActive: { backgroundColor: theme.colors.primarySoft },
-
-  // Name section
-  nameSection: { paddingHorizontal: theme.spacing.lg, paddingTop: theme.spacing.md, gap: 6 },
-  statusPill: { flexDirection: "row", alignItems: "center", gap: 5, alignSelf: "flex-start", paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20 },
-  statusDot: { width: 7, height: 7, borderRadius: 4 },
-  statusText: { fontSize: 12, fontWeight: "700", textTransform: "capitalize" },
-  animalName: { fontSize: 30, fontWeight: "900", color: theme.colors.ink, letterSpacing: -0.5 },
-  orgRow: { flexDirection: "row", alignItems: "center", gap: 4 },
-  orgName: { fontSize: 14, fontWeight: "600", color: theme.colors.primary },
-
-  // Stats chips
-  statsRow: { gap: theme.spacing.sm, paddingHorizontal: theme.spacing.lg },
-  statChip: { backgroundColor: theme.colors.surface, borderRadius: theme.radius.md, paddingHorizontal: theme.spacing.md, paddingVertical: 10, alignItems: "center", minWidth: 80, gap: 2, shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 1 },
-  statLabel: { fontSize: 10, fontWeight: "600", color: theme.colors.inkMuted, textTransform: "uppercase", letterSpacing: 0.5 },
-  statValue: { fontSize: 14, fontWeight: "800", color: theme.colors.ink },
-
-  // Cards
-  card: { backgroundColor: theme.colors.surface, borderRadius: theme.radius.lg, padding: theme.spacing.lg, marginHorizontal: theme.spacing.lg, gap: theme.spacing.sm, shadowColor: "#000", shadowOpacity: 0.06, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 2 },
-  cardTitle: { fontSize: 17, fontWeight: "800", color: theme.colors.ink },
-  cardBody: { fontSize: 14, color: theme.colors.inkSoft, lineHeight: 22 },
-
-  // Donate CTA
-  donateCta: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: theme.colors.primary, borderRadius: theme.radius.lg, marginHorizontal: theme.spacing.lg, paddingVertical: 16 },
-  donateCtaText: { color: "#fff", fontWeight: "700", fontSize: 15 },
-
-  // Update cards within card
-  updateCard: { borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.md, padding: theme.spacing.md, gap: 6, backgroundColor: theme.colors.surfaceMuted },
-  updateImage: { width: "100%", height: 180, borderRadius: theme.radius.sm },
-  updateTitle: { fontSize: 15, fontWeight: "700", color: theme.colors.ink },
-  updateDate: { fontSize: 12, color: theme.colors.inkMuted },
-
-  // Donation modal
-  modalBg: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" },
-  modalCard: { backgroundColor: theme.colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: theme.spacing.xl, gap: theme.spacing.md, paddingBottom: 36 },
-  modalHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: theme.colors.border, alignSelf: "center", marginBottom: 4 },
-  modalEyebrow: { fontSize: 11, fontWeight: "700", color: theme.colors.inkMuted, textTransform: "uppercase", letterSpacing: 1 },
-  modalTitle: { fontSize: 22, fontWeight: "800", color: theme.colors.ink },
-  modalBody: { fontSize: 15, color: theme.colors.inkSoft, lineHeight: 22 },
-  modalCloseBtn: { backgroundColor: theme.colors.primary, borderRadius: theme.radius.pill, paddingVertical: 14, alignItems: "center" },
-  modalCloseText: { color: "#fff", fontWeight: "700", fontSize: 15 },
+const styles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: "#F9FBFA" },
+  centered: { alignItems: "center", justifyContent: "center", gap: 12, padding: 24 },
+  errorText: { fontFamily: fonts.bodyMedium, fontSize: 14, color: colors.inkMuted, textAlign: "center" },
+  retry: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 12, backgroundColor: colors.primary },
+  retryText: { fontFamily: fonts.bodySemiBold, fontSize: 14, color: colors.onPrimary },
+  scroll: { paddingBottom: 112 },
+  hero: { height: HERO_HEIGHT, backgroundColor: "#F1F5F9" },
+  heroEmpty: { height: HERO_HEIGHT, alignItems: "center", justifyContent: "center" },
+  heroShade: { position: "absolute", top: 0, left: 0, right: 0, height: 96 },
+  heroButtons: { position: "absolute", left: 20, right: 20, flexDirection: "row", justifyContent: "space-between" },
+  roundButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(255,255,255,0.9)",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  pressed: { transform: [{ scale: 0.95 }] },
+  dots: { position: "absolute", bottom: 32, left: 0, right: 0, flexDirection: "row", justifyContent: "center", gap: 6 },
+  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: "rgba(255,255,255,0.6)" },
+  dotActive: { width: 24, backgroundColor: colors.surface },
+  sheet: {
+    marginTop: -16,
+    paddingHorizontal: 24,
+    paddingTop: 20,
+    paddingBottom: 16,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(2,44,34,0.05)",
+    backgroundColor: "#F9FBFA",
+  },
+  nameRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 },
+  nameLeft: { flexDirection: "row", alignItems: "center", gap: 8, flexShrink: 1 },
+  name: { flexShrink: 1, fontFamily: fonts.displayExtraBold, fontSize: 30, lineHeight: 36, letterSpacing: -0.8, color: "#111827" },
+  verified: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "#D1FAE5",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  share: { padding: 8 },
+  chips: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 16 },
+  chip: {
+    overflow: "hidden",
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 999,
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  chipSpecies: { backgroundColor: "#F3F4F6", color: "#374151" },
+  chipStatus: { backgroundColor: "#ECFDF5", color: colors.primary },
+  chipAdopted: { backgroundColor: "#F1F5F9", color: "#475569" },
+  chipRow: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999 },
+  chipAdoption: { backgroundColor: "#DCF2EA" },
+  chipDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: "#13614C" },
+  chipAdoptionText: { fontFamily: fonts.bodySemiBold, fontSize: 12, lineHeight: 16, color: "#13614C" },
+  shelter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 14,
+    marginBottom: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "rgba(243,244,246,0.9)",
+    backgroundColor: colors.surface,
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  shelterPressed: { backgroundColor: "#F9FAFB" },
+  shelterLeft: { flex: 1, flexDirection: "row", alignItems: "center", gap: 12 },
+  shelterIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    overflow: "hidden",
+    backgroundColor: "rgba(30,107,86,0.1)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  shelterText: { flex: 1 },
+  shelterName: { fontFamily: fonts.bodyBold, fontSize: 14, lineHeight: 18, color: "#111827" },
+  shelterPlace: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 },
+  shelterPlaceText: { fontFamily: fonts.body, fontSize: 12, color: "#71827D" },
+  shelterArrow: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "#F9FAFB",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  attributes: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", paddingHorizontal: 8, paddingVertical: 4, marginBottom: 16 },
+  attributeLead: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.primary, marginRight: 8 },
+  attributeItem: { flexDirection: "row", alignItems: "center" },
+  attributeSeparator: { marginHorizontal: 8, fontFamily: fonts.bodySemiBold, fontSize: 12, color: "#D1D5DB" },
+  attributeText: { fontFamily: fonts.bodySemiBold, fontSize: 12, lineHeight: 18, color: "#4B5563" },
+  about: { marginBottom: 20 },
+  aboutTitle: {
+    marginBottom: 6,
+    fontFamily: fonts.bodyBold,
+    fontSize: 11,
+    lineHeight: 16,
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+    color: "#9CA3AF",
+  },
+  aboutText: { fontFamily: fonts.body, fontSize: 14, lineHeight: 22.75, color: "#4B5563" },
+  aboutHealth: { marginTop: 8 },
+  aboutHealthLabel: { fontFamily: fonts.bodySemiBold, color: "#374151" },
+  stats: { flexDirection: "row", gap: 12, marginBottom: 8 },
+  stat: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 14,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#F3F4F6",
+    backgroundColor: colors.surface,
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  statIcon: { width: 36, height: 36, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+  statValue: { fontFamily: fonts.displayExtraBold, fontSize: 16, lineHeight: 20, color: "#111827" },
+  statLabel: { fontFamily: fonts.bodyMedium, fontSize: 11, lineHeight: 15, color: "#6B7280" },
+  footer: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    flexDirection: "row",
+    gap: 12,
+    paddingHorizontal: 24,
+    paddingTop: 14,
+    borderTopWidth: 1,
+    borderTopColor: "#F3F4F6",
+    backgroundColor: "rgba(255,255,255,0.95)",
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 20,
+    elevation: 8,
+  },
+  adopt: {
+    flex: 1,
+    height: 52,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    backgroundColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.2,
+    shadowRadius: 15,
+    elevation: 6,
+  },
+  adoptPressed: { backgroundColor: "#165242", transform: [{ scale: 0.98 }] },
+  adoptDisabled: { backgroundColor: "#94A3B8", shadowOpacity: 0 },
+  adoptText: { fontFamily: fonts.displayBold, fontSize: 16, color: colors.onPrimary },
+  sponsor: {
+    flex: 1,
+    height: 52,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "rgba(30,107,86,0.1)",
+    backgroundColor: "#EAF3F0",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+  },
+  sponsorPressed: { backgroundColor: "#DDF0E8", transform: [{ scale: 0.98 }] },
+  sponsorDisabled: { opacity: 0.5 },
+  sponsorText: { fontFamily: fonts.displayBold, fontSize: 16, color: colors.primary },
+  modalBackdrop: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(15,23,42,0.5)" },
+  modalCard: {
+    paddingHorizontal: 24,
+    paddingTop: 12,
+    gap: 12,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    backgroundColor: colors.surface,
+  },
+  modalHandle: { alignSelf: "center", width: 40, height: 5, borderRadius: 3, backgroundColor: "#CBD5E1", marginBottom: 4 },
+  modalTitle: { fontFamily: fonts.displayExtraBold, fontSize: 20, color: "#111827" },
+  modalBody: { fontFamily: fonts.body, fontSize: 14, lineHeight: 21, color: "#4B5563" },
+  bank: { padding: 14, gap: 2, borderRadius: 16, backgroundColor: "#F8FAF9", borderWidth: 1, borderColor: "#E8ECE9" },
+  bankLabel: { marginTop: 6, fontFamily: fonts.bodySemiBold, fontSize: 11, letterSpacing: 0.4, textTransform: "uppercase", color: "#94A3B8" },
+  bankValue: { fontFamily: fonts.bodySemiBold, fontSize: 15, color: "#111827" },
+  bankNumber: { fontFamily: fonts.displayBold, letterSpacing: 1 },
+  modalNote: { fontFamily: fonts.bodyMedium, fontSize: 12.5, lineHeight: 18, color: "#64748B" },
+  modalClose: {
+    height: 50,
+    marginTop: 4,
+    borderRadius: 16,
+    backgroundColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modalCloseText: { fontFamily: fonts.displayBold, fontSize: 15, color: colors.onPrimary },
 });

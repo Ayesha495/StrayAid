@@ -9,7 +9,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
+import { Href, router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { mobileTheme as theme } from "../../../styles/mobileTheme";
 import {
@@ -83,13 +83,18 @@ export default function ActivityPage() {
         <Text style={s.sectionTitle}>My Reports</Text>
         <Text style={s.sectionSub}>Track the status of cases you reported.</Text>
         {reports.length ? reports.map((c) => (
-          <View key={c.id} style={s.reportCard}>
+          <Pressable
+            key={c.id}
+            style={s.reportCard}
+            accessibilityRole="button"
+            onPress={() => router.push(`/cases/${c.id}` as Href)}
+          >
             <View style={s.reportRow}>
               <View style={s.reportIconWrap}>
                 <Ionicons name="location" size={18} color={theme.colors.primary} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={s.reportTitle}>Case #{c.id}</Text>
+                <Text style={s.reportTitle}>Case #{c.reference ?? c.id}</Text>
                 <Text style={s.reportMeta}>{new Date(c.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</Text>
               </View>
               <StatusBadge status={c.status} />
@@ -97,7 +102,7 @@ export default function ActivityPage() {
             {c.description ? (
               <Text style={s.reportDesc} numberOfLines={2}>{c.description}</Text>
             ) : null}
-          </View>
+          </Pressable>
         )) : (
           <View style={s.emptyBox}>
             <Ionicons name="document-text-outline" size={32} color={theme.colors.inkMuted} />

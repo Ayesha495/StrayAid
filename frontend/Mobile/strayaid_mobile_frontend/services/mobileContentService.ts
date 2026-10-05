@@ -1,4 +1,5 @@
 import { authFetch } from "./apiClient";
+import { appendFile } from "../utils/formFile";
 import { API_BASE } from "./apiConfig";
 
 export const resolveMediaUrl = (value: string | null | undefined) => {
@@ -48,11 +49,21 @@ export type MobileAnimal = {
   color?: string;
   description: string;
   medical_info: string;
-  donation_info: string;
-  status: string;
+  // Bank details for sponsoring, and how to reach the organization about adopting.
+  donation_info: { bank: string; account_name: string; account_number: string } | null;
+  adoption_info: { message: string; phone: string; email: string } | null;
+  status: "rescued" | "recovering" | "adoptable" | "adopted" | string;
   image: string | null;
   organization: MobileOrganization;
   created_at: string;
+  case_id?: number;
+  // Profile page extras (Stitch 13).
+  health?: "healthy" | "minor_issues" | "under_treatment" | "special_needs" | "";
+  vaccinated?: boolean;
+  photos?: string[];
+  sponsor_count?: number;
+  application_count?: number;
+  ai_verified?: boolean;
 };
 export type MobilePost = {
   id: number;
@@ -74,6 +85,7 @@ export type MobileReport = {
 };
 export type MobileCase = {
   id: number;
+  reference?: string;
   description: string;
   latitude: number;
   longitude: number;
@@ -96,7 +108,7 @@ function errorMessage(data: unknown, status: number) {
   return "Something went wrong. Please try again.";
 }
 
-async function parseJson<T>(response: Response): Promise<T> {
+export async function parseJson<T>(response: Response): Promise<T> {
   const data = await response.json().catch(() => null);
   if (!response.ok) {
     throw new Error(errorMessage(data, response.status));
@@ -113,6 +125,7 @@ const normalizeOrganization = (organization: MobileOrganization): MobileOrganiza
 const normalizeAnimal = (animal: MobileAnimal): MobileAnimal => ({
   ...animal,
   image: resolveMediaUrl(animal.image),
+  photos: (animal.photos ?? []).map((photo) => resolveMediaUrl(photo)).filter((photo): photo is string => !!photo),
   organization: normalizeOrganization(animal.organization),
 });
 
@@ -188,6 +201,18 @@ export type SubmittedReport = {
     status: string;
   };
 };
+
+// Checks a report photo for an animal before the report is filled in (Stitch 7).
+export type PhotoCheckResult = { ok: true; animal: string; confidence: number } | { ok: false; reason: "not_an_animal" };
+
+export async function checkReportPhoto(photo: { uri: string; name: string; type: string }): Promise<PhotoCheckResult> {
+  const form = new FormData();
+  await appendFile(form, "image", photo);
+  const response = await authFetch("/api/cases/check-photo/", { method: "POST", body: form });
+  if (response.status === 422) return { ok: false, reason: "not_an_animal" };
+  const data = await parseJson<{ animal: string; confidence: number }>(response);
+  return { ok: true, animal: data.animal, confidence: data.confidence };
+}
 
 export async function submitReport(formData: FormData) {
   const response = await authFetch("/api/cases/report/", { method: "POST", body: formData });

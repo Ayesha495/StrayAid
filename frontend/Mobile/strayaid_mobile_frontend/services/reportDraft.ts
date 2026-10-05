@@ -7,8 +7,16 @@ export type LatLng = { latitude: number; longitude: number };
 export type ReportPhoto = { uri: string; name: string; type: string };
 export type Severity = "low" | "medium" | "high" | "critical";
 
+// Result of checking the photo for an animal (it must have one before the report can go on).
+export type PhotoCheck =
+  | { state: "idle" }
+  | { state: "checking" }
+  | { state: "ok"; animal: string }
+  | { state: "error"; message: string };
+
 export type ReportDraft = {
   photo: ReportPhoto | null;
+  photoCheck: PhotoCheck;
   location: LatLng | null;
   // Short readable place, e.g. "F-7, Islamabad". Sent to the backend as the case's area.
   address: string;
@@ -19,6 +27,7 @@ export type ReportDraft = {
 
 const EMPTY: ReportDraft = {
   photo: null,
+  photoCheck: { state: "idle" },
   location: null,
   address: "",
   description: "",

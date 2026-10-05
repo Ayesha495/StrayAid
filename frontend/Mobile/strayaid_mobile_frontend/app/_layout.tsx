@@ -11,7 +11,7 @@ import {
   Manrope_800ExtraBold,
 } from "@expo-google-fonts/manrope";
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import { Href, router, Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useRef } from "react";
 
@@ -64,8 +64,11 @@ export default function RootLayout() {
       notificationListener.current = Notifications.addNotificationReceivedListener(() => {
         // Foreground notification received — handler in notificationService shows it.
       });
-      responseListener.current = Notifications.addNotificationResponseReceivedListener(() => {
-        // User tapped notification — deep-link routing can be added here.
+      // Tapping a push opens what it is about.
+      responseListener.current = Notifications.addNotificationResponseReceivedListener((response) => {
+        const data = response.notification.request.content.data as { case_id?: number; animal_id?: number };
+        if (data?.case_id) router.push(`/cases/${data.case_id}` as Href);
+        else if (data?.animal_id) router.push(`/animals/${data.animal_id}` as Href);
       });
     }
 
