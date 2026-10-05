@@ -39,11 +39,15 @@ def _post_save_case(sender, instance, created, **kwargs):
     reporter_ids = {user_id for user_id, wants_updates in reports if wants_updates}
     if instance.reported_by_id not in {user_id for user_id, _ in reports}:
         reporter_ids.add(instance.reported_by_id)
+    # People who follow the case without having reported it.
+    from notifications.models import CaseFollow
+
+    reporter_ids.update(CaseFollow.objects.filter(case=instance).values_list("user_id", flat=True))
 
     notify_users(
         list(reporter_ids),
         title="Rescue Update",
-        body=f"Your reported case #{instance.pk} is now: {label}",
+        body=f"Case {instance.reference} is now: {label}",
         data={"type": "case_status", "case_id": instance.pk, "status": instance.status},
     )
 

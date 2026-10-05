@@ -14,6 +14,9 @@ PASSWORD_HASHERS = [
 
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 
+# Score reports inside the request so tests see the result straight away.
+AI_SCORE_IN_BACKGROUND = False
+
 MIGRATION_MODULES = {
     "accounts": None,
     "notifications": None,

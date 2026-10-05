@@ -17,11 +17,12 @@ from django.db import transaction
 from django.utils import timezone
 
 from accounts.models import User
-from animals.models import Animal
+from animals.models import AdoptionApplication, Animal, Sponsorship
 from organizations.models import Organization
 from posts.models import Post, PostComment, PostLike, Story
-from rescue.models import Case, Report
-from rescue.utils.scoring import compute_confidence_score, is_possibly_invalid
+from rescue.models import Case, CaseUpdate, Report
+from rescue.signals import STATUS_MESSAGES
+from rescue.utils.scoring import refresh_case_score, score_report
 
 STITCH_IMAGES = Path(__file__).resolve().parents[5] / "images" / "stitch"
 DEMO_DOMAIN = "@strayaid.local"
@@ -37,6 +38,28 @@ def attach_photo(instance, field_name, name):
     field = getattr(instance, field_name)
     if not field:
         field.save(name, photo(name), save=True)
+
+
+# Order a case moves through; the seeded history walks it up to the case's current status.
+STATUS_PATH = ["reported", "assigned", "in_progress", "rescued", "adoption", "closed"]
+
+# Organization notes posted on the open demo cases (by case title).
+CASE_NOTES = {
+    "Injured Dog — G-11": ["Our volunteer is heading to G-11 Markaz with a carrier and first-aid kit."],
+    "Injured Dog — F-10": [
+        "Team reached F-10 park. He's nervous, so we're giving him a few minutes before moving him.",
+        "He let us close in. Leg looks sprained, not broken. Taking him to the clinic now.",
+    ],
+}
+
+
+def health_for(data):
+    """Health tag for a demo animal, consistent with its status and medical notes."""
+    if data["status"] in (Animal.STATUS_ADOPTABLE, Animal.STATUS_ADOPTED):
+        return "healthy"
+    if data["status"] == Animal.STATUS_RECOVERING:
+        return "under_treatment"
+    return "minor_issues"
 
 
 def backdate(instance, **ago):
@@ -130,7 +153,6 @@ OPEN_CASES = [
         "latitude": 33.66912,
         "longitude": 72.99645,
         "image": "01_s10_injured_dog_sitting_calmly_awaiting_medical.jpg",
-        "detector": 0.97,
         "reporters": ["sara.ahmed", "usman.tariq", "hina.malik"],
         "description": "Dog with an injured front leg resting by the curb near G-11 Markaz. Can't put weight on the leg.",
         "minutes_ago": 12,
@@ -145,7 +167,6 @@ OPEN_CASES = [
         "latitude": 33.70985,
         "longitude": 73.03712,
         "image": "32_s3_young_abandoned_grey_tabby_cat_nestled.jpg",
-        "detector": 0.9,
         "reporters": ["ali.raza"],
         "description": "Young grey tabby left in a cardboard box on a residential street in F-8/3. Seems hungry.",
         "minutes_ago": 34,
@@ -160,7 +181,6 @@ OPEN_CASES = [
         "latitude": 33.69511,
         "longitude": 73.01564,
         "image": "21_s24_a_portrait_shot_of_an_injured.jpg",
-        "detector": 0.88,
         "reporters": ["zainab.qureshi", "bilal.hussain"],
         "description": "Light brown street dog lying on the grass in F-10 park, limping and keeping away from people.",
         "minutes_ago": 95,
@@ -393,7 +413,9 @@ class Command(BaseCommand):
         reporters = self.seed_reporters()
         self.seed_open_cases(organizations, reporters)
         posts = self.seed_animals_and_posts(organizations, reporters)
+        self.seed_case_history()
         self.seed_engagement(posts, reporters)
+        self.seed_adoptions_and_sponsorships(reporters)
         self.seed_stories(organizations)
 
         self.stdout.write(self.style.SUCCESS("Demo data ready."))
@@ -459,7 +481,6 @@ class Command(BaseCommand):
         for data in OPEN_CASES:
             first_reporter = reporters[data["reporters"][0]]
             organization = organizations.get(data["organization"]) if data["organization"] else None
-            report_count = len(data["reporters"])
             case, _ = Case.objects.update_or_create(
                 title=data["title"],
                 reported_by=first_reporter,
@@ -473,8 +494,6 @@ class Command(BaseCommand):
                     "assigned_to": organization.user if organization else None,
                     "latitude": data["latitude"],
                     "longitude": data["longitude"],
-                    "confidence_score": compute_confidence_score(data["detector"], data["severity"], report_count),
-                    "possibly_invalid": is_possibly_invalid(data["detector"]),
                 },
             )
             for index, username in enumerate(data["reporters"]):
@@ -487,12 +506,35 @@ class Command(BaseCommand):
                         "latitude": data["latitude"] + index * 0.00001,
                         "longitude": data["longitude"],
                         "severity": data["severity"],
-                        "ai_animal_confidence": data["detector"],
                     },
                 )
                 attach_photo(report, "image", data["image"])
+                score_report(report)
                 backdate(report, minutes=data["minutes_ago"] - index * 3)
+            # AI confidence from the real detector on the demo photos (spec section 4).
+            refresh_case_score(case)
             backdate(case, minutes=data["minutes_ago"])
+
+    def seed_case_history(self):
+        """Rebuild every demo case's "Case Updates": one entry per status step it has been
+        through, spread between the report and now, plus organization notes on open cases."""
+        now = timezone.now()
+        for case in Case.objects.filter(reported_by__email__endswith=DEMO_DOMAIN).select_related("organization"):
+            case.updates.all().delete()
+            steps = STATUS_PATH[: STATUS_PATH.index(case.status) + 1] if case.status in STATUS_PATH else ["reported"]
+            notes = CASE_NOTES.get(case.title, []) if case.organization_id else []
+            entries = [(status, None) for status in steps] + [(None, note) for note in notes]
+            gap = (now - case.created_at) / (len(entries) + 1)
+            organization = case.organization.name if case.organization_id else "A rescue organization"
+            for index, (status, note) in enumerate(entries):
+                CaseUpdate.objects.create(
+                    case=case,
+                    status=status or "",
+                    message=note or STATUS_MESSAGES[status].format(organization=organization),
+                    author=case.organization.user if note else None,
+                    # The report is the first entry; later ones follow at even gaps.
+                    created_at=case.created_at + gap * index,
+                )
 
     def seed_animals_and_posts(self, organizations, reporters):
         posts = []
@@ -512,8 +554,6 @@ class Command(BaseCommand):
                     "assigned_to": organization.user,
                     "latitude": data["latitude"],
                     "longitude": data["longitude"],
-                    "confidence_score": compute_confidence_score(0.92, "medium", 1),
-                    "possibly_invalid": False,
                     "resolved_at": timezone.now() if data["status"] == Animal.STATUS_ADOPTED else None,
                 },
             )
@@ -525,10 +565,11 @@ class Command(BaseCommand):
                     "latitude": data["latitude"],
                     "longitude": data["longitude"],
                     "severity": "medium",
-                    "ai_animal_confidence": 0.92,
                 },
             )
             attach_photo(report, "image", data["image"])
+            score_report(report)
+            refresh_case_score(case)
             # The rescue happened shortly before the first update was posted.
             backdate(case, hours=data["hours_ago"] + 2)
             backdate(report, hours=data["hours_ago"] + 2)
@@ -546,6 +587,8 @@ class Command(BaseCommand):
                     "status": data["status"],
                     "description": data["description"],
                     "medical_info": data["medical_info"],
+                    "health": health_for(data),
+                    "vaccinated": "vaccinat" in data["medical_info"].lower(),
                     "donation_info": f"Support {data['name']}'s care through {organization.name}.",
                 },
             )
@@ -565,6 +608,51 @@ class Command(BaseCommand):
             backdate(post, hours=data["hours_ago"])
             posts.append((post, data))
         return posts
+
+    def seed_adoptions_and_sponsorships(self, reporters):
+        """Adoption applications only for animals that can be (or were) adopted, and pledges
+        for animals still in care, so the profile counts on Stitch 13 are believable."""
+        people = [reporters[username] for username, _, _ in REPORTERS]
+        homes = ["apartment", "house", "house", "other"]
+        amounts = [500, 1000, 2000, 1500]
+        animals = Animal.objects.filter(organization__user__email__endswith=DEMO_DOMAIN).order_by("name")
+        for index, animal in enumerate(animals):
+            reporter_id = animal.case.reported_by_id
+            # A different set of people for each animal, never the person who reported it.
+            candidates = [person for person in people[index:] + people[:index] if person.id != reporter_id]
+
+            if animal.status == Animal.STATUS_ADOPTABLE:
+                applicants = candidates[: 2 + index % 2]
+            elif animal.status == Animal.STATUS_ADOPTED:
+                applicants = candidates[:1]
+            else:
+                applicants = []
+            for offset, person in enumerate(applicants):
+                AdoptionApplication.objects.update_or_create(
+                    animal=animal,
+                    applicant=person,
+                    defaults={
+                        "full_name": person.get_full_name() or person.username,
+                        "phone": f"+92 300 55{index:02d}{offset:03d}",
+                        "home_type": homes[(index + offset) % len(homes)],
+                        "has_other_pets": (index + offset) % 3 == 0,
+                        "status": "approved" if animal.status == Animal.STATUS_ADOPTED else "pending",
+                    },
+                )
+
+            if animal.status != Animal.STATUS_ADOPTED:
+                sponsors = candidates[-(1 + index % 3):]
+                for offset, person in enumerate(sponsors):
+                    Sponsorship.objects.update_or_create(
+                        animal=animal,
+                        sponsor=person,
+                        defaults={
+                            "amount_pkr": amounts[(index + offset) % len(amounts)],
+                            "monthly": offset % 2 == 0,
+                            # The newest pledge waits for the organization to check the receipt.
+                            "status": "pending" if offset == len(sponsors) - 1 and len(sponsors) > 1 else "confirmed",
+                        },
+                    )
 
     def seed_engagement(self, posts, reporters):
         people = list(reporters.values())
