@@ -82,6 +82,34 @@ class RescueApiTests(MediaEnabledAPITestCase):
         self.assertEqual(Case.objects.count(), 2)
         self.assertEqual(Report.objects.count(), 1)
 
+    def test_report_case_saves_area_on_new_case(self):
+        self.client.force_authenticate(user=self.public_user)
+
+        response = self.client.post(
+            "/api/cases/report/",
+            {
+                "description": "Dog is injured",
+                "latitude": "31.5200",
+                "longitude": "74.3200",
+                "area": "  F-7, Islamabad  ",
+                "image": make_test_image(),
+            },
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Case.objects.get(pk=response.data["case_id"]).area, "F-7, Islamabad")
+
+    def test_nearby_report_fills_missing_area_but_keeps_existing_one(self):
+        self.client.force_authenticate(user=self.public_user)
+        payload = {"description": "Seen again", "latitude": "31.5100", "longitude": "74.3100"}
+
+        self.client.post("/api/cases/report/", {**payload, "area": "G-9, Islamabad", "image": make_test_image()}, format="multipart")
+        self.client.post("/api/cases/report/", {**payload, "area": "Somewhere else", "image": make_test_image()}, format="multipart")
+
+        self.case.refresh_from_db()
+        self.assertEqual(self.case.area, "G-9, Islamabad")
+
     def test_report_case_requires_image(self):
         self.client.force_authenticate(user=self.public_user)
 
@@ -444,3 +472,92 @@ class RescueApiTests(MediaEnabledAPITestCase):
         self.case.refresh_from_db()
         self.assertEqual(self.case.status, "rescued")
         self.assertIsNotNone(self.case.resolved_at)
+
+
+class PublicHomeEndpointTests(MediaEnabledAPITestCase):
+    """Trending cases and community stats are readable without logging in."""
+
+    def setUp(self):
+        self.reporter = User.objects.create_user(
+            email="public@example.com", username="public", password="secret123"
+        )
+
+        def make_case(title, severity, score, status_value="reported"):
+            case = Case.objects.create(
+                description=title,
+                title=title,
+                severity=severity,
+                confidence_score=score,
+                status=status_value,
+                latitude=33.68,
+                longitude=73.04,
+                reported_by=self.reporter,
+            )
+            Report.objects.create(
+                case=case,
+                user=self.reporter,
+                image=make_test_image(),
+                description=title,
+                latitude=33.68,
+                longitude=73.04,
+            )
+            return case
+
+        self.medium = make_case("Abandoned Cat — F-8", "medium", 78)
+        self.high_low_score = make_case("Hurt Puppy — I-8", "high", 40)
+        self.high = make_case("Injured Dog — G-11", "high", 93, "assigned")
+        self.closed = make_case("Old case", "critical", 99, "closed")
+        self.rescued = make_case("Rescued already", "critical", 99, "rescued")
+
+    def test_trending_is_public_and_sorted_by_urgency(self):
+        response = self.client.get("/api/cases/trending/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        titles = [item["title"] for item in response.data]
+        self.assertEqual(titles, ["Injured Dog — G-11", "Hurt Puppy — I-8", "Abandoned Cat — F-8"])
+        first = response.data[0]
+        self.assertEqual(first["status_label"], "Responder Assigned")
+        self.assertEqual(first["report_count"], 1)
+        self.assertTrue(first["image"].startswith("http://testserver/media/"))
+        self.assertNotIn("reported_by", first)
+
+    def test_trending_respects_limit(self):
+        response = self.client.get("/api/cases/trending/?limit=1")
+
+        self.assertEqual(len(response.data), 1)
+
+    def test_trending_title_falls_back_to_species_and_area(self):
+        self.high.title = ""
+        self.high.species = "dog"
+        self.high.area = "G-11"
+        self.high.save()
+
+        response = self.client.get("/api/cases/trending/")
+
+        self.assertEqual(response.data[0]["title"], "Dog — G-11")
+
+    def test_stats_count_rescued_animals(self):
+        Animal.objects.create(case=self.rescued, name="Max")
+
+        response = self.client.get("/api/cases/stats/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, {"rescued_total": 1, "rescued_today": 1})
+
+
+class ConfidenceScoreTests(APITestCase):
+    def test_formula_matches_spec(self):
+        from .utils.scoring import compute_confidence_score
+
+        # 0.5*0.97 + 0.3*0.75 + 0.2*1.0 = 0.91
+        self.assertEqual(compute_confidence_score(0.97, "high", 3), 91)
+        # 0.5*0.9 + 0.3*0.5 + 0.2*0.33 = 0.666
+        self.assertEqual(compute_confidence_score(0.9, "medium", 1), 67)
+        self.assertEqual(compute_confidence_score(1.0, "critical", 5), 100)
+        self.assertEqual(compute_confidence_score(None, "low", 0), 8)
+
+    def test_low_detector_confidence_is_flagged(self):
+        from .utils.scoring import is_possibly_invalid
+
+        self.assertTrue(is_possibly_invalid(0.12))
+        self.assertFalse(is_possibly_invalid(0.3))

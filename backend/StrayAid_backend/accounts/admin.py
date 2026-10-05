@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 
-from .models import User
+from .models import PasswordResetCode, User
 
 
 @admin.register(User)
@@ -17,3 +17,9 @@ class UserAdmin(DjangoUserAdmin):
     add_fieldsets = DjangoUserAdmin.add_fieldsets + (
         ("StrayAid", {"fields": ("email", "role")}),
     )
+
+
+@admin.register(PasswordResetCode)
+class PasswordResetCodeAdmin(admin.ModelAdmin):
+    list_display = ("user", "created_at", "failed_attempts", "used_at")
+    readonly_fields = ("user", "code_hash", "created_at", "failed_attempts", "used_at")
