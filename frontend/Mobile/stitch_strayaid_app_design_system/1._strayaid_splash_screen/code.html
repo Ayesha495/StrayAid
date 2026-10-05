@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>StrayAid - Splash Screen</title>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Google Fonts: Inter and Manrope -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Manrope:wght@500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Manrope', 'sans-serif'],
+          },
+          colors: {
+            rescueGreen: '#1E6B56',
+            emeraldAccent: '#35A982',
+            mintLight: '#E7F4EE',
+          }
+        }
+      }
+    };
+  </script>
+<style data-purpose="base-styling">
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #0b1114;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: 'Inter', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+  </style>
+<style data-purpose="device-frame">
+    .mobile-screen-wrapper {
+      width: 100%;
+      max-width: 393px;
+      height: 852px;
+      position: relative;
+      overflow: hidden;
+      border-radius: 50px;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 0 10px #181c20;
+    }
+  </style>
+</head>
+<body class="p-0 sm:p-4">
+<!-- BEGIN: MobileDeviceFrame -->
+<main class="mobile-screen-wrapper bg-black relative flex flex-col justify-between select-none" data-purpose="mobile-splash-container">
+<!-- BEGIN: BackgroundImageAndOverlay -->
+<div class="absolute inset-0 z-0">
+<!-- High-resolution photography of a rescued dog looking forward -->
+<img alt="Rescued golden retriever dog" class="w-full h-full object-cover object-center transform scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDSj2z0Uh2Pq-SHSrH9ir5TITDQKQuJDyu-SCRNqeg4PWwPQsiagSXq90JvIjzLgiw739yi7pEerRJ1Z5q_C3aKtloDQdarOm7m0RFZE6POeFoXRHxLLsLmGVTroKi2OM1ljapUMobKqAR0vPUo9WEE4eKBYf_0C9F5EgMZwjWlbUk6_wwHFwqezEnUfLdkAJX4RFAv8v6JOg0gEsmhWtxeWJu5x93vqTFySd6KapegXYcTtufiOrFiEQ"/>
+<!-- Cinematic multi-layer gradient overlays for contrast and pristine legibility -->
+<div class="absolute inset-0 bg-gradient-to-b from-black/60 via-black/35 to-black/75"></div>
+<div class="absolute inset-0 bg-radial-vignette mix-blend-multiply opacity-60"></div>
+</div>
+<!-- END: BackgroundImageAndOverlay -->
+<!-- BEGIN: TopStatusBar -->
+<header class="relative z-20 flex justify-between items-center px-8 pt-3.5 pb-2 text-white">
+<!-- iOS Clock -->
+<span class="text-[15px] font-semibold tracking-tight text-white/95">9:41</span>
+<!-- iOS Dynamic Island cutout mockup -->
+<div class="w-28 h-6 bg-black/80 backdrop-blur-md rounded-full absolute left-1/2 -translate-x-1/2 top-2.5"></div>
+<!-- iOS System Status Icons (Signal, WiFi, Battery) -->
+<div class="flex items-center space-x-1.5 text-white/95">
+<!-- Cellular Signal -->
+<svg class="w-4 h-4 fill-current" viewbox="0 0 24 24">
+<rect height="4" rx="0.8" width="2.8" x="2" y="17"></rect>
+<rect height="8" rx="0.8" width="2.8" x="7" y="13"></rect>
+<rect height="12" rx="0.8" width="2.8" x="12" y="9"></rect>
+<rect height="16" rx="0.8" width="2.8" x="17" y="5"></rect>
+</svg>
+<!-- WiFi -->
+<svg class="w-4 h-4 fill-current" viewbox="0 0 24 24">
+<path d="M12 4C7.31 4 3.07 5.9 0 8.98L12 21 24 8.98C20.93 5.9 16.69 4 12 4zm0 3.5c3.78 0 7.22 1.48 9.77 3.9L12 18.25 2.23 11.4C4.78 8.98 8.22 7.5 12 7.5z"></path>
+</svg>
+<!-- Battery -->
+<div class="flex items-center pl-0.5">
+<div class="w-5 h-2.5 border border-white/90 rounded-sm p-0.5 flex items-center">
+<div class="h-full w-full bg-white rounded-2xs"></div>
+</div>
+<div class="w-0.5 h-1 bg-white/90 rounded-r-xs -ml-px"></div>
+</div>
+</div>
+</header>
+<!-- END: TopStatusBar -->
+<!-- BEGIN: BrandCenterpiece -->
+<section class="relative z-10 flex-1 flex flex-col items-center justify-center px-8 text-center" data-purpose="center-branding">
+<!-- Glow ambient light behind the logo -->
+<div class="absolute w-44 h-44 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+<!-- StrayAid Official Heart & Hand/Paw Icon -->
+<div class="relative w-20 h-20 mb-5 flex items-center justify-center drop-shadow-[0_8px_16px_rgba(0,0,0,0.35)]" data-purpose="app-emblem">
+<svg class="w-20 h-20 text-white" fill="none" viewbox="0 0 72 72" xmlns="http://www.w3.org/2000/svg">
+<!-- Stylized heart formed by cradling protective arms -->
+<path d="M36 63.5C36 63.5 10 47.8 10 27.5C10 18.2 17.5 10.7 26.8 10.7C31.5 10.7 35.8 12.6 36 12.8C36.2 12.6 40.5 10.7 45.2 10.7C54.5 10.7 62 18.2 62 27.5C62 47.8 36 63.5 36 63.5Z" fill="none" stroke="white" stroke-linecap="round" stroke-linejoin="round" stroke-width="4.5"></path>
+<!-- Animal Rescue Paw in Center of Protection -->
+<ellipse cx="36" cy="38" fill="white" rx="7.5" ry="6.5"></ellipse>
+<ellipse cx="27" cy="27" fill="white" rx="3.5" ry="4.5" transform="rotate(-15 27 27)"></ellipse>
+<ellipse cx="45" cy="27" fill="white" rx="3.5" ry="4.5" transform="rotate(15 45 27)"></ellipse>
+<ellipse cx="20.5" cy="35" fill="white" rx="3" ry="4" transform="rotate(-30 20.5 35)"></ellipse>
+<ellipse cx="51.5" cy="35" fill="white" rx="3" ry="4" transform="rotate(30 51.5 35)"></ellipse>
+</svg>
+</div>
+<!-- StrayAid Brand Wordmark -->
+<h1 class="font-display text-4xl font-extrabold text-white tracking-tight leading-none drop-shadow-md mb-3">
+        StrayAid
+      </h1>
+<!-- Emotional Brand Tagline -->
+<p class="font-sans text-[15.5px] leading-relaxed text-white/90 max-w-[230px] font-normal drop-shadow-md">
+        Every rescue starts with someone who cares.
+      </p>
+</section>
+<!-- END: BrandCenterpiece -->
+<!-- BEGIN: BottomNavigationArea -->
+<footer class="relative z-20 pb-2.5 pt-4 flex flex-col items-center justify-end" data-purpose="home-indicator-container">
+<!-- iOS Home Indicator -->
+<div class="w-36 h-1 bg-white/80 rounded-full mb-1"></div>
+</footer>
+<!-- END: BottomNavigationArea -->
+</main>
+<!-- END: MobileDeviceFrame -->
+</body></html>

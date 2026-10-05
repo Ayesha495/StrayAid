@@ -1,8 +1,9 @@
-export type RegisterData = {
-    username: string;
+export type SignUpData = {
+    fullName: string;
     email: string;
-    password:string;
-    re_password: string;
+    password: string;
+    rePassword: string;
+    avatar?: { uri: string; name: string; type: string } | null;
 };
 
 export type LoginData = {
@@ -17,6 +18,7 @@ export type CurrentUser = {
     first_name: string;
     last_name: string;
     role: string;
+    avatar?: string | null;
 };
 
 export type TokenResponse = {

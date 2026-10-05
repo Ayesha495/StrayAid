@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>StrayAid - Guest Feed (Community)</title>
+<!-- Tailwind CSS v3 with Forms & Container Queries -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              primary: '#1E6B56',
+              primaryHover: '#165242',
+              emerald: '#35A982',
+              mint: '#E7F4EE',
+              coral: '#F47C6C',
+              amber: '#F4B860',
+              navy: '#243447',
+              muted: '#747474',
+              surface: '#F8FAF9',
+              border: '#E8ECE9',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+          },
+          boxShadow: {
+            'card': '0 2px 10px rgba(36, 52, 71, 0.05)',
+            'pill': '0 4px 14px rgba(30, 107, 86, 0.22)',
+            'nav': '0 -3px 16px rgba(0, 0, 0, 0.04)',
+          }
+        }
+      }
+    }
+  </script>
+<!-- Typography styles -->
+<style data-purpose="typography">
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@700;800&display=swap');
+    
+    .font-brand {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    
+    /* Hide scrollbars while allowing touch scrolling */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+<!-- Layout and Device Frame Styling -->
+<style data-purpose="device-viewport">
+    body {
+      background-color: #E2E8F0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0;
+      padding: 16px 0;
+    }
+
+    #app-container {
+      width: 100%;
+      max-width: 390px;
+      height: 844px;
+      background-color: #FFFFFF;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
+      border-radius: 44px;
+      border: 8px solid #1E293B;
+    }
+  </style>
+</head>
+<body class="text-brand-navy antialiased select-none font-sans">
+<!-- BEGIN: MobileDeviceWrapper -->
+<div data-purpose="mobile-screen-container" id="app-container">
+<!-- BEGIN: iOSStatusBar -->
+<header class="w-full pt-3 px-7 pb-1 flex justify-between items-center bg-white z-30 select-none" data-purpose="ios-status-bar">
+<!-- Time display -->
+<span class="text-[14px] font-semibold tracking-tight text-brand-navy">9:41</span>
+<!-- Dynamic Island / Speaker notch placeholder -->
+<div class="w-24 h-4 bg-transparent rounded-full"></div>
+<!-- Device Icons (Network, WiFi, Battery) -->
+<div class="flex items-center space-x-1.5 text-brand-navy">
+<!-- Cellular Signal -->
+<svg class="w-3.5 h-3.5 fill-current" viewbox="0 0 24 24">
+<path d="M2 17h3v4H2v-4zm5-4h3v8H7v-8zm5-4h3v12h-3V9zm5-5h3v17h-3V4z"></path>
+</svg>
+<!-- Wi-Fi -->
+<svg class="w-3.5 h-3.5 fill-current" viewbox="0 0 24 24">
+<path d="M12 4C7.31 4 3.07 5.9 0 8.98L12 21 24 8.98C20.93 5.9 16.69 4 12 4zm0 3.3c3.55 0 6.77 1.41 9.15 3.7L12 19.1 2.85 11C5.23 8.71 8.45 7.3 12 7.3z"></path>
+</svg>
+<!-- Battery with fill -->
+<div class="flex items-center">
+<div class="w-5 h-2.5 border border-brand-navy rounded-[3px] p-[1px] flex items-center">
+<div class="h-full w-3.5 bg-brand-navy rounded-[1px]"></div>
+</div>
+<div class="w-0.5 h-1 bg-brand-navy rounded-r-[1px] ml-[0.5px]"></div>
+</div>
+</div>
+</header>
+<!-- END: iOSStatusBar -->
+<!-- BEGIN: AppHeader -->
+<div class="px-5 pt-1.5 pb-2.5 flex items-center justify-between bg-white z-20" data-purpose="app-header">
+<!-- StrayAid Brand Logo -->
+<div class="flex items-center gap-2" data-purpose="brand-logo">
+<div class="w-8 h-8 rounded-full bg-brand-mint flex items-center justify-center text-brand-primary">
+<!-- Paw + Heart composite emblem -->
+<svg class="w-5 h-5 fill-brand-primary" viewbox="0 0 24 24">
+<path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path>
+</svg>
+</div>
+<span class="font-brand text-[21px] font-bold tracking-tight text-brand-navy">StrayAid</span>
+</div>
+<!-- Notification Action Icon -->
+<button aria-label="Notifications" class="relative p-2 rounded-full hover:bg-slate-100 transition-colors" data-purpose="notification-button">
+<svg class="w-6 h-6 text-brand-navy fill-none stroke-current stroke-2" viewbox="0 0 24 24">
+<path d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<!-- Badge indicator dot -->
+<span class="absolute top-2 right-2 w-2 h-2 bg-brand-coral rounded-full ring-2 ring-white"></span>
+</button>
+</div>
+<!-- END: AppHeader -->
+<!-- BEGIN: MainScrollArea -->
+<main class="flex-1 overflow-y-auto no-scrollbar pb-20 bg-white" data-purpose="feed-scroll-container">
+<!-- BEGIN: SearchBarSection -->
+<div class="px-5 pt-1 pb-3" data-purpose="search-bar-section">
+<div class="relative flex items-center">
+<span class="absolute left-3.5 text-brand-muted pointer-events-none">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewbox="0 0 24 24">
+<path d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</span>
+<input class="w-full h-10 pl-10 pr-4 bg-brand-surface border border-slate-200 rounded-full text-sm text-brand-navy placeholder:text-brand-muted focus:outline-none focus:ring-1.5 focus:ring-brand-primary focus:border-brand-primary transition-all" data-purpose="search-input" placeholder="Search..." type="search"/>
+</div>
+</div>
+<!-- END: SearchBarSection -->
+<!-- BEGIN: ReportAnimalBanner -->
+<div class="px-5 pb-4" data-purpose="report-cta-container">
+<button class="w-full h-11 bg-brand-primary hover:bg-brand-primaryHover active:scale-[0.99] text-white rounded-full flex items-center justify-center gap-2 font-medium text-[15px] shadow-pill transition-all" data-purpose="report-button">
+<!-- Paw print / alert icon -->
+<svg class="w-5 h-5 fill-current" viewbox="0 0 24 24">
+<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"></path>
+</svg>
+<span>Report an Animal</span>
+</button>
+</div>
+<!-- END: ReportAnimalBanner -->
+<!-- BEGIN: StoriesSection -->
+<section class="border-b border-slate-100 pb-3 mb-3" data-purpose="stories-highlight-row">
+<!-- Stories horizontal list -->
+<div class="flex items-start gap-3.5 px-5 overflow-x-auto no-scrollbar">
+<!-- Story 1: Rescue Updates -->
+<div class="flex flex-col items-center gap-1.5 flex-shrink-0 cursor-pointer" data-purpose="story-item">
+<div class="p-[2.5px] rounded-full border-2 border-brand-primary">
+<div class="w-[58px] h-[58px] rounded-full overflow-hidden bg-slate-100 ring-2 ring-white">
+<img alt="Rescue Updates" class="w-full h-full object-cover object-center" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAq0XZP1KoRRahYKsPFgm8KaeIj8qC7LvyYBYfALZrlvXjDPJi0cFleScBC8nUJOMQAZGHNmSfvhIwXJ0iquyjdiOifc2ZphwM0HUbGilyFFg8gidnFRbbE2zqAGc3e8USPAUmNwgNCGEJcx0ck1KfsGZDE3ZvW_MSq2lj6kpQu3QQqHpxJ0D4XUmgvORnVfqAzSL6hnbE55A9oL16zHNpG9hDaGpMvczx306geKskHFfznR5nbpQx_pw"/>
+</div>
+</div>
+<span class="text-[11px] font-medium text-brand-navy tracking-tight text-center leading-tight max-w-[64px] truncate">Rescue Updates</span>
+</div>
+<!-- Story 2: Happy Endings -->
+<div class="flex flex-col items-center gap-1.5 flex-shrink-0 cursor-pointer" data-purpose="story-item">
+<div class="p-[2.5px] rounded-full border-2 border-brand-primary">
+<div class="w-[58px] h-[58px] rounded-full overflow-hidden bg-slate-100 ring-2 ring-white">
+<img alt="Happy Endings" class="w-full h-full object-cover object-center" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCWdsra3C-hkYd7nfOMDJXV6xurk3oDLbLa0UUdEDp4cpo4FiqBLw5TrzfmWJcYlkmdozdGqqieTynZrgzmi4pesEW2TuSzpyOBoS6-MzKQdhH80hISMh2DxBq9E5XCgstTh5pM1AB_VTQJDx2f2P01j63wCIFDBcK1zIThodDdt7RLkGMeI0wCJFZnJDdKdv9jB3jQx-zEFLHuMoT-qUAXwOnLn2LOMr-HgUcEC5EGDXzkWBhtyvWwXg"/>
+</div>
+</div>
+<span class="text-[11px] font-medium text-brand-navy tracking-tight text-center leading-tight max-w-[64px] truncate">Happy Endings</span>
+</div>
+<!-- Story 3: Adoption -->
+<div class="flex flex-col items-center gap-1.5 flex-shrink-0 cursor-pointer" data-purpose="story-item">
+<div class="p-[2.5px] rounded-full border-2 border-brand-primary">
+<div class="w-[58px] h-[58px] rounded-full overflow-hidden bg-slate-100 ring-2 ring-white">
+<img alt="Adoption" class="w-full h-full object-cover object-center" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCEhRpHM1biamaWgES9MeUq9eUWhD8bPc-Nl8NwrrUg-uBrM4QavtcwbhoA2vlYlTqL4VWME80_kacUBm10T7fpFSldMaXL1sQzdRDkajPHr0rwMFibuZhQdQ8Vbmu4cipvkHIyt6ucEgqx07u1Eb-LSTbe6rDzxLg6QqoeebUwTZNiS0qBuS0RPUjUMh03SOK7wL3h4yjsX46fWpRxo_WTk5OP4VIcRPbw9bX4zWUowvx70-xwb8heBg"/>
+</div>
+</div>
+<span class="text-[11px] font-medium text-brand-navy tracking-tight text-center leading-tight max-w-[64px] truncate">Adoption</span>
+</div>
+<!-- Story 4: Behind the Rescue -->
+<div class="flex flex-col items-center gap-1.5 flex-shrink-0 cursor-pointer" data-purpose="story-item">
+<div class="p-[2.5px] rounded-full border-2 border-brand-emerald">
+<div class="w-[58px] h-[58px] rounded-full overflow-hidden bg-slate-100 ring-2 ring-white">
+<img alt="Behind the Rescue" class="w-full h-full object-cover object-center" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCYZrtUuZ_h6zZcExaD5JHyEjOjsamLlUASsXkvPL4Yvb3pSRNu8ba5k_pT-9fwTUXMqA1yEKeCJLvZMv2okpdw50nhHtr5h0k8sSbcHIVpaPHTItHx8ado8KuPpnYyKQ3nX77bODhu_GURyE2cM1v4f0xxS6QROEDZHQgrXap0JX8bsuKXnC4ltmB2wwfEx80bXifWdg8j40lHclred5GvFvbxuk4qUj-uRb-7PhcdoRau0G3a-pd2GA"/>
+</div>
+</div>
+<span class="text-[11px] font-medium text-brand-navy tracking-tight text-center leading-tight max-w-[64px] truncate">Behind Rescue</span>
+</div>
+<!-- Story 5: Shelter Life -->
+<div class="flex flex-col items-center gap-1.5 flex-shrink-0 cursor-pointer" data-purpose="story-item">
+<div class="p-[2.5px] rounded-full border-2 border-slate-300">
+<div class="w-[58px] h-[58px] rounded-full overflow-hidden bg-slate-100 ring-2 ring-white">
+<img alt="Shelter Care" class="w-full h-full object-cover object-center" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDE282vLsfHzGwTNedTlcTBy4BcFP2cW7BXZeqnvzzyuOfnyglxjEtOhI5JYfZKzGCGb1dw5lV6b8cZXgbxwhYEqeY1lScIhebgh1U7nmA-M7asQEcBdmFZRDRCEAnnGL5L7SwMTkj5P37Z2U6c1RgbDhw2DNmh5D7PQSTh6B_vo0WT2fQ0HFHL0eEtGbZHyggWcZPu_ip-NesmtYfHGdlyBRFrVSsdcOyfv6xi7ucU2LKU5X-Nrjnlvw"/>
+</div>
+</div>
+<span class="text-[11px] font-medium text-brand-muted tracking-tight text-center leading-tight max-w-[64px] truncate">Shelter Care</span>
+</div>
+</div>
+</section>
+<!-- END: StoriesSection -->
+<!-- BEGIN: FeedPostCard -->
+<article class="px-4 py-2" data-purpose="community-post-card">
+<div class="bg-white rounded-2xl border border-slate-100 shadow-card overflow-hidden">
+<!-- Post Author Header -->
+<div class="p-3.5 flex items-center justify-between">
+<div class="flex items-center gap-2.5">
+<!-- Organization Avatar -->
+<div class="relative">
+<img alt="Paws &amp; Care Rescue logo" class="w-10 h-10 rounded-full object-cover border border-slate-100" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD2cHihnLhzVEGeGhJxHeeGc_wnI-D2xOwglmp-EaspliIC0nC9sY-DZWhp1jGnaEWfCva7Bgqq_3_-3i-MK8f9BMeJfmbb_-C5ICXt4AlFwuzJghwoZ2qSww1c9mqahsvvjqv-ZqvOUREYGhDuXLey71QugxdMw6coEeKqDP_OEJCd4_wWQWb7CMbDzOy8LFKzsFUiEWz7cR9iIe1YlKtJssI5wfUisw3t-6wFJanrwr7FWqnHQ4TDWg"/>
+<!-- Verified Badge Mini -->
+<div class="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-brand-primary rounded-full flex items-center justify-center text-white ring-1 ring-white">
+<svg class="w-2.5 h-2.5 fill-current" viewbox="0 0 20 20">
+<path clip-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" fill-rule="evenodd"></path>
+</svg>
+</div>
+</div>
+<!-- Org Name and Timestamp -->
+<div>
+<div class="flex items-center gap-1.5">
+<h3 class="text-sm font-bold text-brand-navy leading-tight">Paws &amp; Care Rescue</h3>
+</div>
+<div class="flex items-center gap-1 text-[11px] text-brand-muted font-normal mt-0.5">
+<span>Islamabad</span>
+<span>•</span>
+<span>2h ago</span>
+</div>
+</div>
+</div>
+<!-- More Options Meatball Menu -->
+<button aria-label="More options" class="text-slate-400 hover:text-brand-navy p-1 transition-colors">
+<svg class="w-5 h-5 fill-current" viewbox="0 0 24 24">
+<path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"></path>
+</svg>
+</button>
+</div>
+<!-- Post Content Text -->
+<div class="px-3.5 pb-3">
+<p class="text-[13px] text-slate-700 leading-relaxed font-normal">
+              Found this sweet girl near F-7 today. She's safe now and getting medical care. ❤️
+            </p>
+</div>
+<!-- Post Image / Media Showcase -->
+<div class="w-full h-56 bg-slate-100 overflow-hidden relative" data-purpose="post-media">
+<img alt="Rescued golden dog" class="w-full h-full object-cover object-center" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBgrdx4njqKCISsVlqZo0gZSc9IMutESdJSKCRfDPjCUp60heZ_fcf7ke-xAJ4NRvtF1P7LOJEhDfAylfZ8tGyAWQ8kiwCbOwl26rAgA1dpeJc_nuHGhxNSOEXiQvL5wzVoISyf12j1lqw58EAa03gwhlzphYfvX9m5CQSFzJut1jItUtA3sj560VE23MtuRjGxGO3TalbhxoB9xY4RhrTMFPC_Zf-9AAXCywCFnwkpbHZSjItDuPAgiw"/>
+<!-- Status Badge overlay -->
+<div class="absolute top-3 left-3 bg-brand-navy/70 backdrop-blur-md text-white text-[11px] font-medium px-2.5 py-1 rounded-full flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-brand-emerald"></span>
+              Under Treatment
+            </div>
+</div>
+<!-- Engagement Interaction Bar -->
+<div class="px-3.5 py-2.5 flex items-center justify-between border-t border-slate-50 text-brand-muted text-xs font-medium">
+<div class="flex items-center gap-4">
+<!-- Like Action -->
+<button aria-label="Like post" class="flex items-center gap-1.5 hover:text-brand-coral transition-colors">
+<svg class="w-4 h-4 fill-brand-coral stroke-brand-coral" viewbox="0 0 24 24">
+<path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path>
+</svg>
+<span class="text-brand-navy font-semibold text-xs">1.2k</span>
+</button>
+<!-- Comment Action -->
+<button aria-label="Comment on post" class="flex items-center gap-1.5 hover:text-brand-primary transition-colors">
+<svg class="w-4 h-4 text-brand-navy stroke-current fill-none stroke-2" viewbox="0 0 24 24">
+<path d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a.75.75 0 01-.974-.94 4.053 4.053 0 00.4-1.258C3.58 17.277 3 14.772 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="text-brand-navy font-semibold text-xs">48</span>
+</button>
+</div>
+<!-- Share Action -->
+<button aria-label="Share post" class="hover:text-brand-primary p-1 transition-colors">
+<svg class="w-4 h-4 text-brand-navy fill-none stroke-current stroke-2" viewbox="0 0 24 24">
+<path d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+</div>
+</div>
+</article>
+<!-- END: FeedPostCard -->
+</main>
+<!-- END: MainScrollArea -->
+<!-- BEGIN: BottomTabBar -->
+<nav class="absolute bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-slate-100 shadow-nav z-30 pt-2 pb-6 px-6" data-purpose="bottom-navigation-bar">
+<ul class="flex items-center justify-between text-center">
+<!-- Tab 1: Home (Active) -->
+<li>
+<a aria-label="Home tab" class="flex flex-col items-center gap-1 text-brand-primary" href="#">
+<svg class="w-5 h-5 fill-current" viewbox="0 0 24 24">
+<path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"></path>
+</svg>
+<span class="text-[10px] font-semibold tracking-tight">Home</span>
+</a>
+</li>
+<!-- Tab 2: Explore / Map -->
+<li>
+<a aria-label="Explore tab" class="flex flex-col items-center gap-1 text-brand-muted hover:text-brand-navy transition-colors" href="#">
+<svg class="w-5 h-5 stroke-current stroke-2 fill-none" viewbox="0 0 24 24">
+<path d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.316a1.125 1.125 0 00-1.006 0L3.622 5.753A1.125 1.125 0 003 6.759v10.354c0 .835.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="text-[10px] font-medium tracking-tight">Explore</span>
+</a>
+</li>
+<!-- Tab 3: Quick Post / Center Action -->
+<li>
+<a aria-label="Create Post tab" class="flex flex-col items-center justify-center -mt-2" href="#">
+<div class="w-10 h-10 rounded-full bg-brand-primary text-white flex items-center justify-center shadow-md active:scale-95 transition-transform">
+<svg class="w-6 h-6 stroke-white stroke-[2.5] fill-none" viewbox="0 0 24 24">
+<path d="M12 4.5v15m7.5-7.5h-15" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+<span class="text-[10px] font-medium tracking-tight text-brand-muted mt-0.5">Post</span>
+</a>
+</li>
+<!-- Tab 4: Saved / Favorites -->
+<li>
+<a aria-label="Saved tab" class="flex flex-col items-center gap-1 text-brand-muted hover:text-brand-navy transition-colors" href="#">
+<svg class="w-5 h-5 stroke-current stroke-2 fill-none" viewbox="0 0 24 24">
+<path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="text-[10px] font-medium tracking-tight">Saved</span>
+</a>
+</li>
+<!-- Tab 5: Profile -->
+<li>
+<a aria-label="Profile tab" class="flex flex-col items-center gap-1 text-brand-muted hover:text-brand-navy transition-colors" href="#">
+<svg class="w-5 h-5 stroke-current stroke-2 fill-none" viewbox="0 0 24 24">
+<path d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="text-[10px] font-medium tracking-tight">Profile</span>
+</a>
+</li>
+</ul>
+</nav>
+<!-- END: BottomTabBar -->
+<!-- BEGIN: iOSHomeIndicator -->
+<div class="absolute bottom-1.5 inset-x-0 flex justify-center z-40 pointer-events-none" data-purpose="home-indicator">
+<div class="w-36 h-1 bg-slate-900/60 rounded-full"></div>
+</div>
+<!-- END: iOSHomeIndicator -->
+</div>
+<!-- END: MobileDeviceWrapper -->
+</body></html>

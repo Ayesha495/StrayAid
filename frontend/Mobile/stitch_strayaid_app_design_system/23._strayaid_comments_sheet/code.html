@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;family=Manrope:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "secondary-fixed": "#89f7cb", "on-surface-variant": "#3f4945", "tertiary-fixed-dim": "#ffb4a9", "tertiary-fixed": "#ffdad5", "background": "#f8f9ff", "on-secondary-container": "#007153", "error-container": "#ffdad6", "on-tertiary-container": "#ffcec7", "on-tertiary-fixed-variant": "#82271d", "inverse-surface": "#213144", "surface-bright": "#f8f9ff", "surface-container": "#e5eeff", "on-primary-container": "#9fe9ce", "tertiary-container": "#a23e32", "primary-fixed-dim": "#8cd5bb", "surface-dim": "#cbdbf4", "primary": "#00523f", "primary-container": "#1e6b56", "on-error-container": "#93000a", "surface-tint": "#1d6a55", "primary-fixed": "#a7f1d7", "on-primary": "#ffffff", "inverse-on-surface": "#eaf1ff", "surface-container-high": "#dbe9ff", "on-tertiary-fixed": "#410000", "on-tertiary": "#ffffff", "surface-container-lowest": "#ffffff", "secondary-fixed-dim": "#6cdab0", "surface-container-highest": "#d3e4fd", "surface-container-low": "#eef4ff", "tertiary": "#82271e", "on-primary-fixed": "#002118", "secondary": "#006c4f", "on-primary-fixed-variant": "#00513f", "secondary-container": "#86f4c8", "on-background": "#0b1c2e", "on-secondary-fixed-variant": "#00513b", "on-secondary": "#ffffff", "on-secondary-fixed": "#002116", "surface-variant": "#d3e4fd", "inverse-primary": "#8cd5bb", "outline-variant": "#bec9c3", "outline": "#6f7974", "on-surface": "#0b1c2e", "error": "#ba1a1a", "on-error": "#ffffff", "surface": "#f8f9ff" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-lg": "1rem", "space-md": "0.75rem", "space-xl": "1.5rem", "gutter-sm": "0.75rem", "margin-lg": "1.5rem", "space-xs": "0.25rem", "margin": "1rem", "space-sm": "0.5rem", "gutter": "1rem" }, "fontFamily": { "label-lg": ["Inter"], "headline-lg": ["Manrope"], "body-md": ["Inter"], "body-sm": ["Inter"], "label-md": ["Inter"], "body-lg": ["Inter"], "badge": ["Inter"], "display-lg": ["Manrope"], "label-sm": ["Inter"], "headline-md": ["Manrope"], "headline-sm": ["Manrope"] }, "fontSize": { "label-lg": ["14px", { "lineHeight": "20px", "fontWeight": "600" }], "headline-lg": ["24px", { "lineHeight": "32px", "fontWeight": "700" }], "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }], "label-md": ["12px", { "lineHeight": "16px", "fontWeight": "600" }], "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }], "badge": ["10px", { "lineHeight": "12px", "fontWeight": "700" }], "display-lg": ["32px", { "lineHeight": "40px", "fontWeight": "800" }], "label-sm": ["11px", { "lineHeight": "14px", "fontWeight": "600" }], "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "700" }], "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }] } } } };</script><style>@layer base{html,body{width:100vw;margin:0;padding:0;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style></head><body class="bg-background font-body-md text-on-surface flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 px-margin flex items-center justify-between"><div class="flex items-center gap-space-xs"><button aria-label="Back" class="w-11 h-11 flex items-center justify-center rounded-full text-on-surface hover:bg-surface-container-low transition-colors" onclick="history.back()"><span class="material-symbols-outlined text-[24px]">arrow_back_ios_new</span></button><h1 class="font-headline-sm text-headline-sm text-on-surface tracking-tight ml-space-xs">Post</h1></div><div class="flex items-center gap-space-xs"><button aria-label="Bookmark post" class="w-11 h-11 flex items-center justify-center rounded-full bg-surface-container-low text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-[20px]">bookmark</span></button><button aria-label="Share post" class="w-11 h-11 flex items-center justify-center rounded-full bg-surface-container-low text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-[20px]">share</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center ml-space-xs"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex-1 flex flex-col relative w-full pt-16 pb-20 bg-surface"><div class="flex flex-col w-full">
+<!-- Backdrop Visual Peek (Original Post Peek Banner) -->
+<div class="w-full px-margin pt-space-xs pb-space-sm flex items-center justify-between bg-surface-container-low/70 backdrop-blur-md">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-10 h-10 rounded-xl overflow-hidden shadow-sm shrink-0">
+<img class="w-full h-full object-cover" data-alt="Close up portrait of a vulnerable rescued brown tabby kitten with large curious amber eyes snugly swaddled in a chunky soft oatmeal wool knitted blanket in soft warm daylight" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCIpRBrMLGzQEiExH2YVbMS8V81roIZzMfYVpAQYizw5dLjSdFhtOK5-CMSAojlIjoNFXV6eN9knaowA8kp-AV05gc2rp6XHSwL4VbitlHezouwMlbnRkAKMovC1kHHRMxyJikPg9Clg6c-vpSAp9qghVj9C98R2i8rHE4mdoqQ32wmcocGp0qepFyxvb3ZV76sdEz1iB_fv2VINiaUwPeCtPFih3POpL1tOHjBERUfELcU3kiDjMHh3w"/>
+</div>
+<div class="min-w-0 flex flex-col">
+<div class="flex items-center gap-space-xs">
+<span class="font-headline-sm text-headline-sm text-on-surface truncate">Barnaby the Tabby</span>
+<span class="w-2 h-2 rounded-full bg-secondary shrink-0"></span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">Hope Animal Shelter • Sector F-7, Islamabad</p>
+</div>
+</div>
+<div class="flex items-center gap-space-xs shrink-0">
+<span class="px-space-sm py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed font-badge text-badge">Rescued</span>
+</div>
+</div>
+<!-- Bottom Sheet Container Card -->
+<div class="w-full bg-surface-container-lowest rounded-t-[28px] shadow-[0_-8px_32px_rgba(11,28,46,0.08)] flex flex-col">
+<!-- Drag Handle & Modal Bar -->
+<div class="w-full flex flex-col items-center pt-space-sm pb-space-xs cursor-grab active:cursor-grabbing">
+<div class="w-12 h-1 rounded-full bg-outline-variant/60"></div>
+</div>
+<!-- Sheet Header -->
+<div class="px-margin py-space-sm flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<h2 class="font-headline-md text-headline-md text-on-surface tracking-tight">Comments</h2>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface font-label-md text-label-md">26</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<!-- Sort Control Pill -->
+<button class="flex items-center gap-1 px-space-sm py-1.5 rounded-full bg-surface-container-low text-on-surface-variant font-label-sm text-label-sm hover:bg-surface-container transition-colors" id="sortBtn">
+<span class="material-symbols-outlined text-[16px] text-primary">swap_vert</span>
+<span id="sortLabel">Top</span>
+</button>
+<button aria-label="Sheet options" class="w-8 h-8 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Pinned Shelter Highlight Note -->
+<div class="px-margin mb-space-md">
+<div class="w-full p-space-md rounded-2xl bg-surface-container-low flex flex-col gap-space-xs relative overflow-hidden">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[16px] text-primary" style="font-variation-settings: 'FILL' 1;">push_pin</span>
+<span class="font-label-md text-label-md text-primary font-bold">Pinned by Shelter Author</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">2h ago</span>
+</div>
+<div class="flex items-start gap-space-sm mt-1">
+<div class="w-7 h-7 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-headline-sm text-headline-sm shrink-0">
+<span class="material-symbols-outlined text-[16px]">pets</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center gap-1">
+<span class="font-label-md text-label-md text-on-surface">Hope Animal Shelter</span>
+<span class="material-symbols-outlined text-[14px] text-secondary" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface mt-0.5 leading-snug">
+              Thank you everyone for the outpouring of love! Adoption &amp; foster applications are officially open. Kitten formula &amp; warm fleece blankets can be dropped at our F-7 clinic daily from 10am–6pm. 🐾🍼
+            </p>
+</div>
+</div>
+</div>
+</div>
+<!-- Quick Reaction Pills Carousel -->
+<div class="w-full overflow-x-auto px-margin pb-space-sm flex items-center gap-space-xs no-scrollbar">
+<button class="reaction-pill shrink-0 px-3 py-1.5 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm flex items-center gap-1.5 hover:bg-primary-fixed transition-colors active:scale-95" data-emoji="❤️">
+<span>❤️</span>
+<span>Sweet baby</span>
+</button>
+<button class="reaction-pill shrink-0 px-3 py-1.5 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm flex items-center gap-1.5 hover:bg-primary-fixed transition-colors active:scale-95" data-emoji="🙏">
+<span>🙏</span>
+<span>Bless you</span>
+</button>
+<button class="reaction-pill shrink-0 px-3 py-1.5 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm flex items-center gap-1.5 hover:bg-primary-fixed transition-colors active:scale-95" data-emoji="🐾">
+<span>🐾</span>
+<span>Fostering</span>
+</button>
+<button class="reaction-pill shrink-0 px-3 py-1.5 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm flex items-center gap-1.5 hover:bg-primary-fixed transition-colors active:scale-95" data-emoji="💖">
+<span>💖</span>
+<span>Donated</span>
+</button>
+<button class="reaction-pill shrink-0 px-3 py-1.5 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm flex items-center gap-1.5 hover:bg-primary-fixed transition-colors active:scale-95" data-emoji="🏡">
+<span>🏡</span>
+<span>Forever Home</span>
+</button>
+</div>
+<!-- Comments List Stream -->
+<div class="px-margin flex flex-col gap-space-lg pb-space-xl" id="commentsStream">
+<!-- Comment 1: Ayesha Khan (Threaded) -->
+<div class="flex flex-col gap-space-sm">
+<div class="flex items-start gap-space-sm">
+<!-- Avatar -->
+<div class="w-9 h-9 rounded-full bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center font-label-lg text-label-lg font-bold shrink-0">
+            AK
+          </div>
+<!-- Body -->
+<div class="flex-1 min-w-0">
+<div class="flex items-center gap-space-xs flex-wrap">
+<span class="font-label-md text-label-md text-on-surface">Ayesha Khan</span>
+<span class="px-1.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-badge text-badge">Volunteer</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">• 1h ago</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface mt-1 leading-relaxed">
+              Such a sweet baby! Dropping off some kitten formula and warm fleece blankets this evening around 5 PM. Keep up the amazing work team! 🍼✨
+            </p>
+<div class="flex items-center gap-space-md mt-1.5">
+<button class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors">Reply</button>
+<button class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors">Share</button>
+</div>
+</div>
+<!-- Like action -->
+<button class="like-btn flex flex-col items-center gap-0.5 pt-1 text-on-surface-variant hover:text-tertiary transition-colors" data-count="12" data-liked="false">
+<span class="material-symbols-outlined text-[20px] transition-transform active:scale-125">favorite</span>
+<span class="font-badge text-badge">12</span>
+</button>
+</div>
+<!-- Nested Reply: Shelter Author -->
+<div class="pl-11 flex items-start gap-space-sm">
+<div class="w-7 h-7 rounded-full bg-primary-container text-on-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[15px]">pets</span>
+</div>
+<div class="flex-1 min-w-0 p-space-sm rounded-xl bg-surface-container-low">
+<div class="flex items-center gap-1 flex-wrap">
+<span class="font-label-sm text-label-sm text-on-surface font-semibold">Hope Animal Shelter</span>
+<span class="material-symbols-outlined text-[13px] text-secondary" style="font-variation-settings: 'FILL' 1;">verified</span>
+<span class="font-badge text-badge text-primary-container font-bold">Author</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant ml-auto">45m ago</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface mt-1">
+              Thank you so much Ayesha! You're an angel, see you at the clinic! ❤️
+            </p>
+</div>
+<button class="like-btn flex flex-col items-center gap-0.5 pt-2 text-on-surface-variant hover:text-tertiary transition-colors" data-count="5" data-liked="true">
+<span class="material-symbols-outlined text-[18px] text-tertiary" style="font-variation-settings: 'FILL' 1;">favorite</span>
+<span class="font-badge text-badge text-tertiary">5</span>
+</button>
+</div>
+</div>
+<!-- Comment 2: Imran Ali (Threaded with Dr. Sarah) -->
+<div class="flex flex-col gap-space-sm">
+<div class="flex items-start gap-space-sm">
+<div class="w-9 h-9 rounded-full bg-surface-container-high text-on-surface flex items-center justify-center font-label-lg text-label-lg font-bold shrink-0">
+            IA
+          </div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center gap-space-xs flex-wrap">
+<span class="font-label-md text-label-md text-on-surface">Imran Ali</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">• 2h ago</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface mt-1 leading-relaxed">
+              Is he ready for visits yet? Our family submitted an adoption application earlier today through the portal.
+            </p>
+<div class="flex items-center gap-space-md mt-1.5">
+<button class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors">Reply</button>
+</div>
+</div>
+<button class="like-btn flex flex-col items-center gap-0.5 pt-1 text-on-surface-variant hover:text-tertiary transition-colors" data-count="4" data-liked="false">
+<span class="material-symbols-outlined text-[20px] transition-transform active:scale-125">favorite</span>
+<span class="font-badge text-badge">4</span>
+</button>
+</div>
+<!-- Nested Reply from Dr. Sarah -->
+<div class="pl-11 flex items-start gap-space-sm">
+<div class="w-7 h-7 rounded-full bg-primary-fixed text-on-primary-fixed flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[15px]">medical_services</span>
+</div>
+<div class="flex-1 min-w-0 p-space-sm rounded-xl bg-surface-container-low">
+<div class="flex items-center gap-1 flex-wrap">
+<span class="font-label-sm text-label-sm text-on-surface font-semibold">Dr. Sarah Rehman</span>
+<span class="px-1 py-0.2 rounded bg-primary text-on-primary font-badge text-badge">Vet Lead</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant ml-auto">1h ago</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface mt-1">
+              He's undergoing routine health checks and deworming today. If cleared, visitations begin Friday morning! Keep an eye on your app notification inbox.
+            </p>
+</div>
+<button class="like-btn flex flex-col items-center gap-0.5 pt-2 text-on-surface-variant hover:text-tertiary transition-colors" data-count="3" data-liked="false">
+<span class="material-symbols-outlined text-[18px]">favorite</span>
+<span class="font-badge text-badge">3</span>
+</button>
+</div>
+</div>
+<!-- Comment 3: Sara Ahmed -->
+<div class="flex items-start gap-space-sm">
+<div class="w-9 h-9 rounded-full bg-surface-container-high text-on-surface flex items-center justify-center font-label-lg text-label-lg font-bold shrink-0">
+          SA
+        </div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center gap-space-xs flex-wrap">
+<span class="font-label-md text-label-md text-on-surface">Sara Ahmed</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">• 45m ago</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface mt-1 leading-relaxed">
+            Shared to Islamabad Pet Care group! Praying he finds the most caring forever home quickly 🏡💕
+          </p>
+<div class="flex items-center gap-space-md mt-1.5">
+<button class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors">Reply</button>
+</div>
+</div>
+<button class="like-btn flex flex-col items-center gap-0.5 pt-1 text-on-surface-variant hover:text-tertiary transition-colors" data-count="8" data-liked="false">
+<span class="material-symbols-outlined text-[20px] transition-transform active:scale-125">favorite</span>
+<span class="font-badge text-badge">8</span>
+</button>
+</div>
+<!-- Comment 4: Bilal Tariq (with quick sponsor link) -->
+<div class="flex items-start gap-space-sm">
+<div class="w-9 h-9 rounded-full bg-surface-container-high text-on-surface flex items-center justify-center font-label-lg text-label-lg font-bold shrink-0">
+          BT
+        </div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center gap-space-xs flex-wrap">
+<span class="font-label-md text-label-md text-on-surface">Bilal Tariq</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">• 25m ago</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface mt-1 leading-relaxed">
+            Can we sponsor his vaccination and nutrition pack directly through the app?
+          </p>
+<div class="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-container/60 text-on-secondary-container font-label-sm text-label-sm font-semibold cursor-pointer hover:bg-secondary-container transition-colors">
+<span class="material-symbols-outlined text-[15px]">volunteer_activism</span>
+<span>Sponsor Barnaby's Care Pack ›</span>
+</div>
+<div class="flex items-center gap-space-md mt-1.5">
+<button class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors">Reply</button>
+</div>
+</div>
+<button class="like-btn flex flex-col items-center gap-0.5 pt-1 text-on-surface-variant hover:text-tertiary transition-colors" data-count="2" data-liked="false">
+<span class="material-symbols-outlined text-[20px] transition-transform active:scale-125">favorite</span>
+<span class="font-badge text-badge">2</span>
+</button>
+</div>
+<!-- Comment 5: Maria Qureshi -->
+<div class="flex items-start gap-space-sm">
+<div class="w-9 h-9 rounded-full bg-surface-container-high text-on-surface flex items-center justify-center font-label-lg text-label-lg font-bold shrink-0">
+          MQ
+        </div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center gap-space-xs flex-wrap">
+<span class="font-label-md text-label-md text-on-surface">Maria Qureshi</span>
+<span class="px-1.5 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-badge text-badge">Donor</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">• 10m ago</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface mt-1 leading-relaxed">
+            Look at those little eyes 🥺 Just pledged PKR 2,000 for his shelter food fund. Get well soon Barnaby!
+          </p>
+<div class="flex items-center gap-space-md mt-1.5">
+<button class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors">Reply</button>
+</div>
+</div>
+<button class="like-btn flex flex-col items-center gap-0.5 pt-1 text-on-surface-variant hover:text-tertiary transition-colors" data-count="6" data-liked="false">
+<span class="material-symbols-outlined text-[20px] transition-transform active:scale-125">favorite</span>
+<span class="font-badge text-badge">6</span>
+</button>
+</div>
+</div>
+<!-- Sticky In-sheet Input Composer Section -->
+<div class="sticky bottom-0 w-full px-margin pt-space-xs pb-space-md bg-surface-container-lowest/95 backdrop-blur-md shadow-[0_-4px_16px_rgba(0,0,0,0.04)]">
+<div class="flex items-center gap-space-sm">
+<!-- Current User Avatar -->
+<div class="w-9 h-9 rounded-full bg-primary text-on-primary flex items-center justify-center font-label-md text-label-md font-bold shrink-0 shadow-sm">
+          YU
+        </div>
+<!-- Input Field Container -->
+<div class="flex-1 flex items-center bg-surface-container-low rounded-full px-space-md py-1.5 transition-all focus-within:bg-surface-container-lowest focus-within:shadow-[0_0_0_2px_#1e6b56]">
+<input class="w-full bg-transparent text-on-surface placeholder:text-on-surface-variant font-body-sm text-body-sm outline-none" id="commentInput" placeholder="Add a comment for Hope Animal Shelter..." type="text"/>
+<button class="text-on-surface-variant hover:text-primary p-1 rounded-full transition-colors shrink-0" id="emojiBtn">
+<span class="material-symbols-outlined text-[20px]">sentiment_satisfied</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary p-1 rounded-full transition-colors shrink-0 ml-0.5">
+<span class="material-symbols-outlined text-[20px]">add_photo_alternate</span>
+</button>
+</div>
+<!-- Send Action Button -->
+<button class="w-10 h-10 rounded-full bg-primary-container text-on-primary flex items-center justify-center hover:opacity-95 active:scale-95 transition-all shadow-md shrink-0 disabled:opacity-50" id="sendBtn">
+<span class="material-symbols-outlined text-[20px]">send</span>
+</button>
+</div>
+<!-- Safe indicator line -->
+<div class="w-32 h-1 bg-on-surface-variant/20 rounded-full mx-auto mt-space-sm"></div>
+</div>
+</div>
+</div>
+<script>
+  (function initCommentsSheet() {
+    // Like micro-interaction
+    const likeButtons = document.querySelectorAll('.like-btn');
+    likeButtons.forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const icon = this.querySelector('.material-symbols-outlined');
+        const countSpan = this.querySelector('.font-badge');
+        let count = parseInt(this.getAttribute('data-count'), 10) || 0;
+        const isLiked = this.getAttribute('data-liked') === 'true';
+
+        if (isLiked) {
+          this.setAttribute('data-liked', 'false');
+          this.classList.remove('text-tertiary');
+          this.classList.add('text-on-surface-variant');
+          icon.style.fontVariationSettings = "'FILL' 0";
+          icon.classList.remove('text-tertiary');
+          countSpan.classList.remove('text-tertiary');
+          countSpan.textContent = Math.max(0, count - 1);
+          this.setAttribute('data-count', Math.max(0, count - 1));
+        } else {
+          this.setAttribute('data-liked', 'true');
+          this.classList.remove('text-on-surface-variant');
+          this.classList.add('text-tertiary');
+          icon.style.fontVariationSettings = "'FILL' 1";
+          icon.classList.add('text-tertiary');
+          countSpan.classList.add('text-tertiary');
+          countSpan.textContent = count + 1;
+          this.setAttribute('data-count', count + 1);
+
+          // Subtle bounce animation
+          icon.animate([
+            { transform: 'scale(1)' },
+            { transform: 'scale(1.4)' },
+            { transform: 'scale(1)' }
+          ], { duration: 250, easing: 'ease-out' });
+        }
+      });
+    });
+
+    // Quick reaction pills populate input
+    const reactionPills = document.querySelectorAll('.reaction-pill');
+    const commentInput = document.getElementById('commentInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const stream = document.getElementById('commentsStream');
+
+    reactionPills.forEach(pill => {
+      pill.addEventListener('click', function() {
+        const text = this.innerText.trim();
+        commentInput.value = text + ' ';
+        commentInput.focus();
+      });
+    });
+
+    // Send Comment Action
+    function submitComment() {
+      const val = commentInput.value.trim();
+      if (!val) return;
+
+      const newComment = document.createElement('div');
+      newComment.className = 'flex items-start gap-space-sm animate-fade-in';
+      newComment.innerHTML = `
+        <div class="w-9 h-9 rounded-full bg-primary text-on-primary flex items-center justify-center font-label-lg text-label-lg font-bold shrink-0">
+          YU
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-space-xs flex-wrap">
+            <span class="font-label-md text-label-md text-on-surface">You</span>
+            <span class="px-1.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-badge text-badge">Community</span>
+            <span class="font-body-sm text-body-sm text-on-surface-variant">• Just now</span>
+          </div>
+          <p class="font-body-md text-body-md text-on-surface mt-1 leading-relaxed">
+            ${val.replace(/</g, "&lt;").replace(/>/g, "&gt;")}
+          </p>
+          <div class="flex items-center gap-space-md mt-1.5">
+            <button class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors">Reply</button>
+          </div>
+        </div>
+        <button class="like-btn flex flex-col items-center gap-0.5 pt-1 text-on-surface-variant hover:text-tertiary transition-colors" data-liked="false" data-count="0">
+          <span class="material-symbols-outlined text-[20px] transition-transform active:scale-125">favorite</span>
+          <span class="font-badge text-badge">0</span>
+        </button>
+      `;
+
+      stream.appendChild(newComment);
+      commentInput.value = '';
+      newComment.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+      // Attach like listener to dynamic element
+      const dynamicLike = newComment.querySelector('.like-btn');
+      dynamicLike.addEventListener('click', function() {
+        const icon = this.querySelector('.material-symbols-outlined');
+        const countSpan = this.querySelector('.font-badge');
+        let count = parseInt(this.getAttribute('data-count'), 10) || 0;
+        const isLiked = this.getAttribute('data-liked') === 'true';
+
+        if (isLiked) {
+          this.setAttribute('data-liked', 'false');
+          icon.style.fontVariationSettings = "'FILL' 0";
+          icon.classList.remove('text-tertiary');
+          countSpan.classList.remove('text-tertiary');
+          countSpan.textContent = count - 1;
+          this.setAttribute('data-count', count - 1);
+        } else {
+          this.setAttribute('data-liked', 'true');
+          icon.style.fontVariationSettings = "'FILL' 1";
+          icon.classList.add('text-tertiary');
+          countSpan.classList.add('text-tertiary');
+          countSpan.textContent = count + 1;
+          this.setAttribute('data-count', count + 1);
+        }
+      });
+    }
+
+    sendBtn.addEventListener('click', submitComment);
+    commentInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        submitComment();
+      }
+    });
+
+    // Sort Toggle Button
+    const sortBtn = document.getElementById('sortBtn');
+    const sortLabel = document.getElementById('sortLabel');
+    if (sortBtn && sortLabel) {
+      sortBtn.addEventListener('click', () => {
+        sortLabel.textContent = sortLabel.textContent === 'Top' ? 'Newest' : 'Top';
+      });
+    }
+  })();
+</script></main><div class="fixed bottom-0 w-full z-50 pb-safe bg-surface/90 backdrop-blur-xl shadow-[0_-4px_16px_rgba(0,0,0,0.06)]"><div class="h-20 px-margin flex items-center gap-space-md"><button aria-label="Quick report update" class="h-12 w-12 rounded-full flex items-center justify-center bg-surface-container-high text-on-surface hover:bg-surface-container transition-colors"><span class="material-symbols-outlined text-[22px]">comment</span></button><button aria-label="Offer rescue assistance" class="flex-1 h-12 rounded-full bg-primary text-on-primary font-label-lg text-label-lg flex items-center justify-center gap-space-xs hover:bg-primary-container transition-colors"><span class="material-symbols-outlined text-[20px]">volunteer_activism</span><span class="">Respond to Rescue</span></button><button aria-label="Urgent medical alert dispatch" class="h-12 w-12 rounded-full flex items-center justify-center bg-tertiary text-on-tertiary hover:opacity-95 transition-opacity"><span class="material-symbols-outlined text-[22px]">emergency</span></button></div></div>
+</body></html>

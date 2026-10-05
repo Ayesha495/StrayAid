@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>StrayAid - Report Animal: Photo &amp; Location</title>
+<!-- Tailwind CSS CDN with plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Google Fonts for Manrope & Inter -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Plus+Jakarta+Sans:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              DEFAULT: '#1E6B56',
+              dark: '#165343',
+              light: '#EAF3F0',
+              emerald: '#35A982',
+              mint: '#E7F4EE',
+              coral: '#F47C6C'
+            },
+            neutral: {
+              surface: '#FBFBFB',
+              border: '#E5E7EB',
+              muted: '#6B7280',
+              heading: '#111827'
+            }
+          },
+          fontFamily: {
+            sans: ['Manrope', 'Plus Jakarta Sans', 'sans-serif'],
+          },
+          boxShadow: {
+            'subtle': '0 2px 10px rgba(0, 0, 0, 0.04)',
+            'card': '0 4px 20px -2px rgba(0, 0, 0, 0.06)',
+            'pill': '0 2px 8px rgba(0, 0, 0, 0.12)',
+            'cta': '0 8px 24px -4px rgba(30, 107, 86, 0.35)'
+          }
+        }
+      }
+    }
+  </script>
+<style data-purpose="custom-layout">
+    body {
+      background-color: #F0F2F5;
+      font-family: 'Manrope', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    /* Mobile screen container frame */
+    .mobile-frame {
+      width: 100%;
+      max-width: 390px;
+      min-height: 844px;
+      height: 844px;
+      position: relative;
+      background-color: #FFFFFF;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.18);
+      border-radius: 44px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+  </style>
+<style data-purpose="map-patterns">
+    /* Stylized vector map pattern */
+    .map-pattern {
+      background-color: #F2EFE9;
+      background-image: 
+        radial-gradient(circle at 75% 20%, #D4EAE2 0%, #D4EAE2 38px, transparent 39px),
+        radial-gradient(circle at 18% 78%, #DCEDE6 0%, #DCEDE6 48px, transparent 49px),
+        linear-gradient(45deg, transparent 48%, #FFFFFF 48%, #FFFFFF 52%, transparent 52%),
+        linear-gradient(-35deg, transparent 46%, #FFFFFF 46%, #FFFFFF 54%, transparent 54%),
+        linear-gradient(90deg, transparent 65%, #FBF9F5 65%, #FBF9F5 75%, transparent 75%);
+      background-size: 100% 100%, 100% 100%, 180px 180px, 220px 220px, 120px 120px;
+    }
+  </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-0 sm:p-4">
+<!-- BEGIN: MobileContainer -->
+<div class="mobile-frame" data-purpose="screen-report-animal-step1">
+<!-- BEGIN: StatusBar -->
+<header class="w-full pt-3 px-7 flex items-center justify-between text-neutral-heading z-20 shrink-0" data-purpose="ios-status-bar">
+<!-- Time Display -->
+<span class="text-[14px] font-semibold tracking-tight text-neutral-heading">9:41</span>
+<!-- Right Status Icons (Signal, Wifi, Battery) -->
+<div class="flex items-center space-x-1.5 text-neutral-heading">
+<!-- Cellular Signal -->
+<svg class="w-4 h-3.5 fill-current" viewbox="0 0 17 12">
+<rect height="4" rx="0.5" width="2.5" x="0.5" y="8"></rect>
+<rect height="6.5" rx="0.5" width="2.5" x="4.5" y="5.5"></rect>
+<rect height="9" rx="0.5" width="2.5" x="8.5" y="3"></rect>
+<rect height="11.5" rx="0.5" width="2.5" x="12.5" y="0.5"></rect>
+</svg>
+<!-- Wi-Fi -->
+<svg class="w-4 h-3.5 fill-current" viewbox="0 0 16 12">
+<path d="M8 2.8c2.4 0 4.6.9 6.2 2.5.4.4 1 .4 1.4 0 .4-.4.4-1 0-1.4C13.6 1.8 11 .8 8 .8S2.4 1.8.4 3.9c-.4.4-.4 1 0 1.4.4.4 1 .4 1.4 0C3.4 3.7 5.6 2.8 8 2.8zm0 3.8c1.5 0 2.9.6 4 1.7.4.4 1 .4 1.4 0 .4-.4.4-1 0-1.4-1.8-1.7-4-2.6-6.4-2.6S1.8 5.2 0 6.9c-.4.4-.4 1 0 1.4.4.4 1 .4 1.4 0 1.1-1.1 2.5-1.7 4-1.7zm0 3.8c-.8 0-1.5.3-2 .9-.4.4-.3 1 .1 1.4.4.4 1 .3 1.4-.1.1-.1.3-.2.5-.2.2 0 .4.1.5.2.4.4 1 .5 1.4.1.4-.4.5-1 .1-1.4-.5-.6-1.2-.9-2-.9z"></path>
+</svg>
+<!-- Battery Level -->
+<div class="flex items-center">
+<div class="w-5 h-2.5 border-[1.2px] border-neutral-heading rounded-[3px] p-[1px] flex items-center">
+<div class="h-full w-full bg-neutral-heading rounded-[1px]"></div>
+</div>
+<div class="w-[1.5px] h-1 bg-neutral-heading rounded-r-[1px] -ml-[0.5px]"></div>
+</div>
+</div>
+</header>
+<!-- END: StatusBar -->
+<!-- BEGIN: TopNavigationBar -->
+<nav class="relative flex items-center justify-between px-5 pt-3 pb-2 shrink-0" data-purpose="screen-header">
+<!-- Back Chevron Button -->
+<button aria-label="Go back" class="w-9 h-9 -ml-1 rounded-full flex items-center justify-center text-neutral-800 hover:bg-neutral-100 transition active:scale-95" type="button">
+<svg class="w-5 h-5 stroke-[2.4]" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M15.75 19.5L8.25 12l7.5-7.5" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+<!-- Screen Title -->
+<h1 class="text-[17px] font-bold text-neutral-heading tracking-tight">Report an animal in need</h1>
+<!-- Empty right placeholder for symmetrical balance -->
+<div class="w-9 h-9"></div>
+</nav>
+<!-- END: TopNavigationBar -->
+<!-- BEGIN: ContentArea -->
+<main class="flex-1 px-5 pt-2 pb-4 overflow-y-auto space-y-4 flex flex-col" data-purpose="report-form-body">
+<!-- BEGIN: PhotoUploadSection -->
+<section class="relative w-full rounded-2xl overflow-hidden shadow-card border border-neutral-100" data-purpose="photo-preview-card">
+<!-- Photo display container with rounded corners and fixed aspect ratio -->
+<div class="relative w-full h-[216px] bg-neutral-100 flex items-center justify-center overflow-hidden">
+<img alt="Rescue animal dog looking at camera" class="w-full h-full object-cover object-center" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAIJE1pQwq1bgpvYp9VSktgBOWebo0LPKLYvtN0Zladm-i0Y3CbVa3e32lyDDBQ-hVybNN7wJAd3fkGRUzRsNLe6kNcIo9QRGD5EgWhhsw9o_IT2OGRbODVsdDLcuFe9sn2PA9g9EKlzxTAzkXDe3UYQKlPm3W3a5rbvzDTjnZo8lPbP9VoFdwMkhWv_DYe0Zq0DvlK6Z_KBTQ4prtLMp4xgmzOXQqwrZgvOue_QeW5KuxBiHkslP_PMg"/>
+<!-- Soft gradient overlay at bottom for pill visibility -->
+<div class="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/40 to-transparent"></div>
+<!-- "Add a photo" pill button overlaid -->
+<button class="absolute bottom-3.5 left-1/2 -translate-x-1/2 flex items-center space-x-1.5 bg-white/95 backdrop-blur-md px-4 py-2 rounded-full shadow-pill border border-white/60 active:scale-95 transition" data-purpose="add-photo-button" type="button">
+<!-- Camera Outline Icon -->
+<svg class="w-4 h-4 text-neutral-700 stroke-[2]" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" stroke-linecap="round" stroke-linejoin="round"></path>
+<path d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="text-[13px] font-semibold text-neutral-800 leading-none">Add a photo</span>
+</button>
+</div>
+</section>
+<!-- END: PhotoUploadSection -->
+<!-- BEGIN: LocationMapSection -->
+<section class="space-y-3 pt-1" data-purpose="location-picker-group">
+<!-- Interactive/Styled Map Card -->
+<div class="relative w-full h-[184px] rounded-2xl overflow-hidden border border-neutral-200 shadow-sm map-pattern">
+<!-- Stylized road lines representation -->
+<svg class="absolute inset-0 w-full h-full pointer-events-none opacity-90" xmlns="http://www.w3.org/2000/svg">
+<!-- Secondary Arterial Roads -->
+<path d="M -20 60 Q 120 80, 200 130 T 420 120" fill="none" stroke="#FFFFFF" stroke-linecap="round" stroke-width="12"></path>
+<path d="M 140 -20 L 140 220" fill="none" stroke="#FFFFFF" stroke-linecap="round" stroke-width="8"></path>
+<path d="M 280 -10 L 260 210" fill="none" stroke="#FFFFFF" stroke-linecap="round" stroke-width="7"></path>
+<!-- Main Highway/Avenue in subtle yellow-cream -->
+<path d="M -10 140 C 90 130, 210 50, 410 40" fill="none" stroke="#FFF7D6" stroke-linecap="round" stroke-width="10"></path>
+<!-- Park shape -->
+<circle cx="210" cy="95" fill="#D2EBE0" opacity="0.8" r="42"></circle>
+</svg>
+<!-- Central Rescue Location Marker -->
+<div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+<!-- Pulsing soft halo under pin -->
+<div class="relative flex items-center justify-center">
+<span class="absolute w-8 h-8 rounded-full bg-brand/20 animate-ping"></span>
+<span class="absolute w-6 h-6 rounded-full bg-brand/25"></span>
+<!-- Brand Pin Icon -->
+<div class="relative z-10 -translate-y-3.5 filter drop-shadow-[0_4px_6px_rgba(0,0,0,0.25)]">
+<svg class="w-9 h-9 text-brand" fill="currentColor" viewbox="0 0 24 24">
+<path clip-rule="evenodd" d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 00-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 002.682 2.282 16.975 16.975 0 001.145.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z" fill-rule="evenodd"></path>
+</svg>
+<!-- Inner white target dot -->
+<div class="absolute top-[9px] left-[13px] w-2.5 h-2.5 bg-white rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- "Use my current location" Action Trigger -->
+<button class="flex items-center space-x-2 text-brand hover:text-brand-dark transition text-[13.5px] font-bold px-1 pt-0.5 active:opacity-75" data-purpose="use-current-location-btn" type="button">
+<!-- Navigation Arrow/Crosshair Icon -->
+<svg class="w-4 h-4 fill-none stroke-brand stroke-[2.2]" viewbox="0 0 24 24">
+<path d="M12 3v2.25m6.364 1.386l-1.591 1.591M21 12h-2.25m-1.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="tracking-tight">Use my current location</span>
+</button>
+<!-- Location Display Input Box -->
+<div class="w-full flex items-center space-x-2.5 px-3.5 py-3 rounded-xl border border-neutral-200 bg-white shadow-subtle text-neutral-800" data-purpose="selected-location-field">
+<!-- Subtle Location Pin Icon -->
+<svg class="w-4 h-4 text-neutral-400 shrink-0 stroke-[2]" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round"></path>
+<path d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<!-- Location Text -->
+<span class="text-[14px] font-medium text-neutral-700 tracking-tight select-none">Islamabad, Pakistan</span>
+</div>
+</section>
+<!-- END: LocationMapSection -->
+</main>
+<!-- END: ContentArea -->
+<!-- BEGIN: BottomActionBar -->
+<footer class="p-5 pt-2 pb-2 bg-white flex flex-col items-center shrink-0 space-y-4" data-purpose="footer-action">
+<!-- Primary CTA: Next Button -->
+<button class="w-full h-[52px] bg-brand hover:bg-brand-dark active:scale-[0.985] text-white font-bold text-[16px] rounded-2xl flex items-center justify-center transition shadow-cta" data-purpose="submit-step-button" type="button">
+        Next
+      </button>
+<!-- iOS Home Indicator -->
+<div class="w-32 h-1 bg-neutral-900 rounded-full opacity-30 mt-1 mb-1"></div>
+</footer>
+<!-- END: BottomActionBar -->
+</div>
+<!-- END: MobileContainer -->
+</body></html>

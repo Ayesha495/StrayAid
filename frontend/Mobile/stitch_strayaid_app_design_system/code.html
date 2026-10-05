@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=Manrope:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "on-surface": "#0b1c2e", "surface-container": "#e5eeff", "on-secondary": "#ffffff", "primary-fixed": "#a7f1d7", "tertiary": "#82271e", "on-background": "#0b1c2e", "error-container": "#ffdad6", "tertiary-container": "#a23e32", "surface": "#f8f9ff", "surface-tint": "#1d6a55", "outline-variant": "#bec9c3", "on-primary-fixed-variant": "#00513f", "primary-fixed-dim": "#8cd5bb", "on-tertiary-fixed": "#410000", "on-tertiary-fixed-variant": "#82271d", "secondary-fixed-dim": "#6cdab0", "on-tertiary-container": "#ffcec7", "primary-container": "#1e6b56", "on-surface-variant": "#3f4945", "primary": "#00523f", "surface-variant": "#d3e4fd", "on-secondary-container": "#007153", "surface-bright": "#f8f9ff", "background": "#f8f9ff", "on-primary-container": "#9fe9ce", "tertiary-fixed-dim": "#ffb4a9", "on-error-container": "#93000a", "tertiary-fixed": "#ffdad5", "secondary": "#006c4f", "on-error": "#ffffff", "inverse-surface": "#213144", "surface-dim": "#cbdbf4", "on-tertiary": "#ffffff", "surface-container-highest": "#d3e4fd", "inverse-primary": "#8cd5bb", "surface-container-high": "#dbe9ff", "outline": "#6f7974", "surface-container-low": "#eef4ff", "surface-container-lowest": "#ffffff", "secondary-container": "#86f4c8", "on-primary-fixed": "#002118", "secondary-fixed": "#89f7cb", "on-secondary-fixed": "#002116", "error": "#ba1a1a", "on-primary": "#ffffff", "inverse-on-surface": "#eaf1ff", "on-secondary-fixed-variant": "#00513b" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "space-lg": "1rem", "space-sm": "0.5rem", "margin": "1rem", "gutter-sm": "0.75rem", "margin-lg": "1.5rem", "gutter": "1rem", "space-xs": "0.25rem", "space-xl": "1.5rem", "space-md": "0.75rem" }, fontFamily: { "label-lg": ["Inter"], "body-sm": ["Inter"], "headline-md": ["Manrope"], "headline-lg": ["Manrope"], "body-md": ["Inter"], "badge": ["Inter"], "label-md": ["Inter"], "headline-sm": ["Manrope"], "display-lg": ["Manrope"], "body-lg": ["Inter"], "label-sm": ["Inter"] }, fontSize: { "label-lg": ["14px", { lineHeight: "20px", fontWeight: "600" }], "body-sm": ["12px", { lineHeight: "16px", fontWeight: "400" }], "headline-md": ["20px", { lineHeight: "28px", fontWeight: "700" }], "headline-lg": ["24px", { lineHeight: "32px", fontWeight: "700" }], "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }], "badge": ["10px", { lineHeight: "12px", fontWeight: "700" }], "label-md": ["12px", { lineHeight: "16px", fontWeight: "600" }], "headline-sm": ["18px", { lineHeight: "24px", fontWeight: "600" }], "display-lg": ["32px", { lineHeight: "40px", fontWeight: "800" }], "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }], "label-sm": ["11px", { lineHeight: "14px", fontWeight: "600" }] } } } };</script><style>@layer base{html,body{width:100%;margin:0;padding:0;min-height:100%;}body{overscroll-behavior-y:none;-webkit-tap-highlight-color:transparent;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style></head><body class="bg-surface font-body-md text-on-surface antialiased flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] pt-safe"><div class="h-16 px-margin flex items-center justify-between"><div class="flex items-center gap-space-sm min-w-0"><h1 class="font-headline-lg text-headline-lg text-on-surface truncate">Profile</h1></div><div class="flex items-center gap-space-xs"><button aria-label="Share" class="w-11 h-11 rounded-full flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container/60 transition-colors" type="button"><span class="material-symbols-outlined text-[22px]">share</span></button><button aria-label="Settings" class="w-11 h-11 rounded-full flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container/60 transition-colors" type="button"><span class="material-symbols-outlined text-[22px]">settings</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center ml-space-xs"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex flex-col flex-1 relative w-full pt-16 pb-28 bg-surface"><div class="flex flex-col w-full px-margin pb-6 gap-y-space-lg">
+<!-- Top Profile Card -->
+<div class="w-full bg-surface-container-lowest rounded-xl p-margin shadow-sm flex flex-col gap-y-space-md relative overflow-hidden">
+<div class="flex items-start gap-x-space-md">
+<!-- Avatar with Verified Badge -->
+<div class="relative shrink-0">
+<img class="w-20 h-20 rounded-full object-cover shadow-sm bg-surface-container" data-alt="A warm, compassionate middle-aged South Asian woman in her late 40s wearing a clean olive green rescue vest over a modest navy kurta, smiling gently outdoors in a soft-lit Islamabad park. Soft cinematic sunlight, natural skin textures, depth of field." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAAQJOJwN9tzj33hQ7Zw88xtFHW6VPSpNF7wStCIuwQlnsgJH32IRT3bQ9xcdlbQgvasjPoI7GlUCTw9UZiYvnHrH-U97GEY25QFCvnBJJzqUX3-tvkCtzQuO7ptFqGr4e7xCopNAKQjVjdfXBZxGcJ8Auc1XJwk2OCNt8Higy4hJJFehE9o_jz-y8gLGCpdcTH4FWfD5hbw0KhyVp5Nh-2MOb3lxBMqhSrqCD86thkpKgqjFhgM9B18A"/>
+<div class="absolute bottom-0 right-0 w-6 h-6 bg-primary rounded-full flex items-center justify-center shadow-md">
+<span class="material-symbols-outlined text-on-primary text-[15px]" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+</div>
+<!-- Info Meta -->
+<div class="flex-1 min-w-0 flex flex-col justify-center">
+<div class="flex items-center gap-x-1.5">
+<h2 class="font-headline-md text-headline-md text-on-surface truncate">Ayesha Tabassum</h2>
+<span class="material-symbols-outlined text-secondary text-[20px]" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-x-1 mt-0.5">
+<span class="material-symbols-outlined text-[15px] shrink-0 text-outline">location_on</span>
+<span class="truncate">Sector G-11, Islamabad</span>
+</p>
+<p class="font-label-sm text-label-sm text-outline mt-0.5">Member since Sep 2024</p>
+</div>
+</div>
+<!-- Trust Level & Credibility Pill -->
+<div class="flex items-center gap-x-space-sm">
+<div class="inline-flex items-center gap-x-1.5 px-3 py-1.5 bg-secondary-container/50 rounded-full text-on-secondary-container font-label-md text-label-md">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">workspace_premium</span>
+<span>Level 2 Hero</span>
+<span class="w-1 h-1 rounded-full bg-secondary"></span>
+<span class="font-semibold">98% Verified Accuracy</span>
+</div>
+</div>
+<!-- Quick Action Buttons -->
+<div class="flex items-center gap-x-space-sm pt-space-xs">
+<button class="flex-1 h-11 px-4 rounded-full bg-surface-container-low hover:bg-surface-container text-on-surface font-label-lg text-label-lg flex items-center justify-center gap-x-2 transition-colors active:scale-[0.99]" type="button">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+<span>Edit Profile</span>
+</button>
+<button aria-label="Share Profile" class="w-11 h-11 rounded-full bg-surface-container-low hover:bg-surface-container text-on-surface flex items-center justify-center transition-colors active:scale-[0.96]" type="button">
+<span class="material-symbols-outlined text-[20px]">share</span>
+</button>
+</div>
+</div>
+<!-- Impact Metrics Overview -->
+<div class="w-full bg-surface-container-lowest rounded-xl p-margin shadow-sm flex flex-col gap-y-space-md">
+<div class="flex items-center justify-between">
+<span class="font-headline-sm text-headline-sm text-on-surface">Community Impact</span>
+<span class="font-label-sm text-label-sm px-2.5 py-1 bg-surface-container rounded-full text-primary font-semibold">Verified Log</span>
+</div>
+<!-- 4 Stats Bento -->
+<div class="grid grid-cols-2 gap-space-sm">
+<div class="p-3 bg-surface-container-low rounded-lg flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Reports Filed</span>
+<span class="material-symbols-outlined text-primary text-[18px]">campaign</span>
+</div>
+<p class="font-headline-lg text-headline-lg text-on-surface mt-2">14</p>
+</div>
+<div class="p-3 bg-surface-container-low rounded-lg flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Rescued &amp; Treated</span>
+<span class="material-symbols-outlined text-secondary text-[18px]">healing</span>
+</div>
+<p class="font-headline-lg text-headline-lg text-on-surface mt-2">11</p>
+</div>
+<div class="p-3 bg-surface-container-low rounded-lg flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">In Care / Foster</span>
+<span class="material-symbols-outlined text-tertiary-container text-[18px]">volunteer_activism</span>
+</div>
+<p class="font-headline-lg text-headline-lg text-on-surface mt-2">3</p>
+</div>
+<div class="p-3 bg-surface-container-low rounded-lg flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Funds Pledged</span>
+<span class="material-symbols-outlined text-primary text-[18px]">payments</span>
+</div>
+<p class="font-headline-md text-headline-md text-on-surface mt-2">18.5k <span class="font-label-sm text-label-sm text-on-surface-variant font-normal">PKR</span></p>
+</div>
+</div>
+<!-- Milestone Progress -->
+<div class="flex flex-col gap-y-1.5 pt-1">
+<div class="flex justify-between items-center text-label-sm font-label-sm">
+<span class="text-on-surface-variant font-medium">800 / 1,000 XP to Level 3 Guardian</span>
+<span class="text-primary font-bold">80%</span>
+</div>
+<div class="w-full h-2.5 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full transition-all duration-500" style="width: 80%;"></div>
+</div>
+<p class="font-body-sm text-body-sm text-outline">Just 2 verified reports away from achieving Guardian recognition!</p>
+</div>
+</div>
+<!-- Recognition & Badges Carousel -->
+<div class="flex flex-col gap-y-space-sm">
+<div class="flex items-center justify-between px-1">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Recognition Badges</h3>
+<button class="text-primary font-label-md text-label-md flex items-center hover:underline" type="button">
+        View All (8)
+      </button>
+</div>
+<div class="flex items-center gap-space-sm overflow-x-auto pb-1 -mx-margin px-margin">
+<!-- Badge 1 -->
+<div class="shrink-0 w-36 bg-surface-container-lowest p-3 rounded-xl shadow-sm flex flex-col items-center text-center gap-y-1.5">
+<div class="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[26px]" style="font-variation-settings: 'FILL' 1;">speed</span>
+</div>
+<p class="font-label-md text-label-md text-on-surface leading-tight">First Responder</p>
+<span class="font-label-sm text-label-sm text-outline">&lt;15m response</span>
+</div>
+<!-- Badge 2 -->
+<div class="shrink-0 w-36 bg-surface-container-lowest p-3 rounded-xl shadow-sm flex flex-col items-center text-center gap-y-1.5">
+<div class="w-12 h-12 rounded-full bg-secondary-container/60 text-secondary flex items-center justify-center">
+<span class="material-symbols-outlined text-[26px]" style="font-variation-settings: 'FILL' 1;">pin_drop</span>
+</div>
+<p class="font-label-md text-label-md text-on-surface leading-tight">Eagle Eye</p>
+<span class="font-label-sm text-label-sm text-outline">10+ GPS verified</span>
+</div>
+<!-- Badge 3 -->
+<div class="shrink-0 w-36 bg-surface-container-lowest p-3 rounded-xl shadow-sm flex flex-col items-center text-center gap-y-1.5">
+<div class="w-12 h-12 rounded-full bg-primary-fixed text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[26px]" style="font-variation-settings: 'FILL' 1;">military_tech</span>
+</div>
+<p class="font-label-md text-label-md text-on-surface leading-tight">Community Star</p>
+<span class="font-label-sm text-label-sm text-outline">Top 5% Islamabad</span>
+</div>
+<!-- Badge 4 -->
+<div class="shrink-0 w-36 bg-surface-container-lowest p-3 rounded-xl shadow-sm flex flex-col items-center text-center gap-y-1.5">
+<div class="w-12 h-12 rounded-full bg-surface-container text-on-surface-variant flex items-center justify-center">
+<span class="material-symbols-outlined text-[26px]" style="font-variation-settings: 'FILL' 1;">pets</span>
+</div>
+<p class="font-label-md text-label-md text-on-surface leading-tight">Foster Ally</p>
+<span class="font-label-sm text-label-sm text-outline">Direct care host</span>
+</div>
+</div>
+</div>
+<!-- Segmented Controls -->
+<div class="flex flex-col gap-y-space-sm pt-space-xs">
+<div class="w-full bg-surface-container-low p-1 rounded-xl flex items-center gap-x-1">
+<button class="flex-1 py-2 rounded-lg bg-surface-container-lowest text-primary font-label-md text-label-md shadow-sm transition-all text-center" type="button">
+        My Reports (14)
+      </button>
+<button class="flex-1 py-2 rounded-lg text-on-surface-variant hover:text-on-surface font-label-md text-label-md transition-all text-center" type="button">
+        Followed (5)
+      </button>
+<button class="flex-1 py-2 rounded-lg text-on-surface-variant hover:text-on-surface font-label-md text-label-md transition-all text-center" type="button">
+        Badges &amp; Stats
+      </button>
+</div>
+<!-- Quick Filter Chips -->
+<div class="flex items-center gap-2 overflow-x-auto pb-1 -mx-margin px-margin">
+<button class="px-3 py-1.5 rounded-full bg-primary text-on-primary font-label-sm text-label-sm shrink-0 shadow-sm" type="button">
+        All
+      </button>
+<button class="px-3 py-1.5 rounded-full bg-surface-container-lowest text-on-surface font-label-sm text-label-sm shrink-0 hover:bg-surface-container transition-colors" type="button">
+        Active Cases (2)
+      </button>
+<button class="px-3 py-1.5 rounded-full bg-surface-container-lowest text-on-surface font-label-sm text-label-sm shrink-0 hover:bg-surface-container transition-colors" type="button">
+        Resolved (11)
+      </button>
+<button class="px-3 py-1.5 rounded-full bg-surface-container-lowest text-tertiary-container font-label-sm text-label-sm shrink-0 hover:bg-surface-container transition-colors" type="button">
+        Critical Priority
+      </button>
+</div>
+</div>
+<!-- Recent Reported Cases List -->
+<div class="flex flex-col gap-y-space-md">
+<!-- Card 1: Active / Critical -->
+<div class="w-full bg-surface-container-lowest rounded-xl p-margin shadow-sm flex flex-col gap-y-space-sm transition-all hover:shadow-md">
+<div class="flex gap-x-space-md">
+<img class="w-24 h-24 rounded-lg object-cover bg-surface-container shrink-0" data-alt="Close-up of a vulnerable golden indie puppy with a clean blue protective medical bandage around its front paw, sitting gently on clean grass in Sector G-11 Islamabad with kind eyes looking towards camera, warm daylight." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBivOYR1ekCpctlbwvYsoSgc5QhuVy3dUumLy2VJQGpQCpxzT3wvqXCwYcu4zu6veOZAh-5idob1eYxEpo6hQr4JaCqmofrBX7RYf3BmaZfjjn0ZvHA3QJz0_4GHc6Ftd6mjw5cXGqMkK2VGUMd7DxaC35rr0c3ke0mRS2UVOY_QC1lbj3BI0aP3k8q0ORFgwJ_7LFnTvitLhkhUqOZa2adOG_vE4j531dbvwy9-erKloY9jW7zI5FoeA"/>
+<div class="flex-1 min-w-0 flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between gap-1">
+<span class="font-label-sm text-label-sm text-outline truncate">#SA-2026-1042</span>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-tertiary-container text-on-tertiary font-label-sm text-label-sm shrink-0">
+<span class="w-1.5 h-1.5 rounded-full bg-on-tertiary animate-pulse"></span>
+                Critical
+              </span>
+</div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface mt-1 truncate">Injured Golden Pup • Sector G-11/3</h4>
+</div>
+<div class="flex flex-wrap gap-1 mt-1">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary-container/40 text-on-secondary-container font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+              In Treatment
+            </span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container font-label-sm text-label-sm text-on-surface-variant">
+              Paws &amp; Care Assigned
+            </span>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between pt-2">
+<span class="font-body-sm text-body-sm text-outline flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px]">schedule</span>
+          2h ago • 3 team updates
+        </span>
+<a class="font-label-sm text-label-sm text-primary font-bold hover:underline flex items-center gap-0.5" href="#">
+          View Live Status <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</a>
+</div>
+</div>
+<!-- Card 2: Resolved / Rehomed -->
+<div class="w-full bg-surface-container-lowest rounded-xl p-margin shadow-sm flex flex-col gap-y-space-sm">
+<div class="flex gap-x-space-md">
+<img class="w-24 h-24 rounded-lg object-cover bg-surface-container shrink-0" data-alt="A healthy, vibrant calico cat with distinct ginger, white, and dark patches resting comfortably on a soft padded blanket inside an adoption sanctuary in Islamabad, looking alert and content in natural soft lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAiGo7nDtmEkxn_PErJ8d0YrrdIE7ohRWv4NRmqp_gcQR-iLBJEhgTvmioX_5IKy6fyItryBS5mtnIpRF9UjXqa0tftgT0DAWW49ScYjTVfWtBti_CoRnpfA3npWrTBaTQv78PBu7Ql0jzp1w4jh5UqlXtG1ykUeiLBZKk2Fv8e-eSre3dkJaRh_69jQX67aUfBOqefIVtllQESPFrRHYLwdgzvDFpIPpuvgTenABiv6WEyGBGmrVu7Sw"/>
+<div class="flex-1 min-w-0 flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between gap-1">
+<span class="font-label-sm text-label-sm text-outline truncate">#SA-2026-0984</span>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary-container/60 text-secondary font-label-sm text-label-sm shrink-0">
+<span class="material-symbols-outlined text-[13px]">check_circle</span>
+                Resolved
+              </span>
+</div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface mt-1 truncate">Calico Stray with Fracture • F-8</h4>
+</div>
+<div class="flex flex-wrap gap-1 mt-1">
+<span class="px-2 py-0.5 rounded-full bg-surface-container font-label-sm text-label-sm text-on-surface-variant">
+              Rehomed to Sarah K.
+            </span>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between pt-2">
+<span class="font-body-sm text-body-sm text-outline flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px]">calendar_today</span>
+          Reported Mar 12, 2026
+        </span>
+<button class="font-label-sm text-label-sm text-on-surface-variant font-semibold hover:text-primary" type="button">
+          Case History
+        </button>
+</div>
+</div>
+<!-- Card 3: Resolved / Vaccinated -->
+<div class="w-full bg-surface-container-lowest rounded-xl p-margin shadow-sm flex flex-col gap-y-space-sm">
+<div class="flex gap-x-space-md">
+<img class="w-24 h-24 rounded-lg object-cover bg-surface-container shrink-0" data-alt="A calm sandy-beige rescue hound drinking clean water from a stainless steel bowl with a collar tag, in a sunny outdoor sheltered recovery garden with lush green backdrop in Islamabad." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9m6bAwsSVse5RR3ce9i5GJka-7y67k4IvIfSzJ3vXAyh4EapZzozdMCamjKF-HuyKT-gmmf_9bfoGI-mXH01sg49_-xLuTeQYZUyPP0L7NcR5d9gJEXgG0cCMmWvNrn9aMa9hyaU0t3j5HFX3yNrNg7ETlnbp1BPNoIjaXjWhzOAX1OkzGw5k1ynxMawVs1FUKTGISHw-3kZlaTW4TddRm5QvxMg9lUwry-d3sMj687XxRjVW7m0AeA"/>
+<div class="flex-1 min-w-0 flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between gap-1">
+<span class="font-label-sm text-label-sm text-outline truncate">#SA-2026-0910</span>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary-container/60 text-secondary font-label-sm text-label-sm shrink-0">
+<span class="material-symbols-outlined text-[13px]">check_circle</span>
+                Resolved
+              </span>
+</div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface mt-1 truncate">Dehydrated Hound • Blue Area</h4>
+</div>
+<div class="flex flex-wrap gap-1 mt-1">
+<span class="px-2 py-0.5 rounded-full bg-surface-container font-label-sm text-label-sm text-on-surface-variant">
+              Vaccinated &amp; Safe Haven
+            </span>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between pt-2">
+<span class="font-body-sm text-body-sm text-outline flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px]">calendar_today</span>
+          Reported Feb 28, 2026
+        </span>
+<button class="font-label-sm text-label-sm text-on-surface-variant font-semibold hover:text-primary" type="button">
+          Case History
+        </button>
+</div>
+</div>
+</div>
+<!-- Emergency Dispatch Readiness Card -->
+<div class="w-full bg-surface-container-low rounded-xl p-margin flex flex-col gap-y-space-sm shadow-sm">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-x-space-sm">
+<div class="w-9 h-9 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container shrink-0">
+<span class="material-symbols-outlined text-[20px]">switch_video</span>
+</div>
+<div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Emergency Field Readiness</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Available for rapid on-site case verification</p>
+</div>
+</div>
+<!-- Toggle button UI -->
+<button aria-label="Toggle availability" class="w-12 h-6 rounded-full bg-primary p-0.5 flex items-center justify-end transition-colors shrink-0" id="readinessToggle" type="button">
+<span class="w-5 h-5 rounded-full bg-on-primary shadow-sm block transition-transform"></span>
+</button>
+</div>
+<div class="bg-surface-container-lowest p-3 rounded-lg flex items-center justify-between mt-1">
+<div class="flex items-center gap-x-2">
+<span class="material-symbols-outlined text-outline text-[18px]">lock</span>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-outline">Verified Emergency Line</span>
+<span class="font-label-md text-label-md text-on-surface">+92 300 ••••567</span>
+</div>
+</div>
+<span class="font-label-sm text-label-sm text-primary font-semibold px-2 py-1 bg-surface-container rounded">Protected</span>
+</div>
+</div>
+<!-- Settings & Preferences Grouped List -->
+<div class="w-full bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm flex flex-col">
+<!-- Item 1 -->
+<a class="flex items-center justify-between p-margin hover:bg-surface-container-low transition-colors" href="#">
+<div class="flex items-center gap-x-space-sm min-w-0">
+<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant shrink-0">
+<span class="material-symbols-outlined text-[18px]">notifications_active</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-lg text-label-lg text-on-surface truncate">Urgent Radius Alerts</span>
+<span class="font-body-sm text-body-sm text-outline">Within 5 km radius</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline text-[20px]">chevron_right</span>
+</a>
+<div class="w-full h-[1px] bg-surface-container-low"></div>
+<!-- Item 2 -->
+<a class="flex items-center justify-between p-margin hover:bg-surface-container-low transition-colors" href="#">
+<div class="flex items-center gap-x-space-sm min-w-0">
+<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant shrink-0">
+<span class="material-symbols-outlined text-[18px]">mic</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-lg text-label-lg text-on-surface truncate">Drafts &amp; Voice Memos</span>
+<span class="font-body-sm text-body-sm text-outline">1 voice draft saved</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline text-[20px]">chevron_right</span>
+</a>
+<div class="w-full h-[1px] bg-surface-container-low"></div>
+<!-- Item 3 -->
+<a class="flex items-center justify-between p-margin hover:bg-surface-container-low transition-colors" href="#">
+<div class="flex items-center gap-x-space-sm min-w-0">
+<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant shrink-0">
+<span class="material-symbols-outlined text-[18px]">help_center</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-lg text-label-lg text-on-surface truncate">Volunteer Guidelines &amp; FAQ</span>
+<span class="font-body-sm text-body-sm text-outline">Islamabad rescue protocol</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline text-[20px]">chevron_right</span>
+</a>
+<div class="w-full h-[1px] bg-surface-container-low"></div>
+<!-- Item 4 -->
+<a class="flex items-center justify-between p-margin hover:bg-surface-container-low transition-colors" href="#">
+<div class="flex items-center gap-x-space-sm min-w-0">
+<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant shrink-0">
+<span class="material-symbols-outlined text-[18px]">security</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-lg text-label-lg text-on-surface truncate">Account &amp; Data Privacy</span>
+<span class="font-body-sm text-body-sm text-outline">Identity verification active</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline text-[20px]">chevron_right</span>
+</a>
+</div>
+</div>
+<script>
+  (function() {
+    const toggle = document.getElementById('readinessToggle');
+    if (!toggle) return;
+    let isActive = true;
+    toggle.addEventListener('click', function() {
+      isActive = !isActive;
+      if (isActive) {
+        toggle.classList.remove('bg-surface-container', 'justify-start');
+        toggle.classList.add('bg-primary', 'justify-end');
+      } else {
+        toggle.classList.remove('bg-primary', 'justify-end');
+        toggle.classList.add('bg-surface-container', 'justify-start');
+      }
+    });
+  })();
+</script></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface/85 backdrop-blur-xl shadow-[0_-4px_20px_rgba(11,28,46,0.06)]" data-active-classes="text-primary font-label-md"><div class="relative flex items-center justify-between h-16 px-space-sm max-w-md mx-auto"><a class="flex flex-col items-center justify-center min-w-[56px] h-12 text-on-surface-variant hover:text-primary transition-colors" data-path="home" href="#"><span class="material-symbols-outlined text-[24px]">home</span><span class="font-label-sm text-label-sm mt-0.5">Home</span></a><a class="flex flex-col items-center justify-center min-w-[56px] h-12 text-on-surface-variant hover:text-primary transition-colors" data-path="explore" href="#"><span class="material-symbols-outlined text-[24px]">explore</span><span class="font-label-sm text-label-sm mt-0.5">Explore</span></a><div class="relative -top-5 flex flex-col items-center"><a aria-label="Post Animal Alert" class="w-14 h-14 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-[0_8px_20px_-4px_rgba(0,82,63,0.4)] active:scale-95 transition-transform" data-path="post-report" href="#"><span class="material-symbols-outlined text-[28px]">add</span></a><span class="font-label-sm text-label-sm text-on-surface-variant mt-1">Post</span></div><a class="flex flex-col items-center justify-center min-w-[56px] h-12 text-on-surface-variant hover:text-primary transition-colors" data-path="activity" href="#"><span class="material-symbols-outlined text-[24px]">notifications</span><span class="font-label-sm text-label-sm mt-0.5">Activity</span></a><a aria-current="page" class="flex flex-col items-center justify-center min-w-[56px] h-12 transition-colors text-primary font-label-md" data-path="profile" href="#"><span class="material-symbols-outlined text-[24px]">person</span><span class="font-label-sm text-label-sm mt-0.5">Profile</span></a></div></nav></body></html>

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>StrayAid - Report Submitted</title>
+<!-- Tailwind CSS v3 with forms and container queries -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Google Fonts: Manrope -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Manrope', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              primary: '#1E6B56',
+              primaryHover: '#175645',
+              lightGreen: '#E8F5F1',
+              emerald: '#35A982',
+              mint: '#E7F4EE',
+              coral: '#F47C6C',
+              coralLight: '#FEF0EE',
+              amber: '#F4B860',
+              charcoal: '#1A2421',
+              muted: '#65736E',
+              borderLight: '#E5ECE9',
+              cardBg: '#FFFFFF',
+              screenBg: '#F9FBFB',
+            }
+          },
+          boxShadow: {
+            'card': '0 4px 20px -2px rgba(30, 107, 86, 0.06)',
+            'success': '0 12px 30px -4px rgba(53, 169, 130, 0.25)',
+          }
+        }
+      }
+    };
+  </script>
+<style data-purpose="base-layout">
+    body {
+      background-color: #F0F4F3;
+      font-family: 'Manrope', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+  </style>
+<style data-purpose="animations">
+    @keyframes pulseScale {
+      0%, 100% {
+        transform: scale(1);
+        opacity: 0.25;
+      }
+      50% {
+        transform: scale(1.1);
+        opacity: 0.4;
+      }
+    }
+    .animate-radiant-ring {
+      animation: pulseScale 3s ease-in-out infinite;
+    }
+  </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-0 sm:p-6">
+<!-- BEGIN: PhoneFrame -->
+<div class="relative w-full max-w-[390px] h-screen sm:h-[844px] bg-[#F9FBFB] sm:rounded-[48px] shadow-2xl overflow-hidden flex flex-col justify-between border-0 sm:border-[8px] sm:border-[#1E2927]">
+<!-- BEGIN: iOSStatusBar -->
+<header class="w-full pt-3 px-7 flex justify-between items-center z-20 select-none bg-transparent">
+<!-- Time Indicator -->
+<span class="text-[15px] font-bold text-brand-charcoal tracking-tight">9:41</span>
+<!-- Dynamic Island / Speaker cutout simulation for realistic UI -->
+<div class="hidden sm:block absolute left-1/2 -translate-x-1/2 top-3 w-28 h-6 bg-black rounded-full"></div>
+<!-- Status Icons -->
+<div class="flex items-center space-x-2 text-brand-charcoal">
+<!-- Cellular Signal -->
+<svg class="w-4 h-4 fill-current" viewbox="0 0 24 24">
+<path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 18.25A10.96 10.96 0 011 12C1 5.92 5.92 1 12 1s11 4.92 11 11c0 2.33-.73 4.49-1.97 6.27l-.62-.64C21.43 16.1 22 14.13 22 12c0-4.97-4.03-9-9-9zM2 19h20v2H2z" opacity="0"></path>
+<rect height="5" rx="1" width="3.5" x="2" y="16"></rect>
+<rect height="9" rx="1" width="3.5" x="7.5" y="12"></rect>
+<rect height="13" rx="1" width="3.5" x="13" y="8"></rect>
+<rect height="17" rx="1" width="3.5" x="18.5" y="4"></rect>
+</svg>
+<!-- Wi-Fi -->
+<svg class="w-4 h-4 fill-current" viewbox="0 0 24 24">
+<path d="M12 4C7.31 4 3.07 5.9 0 8.98L12 21 24 8.98C20.93 5.9 16.69 4 12 4zm0 3.5c3.8 0 7.23 1.54 9.74 4.02L12 19.33 2.26 11.52C4.77 9.04 8.2 7.5 12 7.5z"></path>
+</svg>
+<!-- Battery Icon -->
+<div class="w-6 h-3 border-[1.5px] border-brand-charcoal rounded-[4px] p-0.5 flex items-center relative">
+<div class="w-full h-full bg-brand-charcoal rounded-[1.5px]"></div>
+<div class="absolute -right-1 top-0.5 w-0.5 h-1.5 bg-brand-charcoal rounded-r-sm"></div>
+</div>
+</div>
+</header>
+<!-- END: iOSStatusBar -->
+<!-- BEGIN: TopNavigation -->
+<nav class="w-full px-5 pt-3 pb-2 flex items-center justify-between z-10">
+<button aria-label="Go back" class="w-10 h-10 flex items-center justify-center rounded-full bg-white border border-brand-borderLight text-brand-charcoal hover:bg-slate-50 transition active:scale-95 shadow-sm" type="button">
+<svg class="w-5 h-5 stroke-[2.5]" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M15.75 19.5L8.25 12l7.5-7.5" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+<div class="w-10"></div> <!-- Spacer to keep layout balanced -->
+</nav>
+<!-- END: TopNavigation -->
+<!-- BEGIN: MainContent -->
+<main class="flex-1 flex flex-col items-center justify-center px-6 text-center -mt-2">
+<!-- BEGIN: SuccessIllustration -->
+<div class="relative flex items-center justify-center mb-6">
+<!-- Radiant animated outer pulse ring -->
+<div class="absolute w-28 h-28 rounded-full bg-brand-emerald animate-radiant-ring blur-[2px]"></div>
+<!-- Soft inner decorative glow halo -->
+<div class="absolute w-24 h-24 rounded-full bg-brand-mint"></div>
+<!-- Solid Success Circle with Checkmark -->
+<div class="relative w-20 h-20 rounded-full bg-brand-emerald flex items-center justify-center shadow-success">
+<svg class="w-10 h-10 text-white stroke-[3.2]" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M4.5 12.75l6 6 9-13.5" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+</div>
+<!-- END: SuccessIllustration -->
+<!-- BEGIN: TitleAndCaseNumber -->
+<h1 class="text-2xl font-extrabold text-brand-charcoal tracking-tight mb-2">
+        Report submitted!
+      </h1>
+<!-- Distinct Case Reference ID -->
+<div class="inline-flex items-center px-3 py-1 rounded-full bg-brand-mint text-brand-primary text-xs font-bold tracking-wide mb-6">
+        Case #SA-2026-1042
+      </div>
+<!-- END: TitleAndCaseNumber -->
+<!-- BEGIN: IncidentSummaryCard -->
+<div class="w-full bg-white rounded-2xl p-4 border border-brand-borderLight shadow-card text-left space-y-3 mb-5">
+<!-- Location Detail -->
+<div class="flex items-center text-sm font-semibold text-brand-charcoal">
+<div class="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center text-brand-primary mr-3 shrink-0">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewbox="0 0 24 24">
+<path d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round"></path>
+<path d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+<span class="tracking-tight">G-11, Islamabad</span>
+</div>
+<div class="h-px bg-[#F0F4F2] w-full"></div>
+<!-- Severity & Confidence Row -->
+<div class="flex flex-wrap items-center gap-2">
+<!-- High Severity Badge -->
+<div class="inline-flex items-center px-2.5 py-1 rounded-full bg-brand-coralLight text-brand-coral text-xs font-bold">
+<svg class="w-3.5 h-3.5 mr-1 fill-current" viewbox="0 0 24 24">
+<path d="M12 .587l3.668 7.431 8.2 1.192-5.934 5.784 1.399 8.169-7.333-3.856-7.333 3.856 1.399-8.169-5.934-5.784 8.2-1.192zm0 5.702l-2.062 4.178-4.609.67 3.335 3.251-.787 4.593 4.123-2.168 4.123 2.168-.787-4.593 3.335-3.251-4.609-.67z"></path>
+</svg>
+            High severity
+          </div>
+<!-- AI Confidence Badge -->
+<div class="inline-flex items-center px-2.5 py-1 rounded-full bg-brand-lightGreen text-brand-primary text-xs font-bold">
+<svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" stroke-width="2.5" viewbox="0 0 24 24">
+<path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+            AI confidence: 87%
+          </div>
+</div>
+</div>
+<!-- END: IncidentSummaryCard -->
+<!-- Assurance Message -->
+<p class="text-xs text-brand-muted font-medium max-w-[260px] leading-relaxed">
+        Your report has been sent to rescue organizations nearby.
+      </p>
+</main>
+<!-- END: MainContent -->
+<!-- BEGIN: ActionButtonsGroup -->
+<footer class="w-full px-6 pb-6 pt-2 space-y-3">
+<!-- Primary Action: Keep Me Updated -->
+<button class="w-full h-12 bg-brand-primary hover:bg-brand-primaryHover active:scale-[0.99] text-white font-bold text-sm rounded-xl transition duration-150 flex items-center justify-center shadow-md shadow-brand-primary/20" type="button">
+        Keep Me Updated
+      </button>
+<!-- Secondary Action: View Case -->
+<button class="w-full h-12 bg-white hover:bg-gray-50 active:scale-[0.99] text-brand-charcoal font-bold text-sm rounded-xl border border-brand-borderLight transition duration-150 flex items-center justify-center shadow-sm" type="button">
+        View Case
+      </button>
+<!-- Tertiary Action: Back to Feed -->
+<button class="w-full py-2.5 text-brand-muted hover:text-brand-charcoal font-semibold text-xs transition duration-150" type="button">
+        Back to Feed
+      </button>
+<!-- iOS Home Indicator -->
+<div class="pt-2 flex justify-center">
+<div class="w-32 h-1 bg-brand-charcoal/20 rounded-full"></div>
+</div>
+</footer>
+<!-- END: ActionButtonsGroup -->
+</div>
+<!-- END: PhoneFrame -->
+</body></html>
