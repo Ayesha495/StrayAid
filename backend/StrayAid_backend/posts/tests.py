@@ -206,3 +206,91 @@ class PostApiTests(MediaEnabledAPITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
+class CommunityEngagementTests(MediaEnabledAPITestCase):
+    """Likes, comment counts and 24-hour stories behind the home feed."""
+
+    def setUp(self):
+        from datetime import timedelta
+
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from django.utils import timezone
+
+        from .models import PostComment, PostLike, Story
+
+        self.org_user = User.objects.create_user(
+            email="org2@example.com", username="org2", password="secret123", role="organization"
+        )
+        self.organization = Organization.objects.create(user=self.org_user, name="Paws & Care", email=self.org_user.email)
+        self.reporter = User.objects.create_user(
+            email="reporter@example.com", username="reporter", password="secret123"
+        )
+        case = Case.objects.create(description="Case", latitude=33.68, longitude=73.04, reported_by=self.reporter)
+        animal = Animal.objects.create(case=case, organization=self.organization, name="Luna")
+        self.post = Post.objects.create(animal=animal, organization=self.organization, title="Luna", content="Safe now")
+        PostLike.objects.create(post=self.post, user=self.org_user)
+        PostComment.objects.create(post=self.post, user=self.org_user, body="Lovely")
+        PostComment.objects.create(post=self.post, user=self.org_user, body="Get well soon")
+
+        image = lambda: SimpleUploadedFile("story.jpg", b"filecontent", content_type="image/jpeg")
+        Story.objects.create(organization=self.organization, category="adoption", image=image(), caption="Meet Luna")
+        Story.objects.create(organization=self.organization, category="happy_ending", image=image())
+        Story.objects.create(
+            organization=self.organization,
+            category="sanctuary",
+            image=image(),
+            created_at=timezone.now() - timedelta(hours=25),
+        )
+
+    def test_feed_includes_engagement_counts_for_guests(self):
+        response = self.client.get("/api/posts/public-feed/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        item = response.data[0]
+        self.assertEqual(item["like_count"], 1)
+        self.assertEqual(item["comment_count"], 2)
+        self.assertFalse(item["liked_by_me"])
+
+    def test_like_requires_login(self):
+        response = self.client.post(f"/api/posts/{self.post.id}/like/")
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_reporter_can_like_and_unlike_any_post(self):
+        self.client.force_authenticate(self.reporter)
+
+        liked = self.client.post(f"/api/posts/{self.post.id}/like/")
+        again = self.client.post(f"/api/posts/{self.post.id}/like/")
+        feed = self.client.get("/api/posts/public-feed/")
+        unliked = self.client.delete(f"/api/posts/{self.post.id}/like/")
+
+        self.assertEqual(liked.data, {"liked_by_me": True, "like_count": 2})
+        self.assertEqual(again.data["like_count"], 2)  # liking twice counts once
+        self.assertTrue(feed.data[0]["liked_by_me"])
+        self.assertEqual(unliked.data, {"liked_by_me": False, "like_count": 1})
+
+    def test_story_groups_only_include_last_24_hours(self):
+        response = self.client.get("/api/posts/stories/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        categories = [group["category"] for group in response.data]
+        self.assertEqual(categories, ["happy_ending", "adoption"])  # category order, expired sanctuary story hidden
+        self.assertEqual(response.data[1]["label"], "Adoption")
+        self.assertEqual(response.data[1]["stories"][0]["caption"], "Meet Luna")
+        self.assertEqual(response.data[1]["stories"][0]["organization"]["name"], "Paws & Care")
+
+    def test_feed_is_newest_first_even_with_engagement_counts(self):
+        from datetime import timedelta
+
+        from django.utils import timezone
+
+        older = Post.objects.create(
+            animal=self.post.animal, organization=self.organization, title="Older", content="Earlier update"
+        )
+        Post.objects.filter(pk=older.pk).update(created_at=timezone.now() - timedelta(days=2))
+        Post.objects.filter(pk=self.post.pk).update(created_at=timezone.now())
+
+        response = self.client.get("/api/posts/public-feed/")
+
+        self.assertEqual([item["title"] for item in response.data], ["Luna", "Older"])

@@ -1,13 +1,14 @@
 from rest_framework import status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from django.db.models import Q
+from django.db.models import Case as CaseWhen, Count, F, IntegerField, Q, Value, When
+from django.utils import timezone
 from animals.models import Animal
 from organizations.permissions import IsOrganizationUser
 
 from .models import Case, Report
-from .serializers import CaseSerializer
+from .serializers import CaseSerializer, TrendingCaseSerializer
 from .utils.case_matcher import find_nearby_case
 from .utils.location_utils import calculate_distance
 
@@ -41,6 +42,8 @@ def report_case(request):
     latitude = request.data.get('latitude')
     longitude = request.data.get('longitude')
     image = request.FILES.get('image')
+    # Readable place name picked on the phone (e.g. "F-7, Islamabad"); shown instead of coordinates.
+    area = (request.data.get('area') or '').strip()[:100]
 
     # Basic validation before we try duplicate matching or file creation.
     if not latitude or not longitude:
@@ -69,12 +72,16 @@ def report_case(request):
 
     if existing_case:
         case = existing_case
+        if area and not case.area:
+            case.area = area
+            case.save(update_fields=["area"])
         message = "Report attached to existing case"
     else:
         case = Case.objects.create(
             description=description,
             latitude=latitude,
             longitude=longitude,
+            area=area,
             reported_by=user
         )
         message = "New case created and report added"
@@ -115,6 +122,47 @@ def my_reports(request):
     )
     serializer = CaseSerializer(queryset, many=True, context={"request": request})
     return Response(serializer.data)
+
+
+ACTIVE_RESCUE_STATUSES = ["reported", "assigned", "in_progress"]
+SEVERITY_RANK = CaseWhen(
+    When(severity="critical", then=Value(4)),
+    When(severity="high", then=Value(3)),
+    When(severity="medium", then=Value(2)),
+    default=Value(1),
+    output_field=IntegerField(),
+)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def trending_cases(request):
+    """Open rescue cases for the public home screen, most urgent first."""
+    try:
+        limit = min(max(int(request.query_params.get("limit", 3)), 1), 20)
+    except ValueError:
+        limit = 3
+    queryset = (
+        Case.objects.filter(status__in=ACTIVE_RESCUE_STATUSES)
+        .annotate(severity_rank=SEVERITY_RANK, report_count=Count("reports"))
+        .prefetch_related("reports")
+        .order_by("-severity_rank", F("confidence_score").desc(nulls_last=True), "-created_at")[:limit]
+    )
+    serializer = TrendingCaseSerializer(queryset, many=True, context={"request": request})
+    return Response(serializer.data)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def community_stats(request):
+    """Headline numbers for the home screen's community impact card."""
+    today = timezone.localdate()
+    return Response(
+        {
+            "rescued_total": Animal.objects.count(),
+            "rescued_today": Animal.objects.filter(created_at__date=today).count(),
+        }
+    )
 
 
 class CaseViewSet(viewsets.ReadOnlyModelViewSet):

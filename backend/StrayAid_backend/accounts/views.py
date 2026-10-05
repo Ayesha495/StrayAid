@@ -11,6 +11,8 @@ from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token as google_id_token
 import requests
 
+from .serializers import build_unique_username
+
 
 User = get_user_model()
 
@@ -24,9 +26,12 @@ def _sync_user_role(user):
     return user
 
 
-def _serialize_user(user):
+def _serialize_user(user, request=None):
     # Return the compact user shape consumed by the frontend clients.
     user = _sync_user_role(user)
+    avatar = user.avatar.url if user.avatar else None
+    if avatar and request is not None:
+        avatar = request.build_absolute_uri(avatar)
     return {
         "id": user.id,
         "email": user.email,
@@ -34,20 +39,8 @@ def _serialize_user(user):
         "first_name": user.first_name,
         "last_name": user.last_name,
         "role": user.role,
+        "avatar": avatar,
     }
-
-
-def _build_unique_username(email):
-    # Google sign-in may not provide a username that is unique in our system.
-    base_username = (email.split("@")[0] if email else "google_user").strip() or "google_user"
-    candidate = base_username
-    suffix = 1
-
-    while User.objects.filter(username=candidate).exists():
-        candidate = f"{base_username}{suffix}"
-        suffix += 1
-
-    return candidate
 
 
 def _get_or_create_google_user(email, first_name="", last_name=""):
@@ -66,7 +59,7 @@ def _get_or_create_google_user(email, first_name="", last_name=""):
 
     return User.objects.create_user(
         email=email,
-        username=_build_unique_username(email),
+        username=build_unique_username(email),
         first_name=first_name or "",
         last_name=last_name or "",
         password=get_random_string(32),
@@ -146,7 +139,7 @@ def google_auth(request):
         {
             "access": str(refresh.access_token),
             "refresh": str(refresh),
-            "user": _serialize_user(user),
+            "user": _serialize_user(user, request),
         },
         status=status.HTTP_200_OK,
     )
@@ -155,4 +148,4 @@ def google_auth(request):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def me(request):
-    return Response(_serialize_user(request.user), status=status.HTTP_200_OK)
+    return Response(_serialize_user(request.user, request), status=status.HTTP_200_OK)

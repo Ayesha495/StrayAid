@@ -7,6 +7,14 @@ class CaseQuerySet(models.QuerySet):
         return self.exclude(status="closed")
 
 
+SEVERITY_CHOICES = [
+    ("low", "Low"),
+    ("medium", "Medium"),
+    ("high", "High"),
+    ("critical", "Critical"),
+]
+
+
 class Case(models.Model):
     # Case status tracks the rescue workflow before an animal profile is complete.
     STATUS_CHOICES = [
@@ -39,6 +47,15 @@ class Case(models.Model):
     )
     resolved_at = models.DateTimeField(null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
+    # Short public headline, e.g. "Injured Dog — G-11".
+    title = models.CharField(max_length=120, blank=True)
+    species = models.CharField(max_length=30, blank=True)
+    # Neighbourhood or sector shown publicly instead of raw coordinates.
+    area = models.CharField(max_length=100, blank=True)
+    severity = models.CharField(max_length=10, choices=SEVERITY_CHOICES, default="medium")
+    # 0-100 AI confidence that the report is a genuine animal in need.
+    confidence_score = models.PositiveSmallIntegerField(null=True, blank=True)
+    possibly_invalid = models.BooleanField(default=False)
     objects = CaseQuerySet.as_manager()
 
     class Meta:
@@ -55,6 +72,9 @@ class Report(models.Model):
     description =models.TextField()
     latitude = models.FloatField()
     longitude = models.FloatField()
+    severity = models.CharField(max_length=10, choices=SEVERITY_CHOICES, default="medium")
+    # Highest animal-class confidence from the image detector (0-1).
+    ai_animal_confidence = models.FloatField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

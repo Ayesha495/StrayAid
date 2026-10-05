@@ -16,6 +16,7 @@ EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 
 MIGRATION_MODULES = {
     "accounts": None,
+    "notifications": None,
     "animals": None,
     "organizations": None,
     "posts": None,

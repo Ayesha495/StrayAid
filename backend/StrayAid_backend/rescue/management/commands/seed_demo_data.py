@@ -1,547 +1,587 @@
+"""Fake but consistent demo data for StrayAid, set in Islamabad and Rawalpindi.
+
+Run:   python manage.py seed_demo_data
+Fresh: python manage.py seed_demo_data --reset   (deletes every @strayaid.local demo account first)
+
+Safe to re-run: records are matched by stable keys and photos are only attached once.
+Timestamps are relative to "now", so stories stay inside their 24-hour window; re-run before a demo.
+All demo accounts use the password in DEMO_PASSWORD.
+"""
+
+from datetime import timedelta
 from pathlib import Path
 
 from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand
+from django.db import transaction
+from django.utils import timezone
 
 from accounts.models import User
 from animals.models import Animal
 from organizations.models import Organization
-from posts.models import Post
+from posts.models import Post, PostComment, PostLike, Story
 from rescue.models import Case, Report
+from rescue.utils.scoring import compute_confidence_score, is_possibly_invalid
+
+STITCH_IMAGES = Path(__file__).resolve().parents[5] / "images" / "stitch"
+DEMO_DOMAIN = "@strayaid.local"
+DEMO_PASSWORD = "demo12345"
 
 
-ASSET_ROOT = Path(__file__).resolve().parents[5] / "images"
+def photo(name):
+    return ContentFile((STITCH_IMAGES / name).read_bytes(), name=name)
 
 
-def image_file(category, name):
-    image_path = ASSET_ROOT / category / name
-    return ContentFile(image_path.read_bytes(), name=name)
+def attach_photo(instance, field_name, name):
+    # Attach once; re-runs keep the existing file instead of piling up copies.
+    field = getattr(instance, field_name)
+    if not field:
+        field.save(name, photo(name), save=True)
 
 
-def ensure_password(user, raw_password):
-    if not user.check_password(raw_password):
-        user.set_password(raw_password)
-        user.save(update_fields=["password"])
+def backdate(instance, **ago):
+    type(instance).objects.filter(pk=instance.pk).update(created_at=timezone.now() - timedelta(**ago))
+
+
+ORGANIZATIONS = [
+    {
+        "key": "paws-care",
+        "name": "Paws & Care Rescue",
+        "city": "Islamabad",
+        "address": "Street 12, F-7/2, Islamabad",
+        "latitude": 33.7215,
+        "longitude": 73.0560,
+        "radius": 15,
+        "capacity": 25,
+        "phone": "+92 300 0000101",
+        "description": "Volunteer-run rescue for injured and abandoned street animals across central Islamabad.",
+        "image": "16_s2_paws_and_care_rescue_logo.jpg",
+        "bank_name": "Meezan Bank",
+        "bank_account_number": "0101-0000000101",
+    },
+    {
+        "key": "safe-haven",
+        "name": "Safe Haven Rescue",
+        "city": "Islamabad",
+        "address": "Plot 4, G-11 Markaz, Islamabad",
+        "latitude": 33.6687,
+        "longitude": 72.9980,
+        "radius": 12,
+        "capacity": 18,
+        "phone": "+92 300 0000202",
+        "description": "Emergency pick-ups and recovery care for strays in the G and I sectors.",
+        "image": "26_s3_a_compassionate_volunteer_rescuer_in_high.jpg",
+        "bank_name": "HBL",
+        "bank_account_number": "0202-0000000202",
+    },
+    {
+        "key": "hope-shelter",
+        "name": "Hope Animal Shelter",
+        "city": "Rawalpindi",
+        "address": "Adamjee Road, Saddar, Rawalpindi",
+        "latitude": 33.5973,
+        "longitude": 73.0479,
+        "radius": 15,
+        "capacity": 30,
+        "phone": "+92 300 0000303",
+        "description": "Shelter, vaccination and adoption programme serving Rawalpindi.",
+        "image": "30_s3_a_serene_sanctuary_courtyard_where_several.jpg",
+        "bank_name": "Bank Alfalah",
+        "bank_account_number": "0303-0000000303",
+    },
+    {
+        "key": "margalla-welfare",
+        "name": "Margalla Animal Welfare",
+        "city": "Islamabad",
+        "address": "Service Road, E-11/3, Islamabad",
+        "latitude": 33.6996,
+        "longitude": 72.9768,
+        "radius": 10,
+        "capacity": 12,
+        "phone": "+92 300 0000404",
+        "description": "Small clinic focused on kittens and cats needing medical care.",
+        "image": "29_s3_animal_welfare_clinic_veterinary_staff_caring.jpg",
+        "bank_name": "UBL",
+        "bank_account_number": "0404-0000000404",
+    },
+]
+
+REPORTERS = [
+    ("ali.raza", "Ali", "Raza"),
+    ("sara.ahmed", "Sara", "Ahmed"),
+    ("fatima.khan", "Fatima", "Khan"),
+    ("usman.tariq", "Usman", "Tariq"),
+    ("hina.malik", "Hina", "Malik"),
+    ("bilal.hussain", "Bilal", "Hussain"),
+    ("zainab.qureshi", "Zainab", "Qureshi"),
+    ("hamza.iqbal", "Hamza", "Iqbal"),
+]
+
+# Open cases shown in "Trending Rescue Cases". Extra reporters are within 15 ft of the first report,
+# matching how the app merges nearby reports into one case.
+OPEN_CASES = [
+    {
+        "title": "Injured Dog — G-11",
+        "species": "dog",
+        "area": "G-11",
+        "severity": "high",
+        "status": "assigned",
+        "organization": "safe-haven",
+        "latitude": 33.66912,
+        "longitude": 72.99645,
+        "image": "01_s10_injured_dog_sitting_calmly_awaiting_medical.jpg",
+        "detector": 0.97,
+        "reporters": ["sara.ahmed", "usman.tariq", "hina.malik"],
+        "description": "Dog with an injured front leg resting by the curb near G-11 Markaz. Can't put weight on the leg.",
+        "minutes_ago": 12,
+    },
+    {
+        "title": "Abandoned Cat — F-8",
+        "species": "cat",
+        "area": "F-8",
+        "severity": "medium",
+        "status": "reported",
+        "organization": None,
+        "latitude": 33.70985,
+        "longitude": 73.03712,
+        "image": "32_s3_young_abandoned_grey_tabby_cat_nestled.jpg",
+        "detector": 0.9,
+        "reporters": ["ali.raza"],
+        "description": "Young grey tabby left in a cardboard box on a residential street in F-8/3. Seems hungry.",
+        "minutes_ago": 34,
+    },
+    {
+        "title": "Injured Dog — F-10",
+        "species": "dog",
+        "area": "F-10",
+        "severity": "medium",
+        "status": "in_progress",
+        "organization": "paws-care",
+        "latitude": 33.69511,
+        "longitude": 73.01564,
+        "image": "21_s24_a_portrait_shot_of_an_injured.jpg",
+        "detector": 0.88,
+        "reporters": ["zainab.qureshi", "bilal.hussain"],
+        "description": "Light brown street dog lying on the grass in F-10 park, limping and keeping away from people.",
+        "minutes_ago": 95,
+    },
+]
+
+# Rescued animals. Animal status drives the case status: recovering -> rescued, adoptable -> adoption,
+# adopted -> closed. Each one gets a community post.
+ANIMALS = [
+    {
+        "name": "Sunny",
+        "species": "Dog",
+        "breed": "Golden Retriever mix",
+        "gender": "Female",
+        "age": 3,
+        "color": "Golden",
+        "status": Animal.STATUS_RECOVERING,
+        "organization": "paws-care",
+        "area": "F-7",
+        "latitude": 33.72083,
+        "longitude": 73.05502,
+        "reporter": "fatima.khan",
+        "image": "17_s2_rescued_golden_dog.jpg",
+        "description": "Gentle girl found wandering near F-7 Markaz with a skin infection.",
+        "medical_info": "On antibiotics for a skin infection; first vaccination done.",
+        "post": "Found this sweet girl near F-7 today. She's safe now and getting medical care. ❤️",
+        "post_category": Post.CATEGORY_MEDICAL,
+        "hours_ago": 2,
+        "likes": 7,
+        "comments": ["She looks so happy already!", "Thank you for helping her 🙏", "Get well soon Sunny"],
+    },
+    {
+        "name": "Luna",
+        "species": "Cat",
+        "breed": "Domestic Longhair",
+        "gender": "Female",
+        "age": 2,
+        "color": "Grey and white",
+        "status": Animal.STATUS_ADOPTABLE,
+        "organization": "paws-care",
+        "area": "G-9",
+        "latitude": 33.68790,
+        "longitude": 73.03120,
+        "reporter": "ali.raza",
+        "image": "04_s13_close_up_portrait_of_an_adorable.jpg",
+        "description": "Calm, affectionate cat rescued from a construction site. Loves quiet homes.",
+        "medical_info": "Healthy, vaccinated and spayed.",
+        "post": "Luna is fully recovered and ready for her forever home. She loves sunny windows and gentle cuddles.",
+        "post_category": Post.CATEGORY_ADOPTION,
+        "hours_ago": 9,
+        "likes": 6,
+        "comments": ["She's beautiful!", "Is she good with other cats?"],
+    },
+    {
+        "name": "Max",
+        "species": "Dog",
+        "breed": "Mixed breed",
+        "gender": "Male",
+        "age": 4,
+        "color": "Golden brown",
+        "status": Animal.STATUS_ADOPTABLE,
+        "organization": "hope-shelter",
+        "area": "Saddar",
+        "latitude": 33.59810,
+        "longitude": 73.04650,
+        "reporter": "hamza.iqbal",
+        "image": "09_s16_close_up_portrait_of_an_adorable.jpg",
+        "description": "Scruffy, friendly dog who follows volunteers everywhere.",
+        "medical_info": "Vaccinated and dewormed. Recovered from a leg fracture.",
+        "post": "Max made a full recovery from his leg fracture. Looking for a family with a yard to run in!",
+        "post_category": Post.CATEGORY_ADOPTION,
+        "hours_ago": 20,
+        "likes": 5,
+        "comments": ["What a happy boy", "Sharing this with my cousin in Rawalpindi!"],
+    },
+    {
+        "name": "Milo",
+        "species": "Dog",
+        "breed": "Mixed breed",
+        "gender": "Male",
+        "age": 3,
+        "color": "Brown",
+        "status": Animal.STATUS_RECOVERING,
+        "organization": "safe-haven",
+        "area": "I-8",
+        "latitude": 33.66820,
+        "longitude": 73.07490,
+        "reporter": "usman.tariq",
+        "image": "05_s15_milo_rescue_dog.jpg",
+        "description": "Brought in after a road accident in I-8. Very brave through treatment.",
+        "medical_info": "Stitches on the hind leg; check-up every three days.",
+        "post": "Milo's stitches are healing well. Thank you to everyone who reported him in I-8.",
+        "post_category": Post.CATEGORY_MEDICAL,
+        "hours_ago": 30,
+        "likes": 4,
+        "comments": ["So glad he made it"],
+    },
+    {
+        "name": "Buddy",
+        "species": "Dog",
+        "breed": "Mixed breed",
+        "gender": "Male",
+        "age": 1,
+        "color": "Tan",
+        "status": Animal.STATUS_RECOVERING,
+        "organization": "paws-care",
+        "area": "F-6",
+        "latitude": 33.72910,
+        "longitude": 73.07580,
+        "reporter": "sara.ahmed",
+        "image": "07_s15_buddy_rescue_puppy.jpg",
+        "description": "Playful puppy found alone near a drain in F-6.",
+        "medical_info": "Treated for dehydration; first round of vaccines done.",
+        "post": "Little Buddy is eating well and has started playing again. Sponsors can help cover his vaccines.",
+        "post_category": Post.CATEGORY_SPONSORSHIP,
+        "hours_ago": 44,
+        "likes": 3,
+        "comments": [],
+    },
+    {
+        "name": "Coco",
+        "species": "Cat",
+        "breed": "Tabby",
+        "gender": "Female",
+        "age": 1,
+        "color": "Brown tabby",
+        "status": Animal.STATUS_RECOVERING,
+        "organization": "margalla-welfare",
+        "area": "E-11",
+        "latitude": 33.70010,
+        "longitude": 72.97590,
+        "reporter": "zainab.qureshi",
+        "image": "19_s22_rescued_kitten_resting_safely_in_shelter.jpg",
+        "description": "Tiny kitten rescued from heavy rain in E-11.",
+        "medical_info": "Kept warm and bottle-fed; gaining weight steadily.",
+        "post": "This little one was rescued from the rain last night and is now warm and safe. 🐾",
+        "post_category": Post.CATEGORY_MEDICAL,
+        "hours_ago": 60,
+        "likes": 8,
+        "comments": ["Poor baby, thank you!", "So tiny 🥺"],
+    },
+    {
+        "name": "Pumpkin",
+        "species": "Cat",
+        "breed": "Calico",
+        "gender": "Female",
+        "age": 1,
+        "color": "Calico",
+        "status": Animal.STATUS_ADOPTABLE,
+        "organization": "margalla-welfare",
+        "area": "E-11",
+        "latitude": 33.69870,
+        "longitude": 72.97710,
+        "reporter": "hina.malik",
+        "image": "28_s3_a_close_up_portrait_of_an.jpg",
+        "description": "Curious calico kitten who loves toys and attention.",
+        "medical_info": "Vaccinated; ready to be spayed at six months.",
+        "post": "Pumpkin is ready for adoption! She's curious, playful and gets along with other cats.",
+        "post_category": Post.CATEGORY_ADOPTION,
+        "hours_ago": 80,
+        "likes": 5,
+        "comments": ["Adorable!"],
+    },
+    {
+        "name": "Bella",
+        "species": "Dog",
+        "breed": "Mixed breed",
+        "gender": "Female",
+        "age": 5,
+        "color": "Black and tan",
+        "status": Animal.STATUS_ADOPTED,
+        "organization": "hope-shelter",
+        "area": "Satellite Town",
+        "latitude": 33.63910,
+        "longitude": 73.06720,
+        "reporter": "bilal.hussain",
+        "image": "08_s15_bella_rescue_dog.jpg",
+        "description": "Senior dog rescued from Satellite Town, now adopted by a loving family.",
+        "medical_info": "Healthy and vaccinated.",
+        "post": "Happy ending! Bella went home with her new family today. Thank you for all the support. 💚",
+        "post_category": Post.CATEGORY_FOSTER,
+        "hours_ago": 120,
+        "likes": 8,
+        "comments": ["Best news today!", "Congratulations Bella!"],
+    },
+]
+
+CASE_STATUS_FOR_ANIMAL = {
+    Animal.STATUS_RESCUED: "rescued",
+    Animal.STATUS_RECOVERING: "rescued",
+    Animal.STATUS_ADOPTABLE: "adoption",
+    Animal.STATUS_ADOPTED: "closed",
+}
+
+STORIES = [
+    ("paws-care", "rescue_update", "18_s21_rescued_street_dog_in_golden_sunlight.jpg",
+     "Rescue is not just about saving lives, it's about giving them a future. ❤️", 2),
+    ("safe-haven", "rescue_update", "11_s2_rescue_updates.jpg", "On our way to a call in G-11 right now.", 5),
+    ("hope-shelter", "happy_ending", "27_s3_a_joyful_smiling_family_outdoors_in.jpg",
+     "Rocky's first weekend with his new family!", 3),
+    ("paws-care", "happy_ending", "12_s2_happy_endings.jpg", "Another happy ending this week.", 14),
+    ("margalla-welfare", "adoption", "28_s3_a_close_up_portrait_of_an.jpg", "Pumpkin is waiting for you. 🧡", 4),
+    ("paws-care", "adoption", "13_s2_adoption.jpg", "Luna and friends are ready for adoption.", 10),
+    ("margalla-welfare", "behind_the_scenes", "29_s3_animal_welfare_clinic_veterinary_staff_caring.jpg",
+     "Morning check-ups at the clinic.", 6),
+    ("safe-haven", "behind_the_scenes", "14_s2_behind_the_rescue.jpg", "Our volunteers after a long night shift.", 18),
+    ("hope-shelter", "sanctuary", "30_s3_a_serene_sanctuary_courtyard_where_several.jpg",
+     "Playtime in the courtyard.", 8),
+]
 
 
 class Command(BaseCommand):
-    help = "Create admin credentials and sample organizations, cases, reports, animals, and posts."
+    help = "Create fake but consistent StrayAid demo data for Islamabad and Rawalpindi."
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "--purge-save-strays",
+            "--reset",
             action="store_true",
-            help="Delete existing animals and posts linked to the legacy SaveStrays organization before seeding.",
+            help=f"Delete all {DEMO_DOMAIN} demo accounts (and everything they own) before seeding.",
         )
 
+    @transaction.atomic
     def handle(self, *args, **options):
-        if options["purge_save_strays"]:
-            legacy_organizations = Organization.objects.filter(name__in=["SaveStrays", "Save Strays"])
-            deleted_animals = 0
-            deleted_posts = 0
-            for legacy_org in legacy_organizations:
-                deleted_posts += Post.objects.filter(organization=legacy_org).count()
-                deleted_animals += Animal.objects.filter(organization=legacy_org).count()
-                Animal.objects.filter(organization=legacy_org).delete()
-                Post.objects.filter(organization=legacy_org).delete()
+        if options["reset"]:
+            deleted, _ = User.objects.filter(email__endswith=DEMO_DOMAIN).exclude(is_superuser=True).delete()
+            self.stdout.write(self.style.WARNING(f"Reset: removed {deleted} demo records."))
 
-            self.stdout.write(
-                self.style.WARNING(
-                    f"Removed {deleted_animals} animal profiles and {deleted_posts} posts from legacy SaveStrays data."
-                )
+        self.seed_admin()
+        organizations = self.seed_organizations()
+        reporters = self.seed_reporters()
+        self.seed_open_cases(organizations, reporters)
+        posts = self.seed_animals_and_posts(organizations, reporters)
+        self.seed_engagement(posts, reporters)
+        self.seed_stories(organizations)
+
+        self.stdout.write(self.style.SUCCESS("Demo data ready."))
+        self.stdout.write(f"Password for every demo account: {DEMO_PASSWORD}")
+        self.stdout.write("Reporters: " + ", ".join(f"{username}{DEMO_DOMAIN}" for username, _, _ in REPORTERS))
+        self.stdout.write("Organizations: " + ", ".join(f"{org['key']}{DEMO_DOMAIN}" for org in ORGANIZATIONS))
+
+    def seed_admin(self):
+        admin, _ = User.objects.get_or_create(
+            email=f"admin{DEMO_DOMAIN}",
+            defaults={"username": "admin", "role": "admin", "is_staff": True, "is_superuser": True},
+        )
+        admin.set_password("admin12345")
+        admin.save()
+
+    def seed_organizations(self):
+        organizations = {}
+        for data in ORGANIZATIONS:
+            user, _ = User.objects.get_or_create(
+                email=f"{data['key']}{DEMO_DOMAIN}",
+                defaults={"username": data["key"].replace("-", "_"), "role": "organization"},
             )
+            user.role = "organization"
+            user.set_password(DEMO_PASSWORD)
+            user.save()
+            organization, _ = Organization.objects.update_or_create(
+                user=user,
+                defaults={
+                    "name": data["name"],
+                    "type": "rescue",
+                    "email": user.email,
+                    "phone": data["phone"],
+                    "address": data["address"],
+                    "city": data["city"],
+                    "latitude": data["latitude"],
+                    "longitude": data["longitude"],
+                    "radius": data["radius"],
+                    "capacity": data["capacity"],
+                    "is_available": True,
+                    "description": data["description"],
+                    "bank_name": data["bank_name"],
+                    "bank_account_title": data["name"],
+                    "bank_account_number": data["bank_account_number"],
+                },
+            )
+            attach_photo(organization, "image", data["image"])
+            organizations[data["key"]] = organization
+        return organizations
 
-        admin_user, admin_created = User.objects.get_or_create(
-            email="admin@strayaid.local",
-            defaults={
-                "username": "admin",
-                "role": "admin",
-                "is_staff": True,
-                "is_superuser": True,
-            },
-        )
-        if admin_created:
-            ensure_password(admin_user, "admin12345")
-            self.stdout.write(self.style.SUCCESS("Created admin user: admin@strayaid.local / admin12345"))
-        else:
-            updated = False
-            if not admin_user.is_staff:
-                admin_user.is_staff = True
-                updated = True
-            if not admin_user.is_superuser:
-                admin_user.is_superuser = True
-                updated = True
-            if admin_user.role != "admin":
-                admin_user.role = "admin"
-                updated = True
-            if updated:
-                admin_user.save(update_fields=["is_staff", "is_superuser", "role"])
-            ensure_password(admin_user, "admin12345")
-            self.stdout.write("Admin user already exists: admin@strayaid.local")
+    def seed_reporters(self):
+        reporters = {}
+        for username, first_name, last_name in REPORTERS:
+            user, _ = User.objects.get_or_create(
+                email=f"{username}{DEMO_DOMAIN}",
+                defaults={"username": username.replace(".", "_"), "first_name": first_name, "last_name": last_name},
+            )
+            user.set_password(DEMO_PASSWORD)
+            user.save()
+            reporters[username] = user
+        return reporters
 
-        rescue_user_1, _ = User.objects.get_or_create(
-            email="safe-paws@strayaid.local",
-            defaults={
-                "username": "safepaws",
-                "first_name": "Safe",
-                "last_name": "Paws",
-                "role": "organization",
-            },
-        )
-        ensure_password(rescue_user_1, "org12345")
+    def seed_open_cases(self, organizations, reporters):
+        for data in OPEN_CASES:
+            first_reporter = reporters[data["reporters"][0]]
+            organization = organizations.get(data["organization"]) if data["organization"] else None
+            report_count = len(data["reporters"])
+            case, _ = Case.objects.update_or_create(
+                title=data["title"],
+                reported_by=first_reporter,
+                defaults={
+                    "description": data["description"],
+                    "species": data["species"],
+                    "area": data["area"],
+                    "severity": data["severity"],
+                    "status": data["status"],
+                    "organization": organization,
+                    "assigned_to": organization.user if organization else None,
+                    "latitude": data["latitude"],
+                    "longitude": data["longitude"],
+                    "confidence_score": compute_confidence_score(data["detector"], data["severity"], report_count),
+                    "possibly_invalid": is_possibly_invalid(data["detector"]),
+                },
+            )
+            for index, username in enumerate(data["reporters"]):
+                # Follow-up reports sit a few feet from the first one (well inside the 15 ft merge radius).
+                report, _ = Report.objects.get_or_create(
+                    case=case,
+                    user=reporters[username],
+                    defaults={
+                        "description": data["description"],
+                        "latitude": data["latitude"] + index * 0.00001,
+                        "longitude": data["longitude"],
+                        "severity": data["severity"],
+                        "ai_animal_confidence": data["detector"],
+                    },
+                )
+                attach_photo(report, "image", data["image"])
+                backdate(report, minutes=data["minutes_ago"] - index * 3)
+            backdate(case, minutes=data["minutes_ago"])
 
-        rescue_user_2, _ = User.objects.get_or_create(
-            email="second-chance@strayaid.local",
-            defaults={
-                "username": "secondchance",
-                "first_name": "Second",
-                "last_name": "Chance",
-                "role": "organization",
-            },
-        )
-        ensure_password(rescue_user_2, "org12345")
+    def seed_animals_and_posts(self, organizations, reporters):
+        posts = []
+        for data in ANIMALS:
+            organization = organizations[data["organization"]]
+            reporter = reporters[data["reporter"]]
+            case, _ = Case.objects.update_or_create(
+                title=f"{data['species']} — {data['area']}",
+                reported_by=reporter,
+                defaults={
+                    "description": data["description"],
+                    "species": data["species"].lower(),
+                    "area": data["area"],
+                    "severity": "medium",
+                    "status": CASE_STATUS_FOR_ANIMAL[data["status"]],
+                    "organization": organization,
+                    "assigned_to": organization.user,
+                    "latitude": data["latitude"],
+                    "longitude": data["longitude"],
+                    "confidence_score": compute_confidence_score(0.92, "medium", 1),
+                    "possibly_invalid": False,
+                    "resolved_at": timezone.now() if data["status"] == Animal.STATUS_ADOPTED else None,
+                },
+            )
+            report, _ = Report.objects.get_or_create(
+                case=case,
+                user=reporter,
+                defaults={
+                    "description": data["description"],
+                    "latitude": data["latitude"],
+                    "longitude": data["longitude"],
+                    "severity": "medium",
+                    "ai_animal_confidence": 0.92,
+                },
+            )
+            attach_photo(report, "image", data["image"])
+            # The rescue happened shortly before the first update was posted.
+            backdate(case, hours=data["hours_ago"] + 2)
+            backdate(report, hours=data["hours_ago"] + 2)
 
-        rescue_user_3, _ = User.objects.get_or_create(
-            email="city-tails@strayaid.local",
-            defaults={
-                "username": "citytails",
-                "first_name": "City",
-                "last_name": "Tails",
-                "role": "organization",
-            },
-        )
-        ensure_password(rescue_user_3, "org12345")
+            animal, _ = Animal.objects.update_or_create(
+                case=case,
+                defaults={
+                    "organization": organization,
+                    "name": data["name"],
+                    "species": data["species"],
+                    "breed": data["breed"],
+                    "gender": data["gender"],
+                    "age": data["age"],
+                    "color": data["color"],
+                    "status": data["status"],
+                    "description": data["description"],
+                    "medical_info": data["medical_info"],
+                    "donation_info": f"Support {data['name']}'s care through {organization.name}.",
+                },
+            )
+            attach_photo(animal, "image", data["image"])
+            backdate(animal, hours=data["hours_ago"] + 1)
 
-        public_user_1, _ = User.objects.get_or_create(
-            email="ali.public@strayaid.local",
-            defaults={
-                "username": "ali_public",
-                "first_name": "Ali",
-                "last_name": "Khan",
-                "role": "public",
-            },
-        )
-        ensure_password(public_user_1, "user12345")
+            post, _ = Post.objects.update_or_create(
+                animal=animal,
+                organization=organization,
+                defaults={
+                    "title": f"Update on {data['name']}",
+                    "content": data["post"],
+                    "category": data["post_category"],
+                },
+            )
+            attach_photo(post, "image", data["image"])
+            backdate(post, hours=data["hours_ago"])
+            posts.append((post, data))
+        return posts
 
-        public_user_2, _ = User.objects.get_or_create(
-            email="sara.public@strayaid.local",
-            defaults={
-                "username": "sara_public",
-                "first_name": "Sara",
-                "last_name": "Ahmed",
-                "role": "public",
-            },
-        )
-        ensure_password(public_user_2, "user12345")
+    def seed_engagement(self, posts, reporters):
+        people = list(reporters.values())
+        for post, data in posts:
+            for user in people[: data["likes"]]:
+                PostLike.objects.get_or_create(post=post, user=user)
+            for index, body in enumerate(data["comments"]):
+                comment, _ = PostComment.objects.get_or_create(post=post, user=people[-1 - index], body=body)
+                backdate(comment, hours=max(data["hours_ago"] - 1 - index, 0), minutes=20)
 
-        public_user_3, _ = User.objects.get_or_create(
-            email="fatima.public@strayaid.local",
-            defaults={
-                "username": "fatima_public",
-                "first_name": "Fatima",
-                "last_name": "Raza",
-                "role": "public",
-            },
-        )
-        ensure_password(public_user_3, "user12345")
-
-        org_1, _ = Organization.objects.update_or_create(
-            user=rescue_user_1,
-            defaults={
-                "name": "Safe Paws Rescue",
-                "type": "rescue",
-                "phone": "0300-1111111",
-                "email": rescue_user_1.email,
-                "address": "Johar Town, Lahore",
-                "is_verified": True,
-                "capacity": 18,
-                "current_active_cases": 3,
-                "city": "Lahore",
-                "latitude": 31.4697,
-                "longitude": 74.2728,
-                "radius": 25,
-                "is_available": True,
-                "description": "Focused on street animal rescue, treatment, and adoption support.",
-                "bank_account_title": "Safe Paws Rescue",
-                "bank_account_number": "PK12SAFE000111222333",
-            },
-        )
-
-        org_2, _ = Organization.objects.update_or_create(
-            user=rescue_user_2,
-            defaults={
-                "name": "Second Chance Shelter",
-                "type": "shelter",
-                "phone": "0311-2222222",
-                "email": rescue_user_2.email,
-                "address": "F-8 Markaz, Islamabad",
-                "is_verified": True,
-                "capacity": 25,
-                "current_active_cases": 4,
-                "city": "Islamabad",
-                "latitude": 33.7070,
-                "longitude": 73.0489,
-                "radius": 30,
-                "is_available": True,
-                "description": "Provides temporary shelter, recovery care, and community adoptions.",
-                "bank_account_title": "Second Chance Shelter",
-                "bank_account_number": "PK12CHANCE000444555666",
-            },
-        )
-
-        org_3, _ = Organization.objects.update_or_create(
-            user=rescue_user_3,
-            defaults={
-                "name": "City Tails Clinic",
-                "type": "clinic",
-                "phone": "0322-3333333",
-                "email": rescue_user_3.email,
-                "address": "Clifton Block 5, Karachi",
-                "is_verified": True,
-                "capacity": 14,
-                "current_active_cases": 2,
-                "city": "Karachi",
-                "latitude": 24.8138,
-                "longitude": 67.0305,
-                "radius": 18,
-                "is_available": True,
-                "description": "Small rescue clinic focused on treatment, stabilization, and foster handoffs.",
-                "bank_account_title": "City Tails Clinic",
-                "bank_account_number": "PK12TAILS000777888999",
-            },
-        )
-
-        org_1.image.save(
-            "download.jpg",
-            image_file("organizations", "download.jpg"),
-            save=True,
-        )
-        org_2.image.save(
-            "images.jpg",
-            image_file("organizations", "images.jpg"),
-            save=True,
-        )
-        org_3.image.save(
-            "download (1).jpg",
-            image_file("organizations", "download (1).jpg"),
-            save=True,
-        )
-
-        case_1, _ = Case.objects.update_or_create(
-            description="Injured brown dog spotted near a roadside food street.",
-            latitude=31.4712,
-            longitude=74.2683,
-            defaults={
-                "status": "adoption",
-                "reported_by": public_user_1,
-                "organization": org_1,
-                "assigned_to": rescue_user_1,
-            },
-        )
-        case_2, _ = Case.objects.update_or_create(
-            description="Small white cat found dehydrated near a market parking area.",
-            latitude=33.7095,
-            longitude=73.0511,
-            defaults={
-                "status": "rescued",
-                "reported_by": public_user_2,
-                "organization": org_2,
-                "assigned_to": rescue_user_2,
-            },
-        )
-        case_3, _ = Case.objects.update_or_create(
-            description="Puppy seen limping beside a canal road and needs pickup.",
-            latitude=31.5204,
-            longitude=74.3587,
-            defaults={
-                "status": "reported",
-                "reported_by": public_user_2,
-                "organization": None,
-                "assigned_to": None,
-            },
-        )
-
-        case_4, _ = Case.objects.update_or_create(
-            description="Black kitten rescued from a drainage edge and moved into warm indoor care.",
-            latitude=24.8204,
-            longitude=67.0331,
-            defaults={
-                "status": "rescued",
-                "reported_by": public_user_3,
-                "organization": org_3,
-                "assigned_to": rescue_user_3,
-            },
-        )
-        case_5, _ = Case.objects.update_or_create(
-            description="Senior dog recovering after treatment and now ready for calm home placement.",
-            latitude=24.8074,
-            longitude=67.0215,
-            defaults={
-                "status": "adoption",
-                "reported_by": public_user_1,
-                "organization": org_3,
-                "assigned_to": rescue_user_3,
-            },
-        )
-        case_6, _ = Case.objects.update_or_create(
-            description="Playful young dog recently vaccinated and looking for foster-to-adopt placement.",
-            latitude=33.7001,
-            longitude=73.0402,
-            defaults={
-                "status": "adoption",
-                "reported_by": public_user_3,
-                "organization": org_2,
-                "assigned_to": rescue_user_2,
-            },
-        )
-
-        report_1, _ = Report.objects.get_or_create(
-            case=case_1,
-            user=public_user_1,
-            description="The dog has a visible leg wound and seems frightened but approachable.",
-            latitude=31.4712,
-            longitude=74.2683,
-        )
-        report_1.image.save("4377.Rocky.jpg", image_file("reports", "4377.Rocky.jpg"), save=True)
-
-        report_2, _ = Report.objects.get_or_create(
-            case=case_2,
-            user=public_user_2,
-            description="The cat was hiding under a parked car and looked weak from heat.",
-            latitude=33.7095,
-            longitude=73.0511,
-        )
-        report_2.image.save("gang-cats-Alaksa.webp", image_file("reports", "gang-cats-Alaksa.webp"), save=True)
-
-        report_3, _ = Report.objects.get_or_create(
-            case=case_3,
-            user=public_user_2,
-            description="The puppy keeps returning to the same corner and struggles to walk.",
-            latitude=31.5204,
-            longitude=74.3587,
-        )
-        report_3.image.save("images (1).jpg", image_file("reports", "images (1).jpg"), save=True)
-
-        report_4, _ = Report.objects.get_or_create(
-            case=case_4,
-            user=public_user_3,
-            description="The kitten was cold, weak, and curled beside the concrete wall until picked up.",
-            latitude=24.8204,
-            longitude=67.0331,
-        )
-        report_4.image.save(
-            "detail-domestic-animals-abandoned-street-260nw-2706423185.webp",
-            image_file("reports", "detail-domestic-animals-abandoned-street-260nw-2706423185.webp"),
-            save=True,
-        )
-
-        report_5, _ = Report.objects.get_or_create(
-            case=case_5,
-            user=public_user_1,
-            description="This older dog is calm around people and seems comfortable indoors after treatment.",
-            latitude=24.8074,
-            longitude=67.0215,
-        )
-        report_5.image.save(
-            "Banner_stray-dog-with-puppies_credit_AlRahmeh.jpg",
-            image_file("reports", "Banner_stray-dog-with-puppies_credit_AlRahmeh.jpg"),
-            save=True,
-        )
-
-        report_6, _ = Report.objects.get_or_create(
-            case=case_6,
-            user=public_user_3,
-            description="The dog has good energy, friendly behavior, and seems eager to stay around people.",
-            latitude=33.7001,
-            longitude=73.0402,
-        )
-        report_6.image.save("_130505861_mediaitem130505860.jpg", image_file("reports", "_130505861_mediaitem130505860.jpg"), save=True)
-
-        animal_1, _ = Animal.objects.update_or_create(
-            case=case_1,
-            defaults={
-                "organization": org_1,
-                "name": "Milo",
-                "species": "Dog",
-                "breed": "Mixed",
-                "gender": "Male",
-                "age": 3,
-                "color": "Brown",
-                "description": "Friendly adult dog recovering well and now ready for adoption.",
-                "medical_info": "Leg wound cleaned, vaccinated, and under observation.",
-                "donation_info": "Sponsor treatment via Safe Paws Rescue bank account.",
-                "status": Animal.STATUS_ADOPTABLE,
-            },
-        )
-        animal_1.image.save(
-            "dog-hero.jpg",
-            image_file("animals", "dog-hero.jpg"),
-            save=True,
-        )
-
-        animal_2, _ = Animal.objects.update_or_create(
-            case=case_2,
-            defaults={
-                "organization": org_2,
-                "name": "Luna",
-                "species": "Cat",
-                "breed": "Domestic Shorthair",
-                "gender": "Female",
-                "age": 2,
-                "color": "White",
-                "description": "Quiet rescue cat currently recovering indoors with supervised care.",
-                "medical_info": "Treated for dehydration and scheduled for follow-up checks.",
-                "donation_info": "Food and treatment support can be sent to Second Chance Shelter.",
-                "status": Animal.STATUS_RECOVERING,
-            },
-        )
-        animal_2.image.save(
-            "Cat-on-couch.jpg",
-            image_file("animals", "Cat-on-couch.jpg"),
-            save=True,
-        )
-
-        animal_3, _ = Animal.objects.update_or_create(
-            case=case_4,
-            defaults={
-                "organization": org_3,
-                "name": "Pepper",
-                "species": "Cat",
-                "breed": "Mixed",
-                "gender": "Female",
-                "age": 1,
-                "color": "Black",
-                "description": "Small black kitten warming up well after rescue and eating on schedule.",
-                "medical_info": "Underweight at intake, now hydrated and receiving routine observation.",
-                "donation_info": "Sponsor Pepper's treatment supplies through City Tails Clinic.",
-                "status": Animal.STATUS_RECOVERING,
-            },
-        )
-        animal_3.image.save(
-            "8a87d092545e4d949f2d95978445aa9a.webp",
-            image_file("animals", "8a87d092545e4d949f2d95978445aa9a.webp"),
-            save=True,
-        )
-
-        animal_4, _ = Animal.objects.update_or_create(
-            case=case_5,
-            defaults={
-                "organization": org_3,
-                "name": "Buddy",
-                "species": "Dog",
-                "breed": "Mixed",
-                "gender": "Male",
-                "age": 8,
-                "color": "Golden",
-                "description": "Gentle senior dog now stable and ready for a calm adoption placement.",
-                "medical_info": "Completed treatment, resting well, and cleared for adoption meetings.",
-                "donation_info": "Support Buddy with food, medicine, or direct clinic donations.",
-                "status": Animal.STATUS_ADOPTABLE,
-            },
-        )
-        animal_4.image.save(
-            "awsmaine_peachesDOG_0325-scaled-e1742240776863-1024x1024.jpg",
-            image_file("animals", "awsmaine_peachesDOG_0325-scaled-e1742240776863-1024x1024.jpg"),
-            save=True,
-        )
-
-        animal_5, _ = Animal.objects.update_or_create(
-            case=case_6,
-            defaults={
-                "organization": org_2,
-                "name": "Sunny",
-                "species": "Dog",
-                "breed": "Mixed",
-                "gender": "Male",
-                "age": 2,
-                "color": "Cream",
-                "description": "Playful young dog with strong recovery progress and a social personality.",
-                "medical_info": "Vaccinated, active, and transitioning into adoption visibility.",
-                "donation_info": "Sponsor Sunny's boarding and adoption prep through Second Chance Shelter.",
-                "status": Animal.STATUS_ADOPTABLE,
-            },
-        )
-        animal_5.image.save(
-            "NationalGeographic_2572187_16x9.avif",
-            image_file("animals", "NationalGeographic_2572187_16x9.avif"),
-            save=True,
-        )
-
-        post_1, _ = Post.objects.update_or_create(
-            organization=org_1,
-            animal=animal_1,
-            title="Milo is ready to meet adopters",
-            defaults={
-                "content": "Milo has completed his first recovery stage and is now open for adoption inquiries.",
-            },
-        )
-        post_1.image.save(
-            "Stray-dogs-India.jpg",
-            image_file("posts", "Stray-dogs-India.jpg"),
-            save=True,
-        )
-
-        post_2, _ = Post.objects.update_or_create(
-            organization=org_2,
-            animal=animal_2,
-            title="Luna is responding well to treatment",
-            defaults={
-                "content": "Luna is eating regularly again and showing steady improvement each day.",
-            },
-        )
-        post_2.image.save(
-            "images.jpg",
-            image_file("posts", "images.jpg"),
-            save=True,
-        )
-
-        post_3, _ = Post.objects.update_or_create(
-            organization=org_3,
-            animal=animal_3,
-            title="Pepper is gaining strength in foster care",
-            defaults={
-                "content": "Pepper is warmer, more alert, and starting to explore her recovery room with confidence.",
-            },
-        )
-        post_3.image.save(
-            "800_a0895029beforesurgery-verystenoticnostirlscatwasmostlyopenmouthbreathing..jpg",
-            image_file("posts", "800_a0895029beforesurgery-verystenoticnostirlscatwasmostlyopenmouthbreathing..jpg"),
-            save=True,
-        )
-
-        post_4, _ = Post.objects.update_or_create(
-            organization=org_3,
-            animal=animal_4,
-            title="Buddy is ready for a calm forever home",
-            defaults={
-                "content": "Buddy has settled beautifully and is now meeting potential adopters looking for a gentle companion.",
-            },
-        )
-        post_4.image.save(
-            "BlcNf2ItMVsDsMjKkRBwu1sMt0.webp",
-            image_file("posts", "BlcNf2ItMVsDsMjKkRBwu1sMt0.webp"),
-            save=True,
-        )
-
-        post_5, _ = Post.objects.update_or_create(
-            organization=org_2,
-            animal=animal_5,
-            title="Sunny has moved into adoption prep",
-            defaults={
-                "content": "Sunny is playful, vaccinated, and getting daily social time while the team screens adopters.",
-            },
-        )
-        post_5.image.save(
-            "VIER PFOTEN_2024-07-2820241217_0142-1041x720.jpg",
-            image_file("posts", "VIER PFOTEN_2024-07-2820241217_0142-1041x720.jpg"),
-            save=True,
-        )
-
-        self.stdout.write(self.style.SUCCESS("Sample data is ready."))
-        self.stdout.write("Admin login: admin@strayaid.local / admin12345")
-        self.stdout.write("Organization login: safe-paws@strayaid.local / org12345")
-        self.stdout.write("Organization login: second-chance@strayaid.local / org12345")
-        self.stdout.write("Organization login: city-tails@strayaid.local / org12345")
-        self.stdout.write("Public login: ali.public@strayaid.local / user12345")
-        self.stdout.write("Public login: sara.public@strayaid.local / user12345")
-        self.stdout.write("Public login: fatima.public@strayaid.local / user12345")
+    def seed_stories(self, organizations):
+        for org_key, category, image, caption, hours_ago in STORIES:
+            story, _ = Story.objects.get_or_create(
+                organization=organizations[org_key],
+                category=category,
+                caption=caption,
+                defaults={"image": photo(image)},
+            )
+            # Stories stay fresh: every run moves them back inside the 24-hour window.
+            backdate(story, hours=hours_ago)

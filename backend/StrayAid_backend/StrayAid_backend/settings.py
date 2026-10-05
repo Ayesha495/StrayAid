@@ -16,6 +16,14 @@ import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Local secrets (e.g. Gmail app password) live in backend/StrayAid_backend/.env, which git ignores.
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv(BASE_DIR / ".env")
+except ImportError:
+    pass
+
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
@@ -80,7 +88,23 @@ DJOSER = {
     "LOGIN_FIELD": "email",
     "USER_CREATE_PASSWORD_RETYPE": True,
     "SEND_ACTIVATION_EMAIL": False,
+    "SERIALIZERS": {
+        "user_create_password_retype": "accounts.serializers.StrayAidUserCreateSerializer",
+    },
 }
+
+# Email (password reset codes). Gmail SMTP with an app password when EMAIL_HOST_USER and
+# EMAIL_HOST_PASSWORD are set; otherwise emails are printed to the runserver console.
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+if EMAIL_HOST_USER and EMAIL_HOST_PASSWORD:
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
+    EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
+    EMAIL_USE_TLS = True
+else:
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER or "StrayAid <no-reply@strayaid.local>")
 
 SIMPLE_JWT = {
     "TOKEN_OBTAIN_SERIALIZER": "accounts.serializers.UsernameOrEmailTokenObtainPairSerializer",

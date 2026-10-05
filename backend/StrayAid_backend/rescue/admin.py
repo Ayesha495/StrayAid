@@ -11,8 +11,8 @@ class ReportInline(admin.TabularInline):
 
 @admin.register(Case)
 class CaseAdmin(admin.ModelAdmin):
-    list_display = ("id", "status", "reported_by", "organization", "assigned_to", "created_at")
-    list_filter = ("status", "organization", "created_at")
+    list_display = ("id", "title", "status", "severity", "confidence_score", "organization", "created_at")
+    list_filter = ("status", "severity", "organization", "created_at")
     search_fields = ("description", "reported_by__email", "organization__name", "assigned_to__email")
     autocomplete_fields = ("reported_by", "organization", "assigned_to")
     inlines = [ReportInline]

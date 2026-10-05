@@ -37,3 +37,58 @@ class CaseSerializer(serializers.ModelSerializer):
             obj.longitude,
         )
         return round(distance_m / 1000, 2)
+
+
+# Public wording for each case status, as shown to guests and reporters.
+PUBLIC_STATUS_LABELS = {
+    "reported": "Awaiting Responder",
+    "assigned": "Responder Assigned",
+    "in_progress": "Rescue In Progress",
+    "rescued": "Rescued",
+    "adoption": "Up for Adoption",
+    "closed": "Closed",
+}
+
+
+class TrendingCaseSerializer(serializers.ModelSerializer):
+    # Public card data only: no reporter identity or organization internals.
+    title = serializers.SerializerMethodField()
+    status_label = serializers.SerializerMethodField()
+    image = serializers.SerializerMethodField()
+    report_count = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = Case
+        fields = [
+            "id",
+            "title",
+            "species",
+            "area",
+            "severity",
+            "confidence_score",
+            "possibly_invalid",
+            "status",
+            "status_label",
+            "latitude",
+            "longitude",
+            "image",
+            "report_count",
+            "created_at",
+        ]
+
+    def get_title(self, obj):
+        if obj.title:
+            return obj.title
+        species = (obj.species or "Animal").title()
+        return f"{species} — {obj.area}" if obj.area else species
+
+    def get_status_label(self, obj):
+        return PUBLIC_STATUS_LABELS.get(obj.status, obj.get_status_display())
+
+    def get_image(self, obj):
+        # The newest report photo stands for the case.
+        report = next(iter(obj.reports.all()), None)
+        if not report or not report.image:
+            return None
+        request = self.context.get("request")
+        return request.build_absolute_uri(report.image.url) if request else report.image.url
