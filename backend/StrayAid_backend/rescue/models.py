@@ -83,8 +83,11 @@ class Report(models.Model):
     severity = models.CharField(max_length=10, choices=SEVERITY_CHOICES, default="medium")
     # "Keep me updated" on the report form: push this reporter the case's status changes.
     notify_reporter = models.BooleanField(default=True)
-    # Highest animal-class confidence from the image detector (0-1).
+    # Highest animal-class confidence from the image detector (0-1); null = not scored.
     ai_animal_confidence = models.FloatField(null=True, blank=True)
+    # What the detector saw ("dog", "cat", ...) and where, as [x0, y0, x1, y1] in 0-1 units.
+    ai_animal_label = models.CharField(max_length=20, blank=True)
+    ai_box = models.JSONField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -92,3 +95,44 @@ class Report(models.Model):
 
     def __str__(self):
         return f"Report #{self.pk} for case {self.case_id}"
+
+
+class CaseUpdate(models.Model):
+    """One entry in a case's history: a status change (recorded automatically) or a note
+    posted by the organization handling it. Shown under "Case Updates" (Stitch 10)."""
+
+    case = models.ForeignKey(Case, on_delete=models.CASCADE, related_name="updates")
+    # The case status this entry is about; blank for a plain note.
+    status = models.CharField(max_length=50, choices=Case.STATUS_CHOICES, blank=True)
+    message = models.TextField()
+    author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="case_updates")
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+
+    def __str__(self):
+        return f"Update on case #{self.case_id}: {self.status or 'note'}"
+
+
+class AIFeedback(models.Model):
+    """"Report incorrect AI detection" on the confidence screen (Stitch 11). Kept for the
+    organization and for checking the detector; it doesn't change the score by itself."""
+
+    REASON_CHOICES = [
+        ("no_animal", "There's no animal in the photo"),
+        ("wrong_animal", "It's a different animal"),
+        ("wrong_score", "The score looks wrong"),
+    ]
+
+    case = models.ForeignKey(Case, on_delete=models.CASCADE, related_name="ai_feedback")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="ai_feedback")
+    reason = models.CharField(max_length=20, choices=REASON_CHOICES)
+    created_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("case", "user")
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"AI feedback on case #{self.case_id}: {self.reason}"

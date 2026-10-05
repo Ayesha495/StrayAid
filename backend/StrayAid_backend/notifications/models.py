@@ -37,3 +37,17 @@ class OrganizationFollow(models.Model):
 
     def __str__(self):
         return f"{self.user.email} follows {self.organization.name}"
+
+
+class CaseFollow(models.Model):
+    """Someone who isn't a reporter but tapped "Keep me updated" on a case (Stitch 10)."""
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="case_follows")
+    case = models.ForeignKey("rescue.Case", on_delete=models.CASCADE, related_name="followers")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("user", "case")
+
+    def __str__(self):
+        return f"{self.user.email} follows case #{self.case_id}"

@@ -218,3 +218,40 @@ class AnimalApiTests(MediaEnabledAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["id"], own_animal.id)
+
+
+class AnimalProfileTests(MediaEnabledAPITestCase):
+    """The public animal profile (Stitch 13): health tags, photos and community counts."""
+
+    def setUp(self):
+        from .models import AdoptionApplication, Sponsorship
+
+        org_user = User.objects.create_user(email="o@example.com", username="o", password="x", role="organization")
+        self.organization = Organization.objects.create(user=org_user, name="Safe Paws", city="Islamabad")
+        reporter = User.objects.create_user(email="r@example.com", username="r", password="x")
+        self.people = [User.objects.create_user(email=f"p{i}@example.com", username=f"p{i}", password="x") for i in range(3)]
+        case = Case.objects.create(description="Cat", latitude=33.7, longitude=73.0, reported_by=reporter,
+                                   organization=self.organization, confidence_score=88)
+        self.animal = Animal.objects.create(case=case, organization=self.organization, name="Luna", species="Cat",
+                                            status=Animal.STATUS_ADOPTABLE, health="healthy", vaccinated=True)
+        AdoptionApplication.objects.create(animal=self.animal, applicant=self.people[0], full_name="A", phone="1", home_type="house")
+        AdoptionApplication.objects.create(animal=self.animal, applicant=self.people[1], full_name="B", phone="2",
+                                           home_type="apartment", status="withdrawn")
+        Sponsorship.objects.create(animal=self.animal, sponsor=self.people[0], amount_pkr=500, status="confirmed")
+        Sponsorship.objects.create(animal=self.animal, sponsor=self.people[0], amount_pkr=1000, status="confirmed")
+        Sponsorship.objects.create(animal=self.animal, sponsor=self.people[2], amount_pkr=500, status="pending")
+
+    def test_guest_sees_profile_with_health_and_counts(self):
+        data = self.client.get(f"/api/animals/{self.animal.id}/").data
+
+        self.assertEqual((data["health"], data["vaccinated"]), ("healthy", True))
+        self.assertEqual(data["application_count"], 1)  # withdrawn ones don't count
+        self.assertEqual(data["sponsor_count"], 1)  # people with a confirmed pledge, counted once
+        self.assertTrue(data["ai_verified"])
+        self.assertEqual(data["photos"], [])
+
+    def test_unverified_rescue_has_no_shield(self):
+        self.animal.case.possibly_invalid = True
+        self.animal.case.save()
+
+        self.assertFalse(self.client.get(f"/api/animals/{self.animal.id}/").data["ai_verified"])

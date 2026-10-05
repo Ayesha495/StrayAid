@@ -7,9 +7,17 @@ from django.utils import timezone
 from animals.models import Animal
 from organizations.permissions import IsOrganizationUser
 
-from .models import SEVERITY_ORDER, Case, Report
-from .serializers import CaseSerializer, TrendingCaseSerializer
+from .models import SEVERITY_ORDER, AIFeedback, Case, CaseUpdate, Report
+from .serializers import (
+    CaseDetailSerializer,
+    CaseSerializer,
+    CaseUpdateSerializer,
+    PublicReportSerializer,
+    TrendingCaseSerializer,
+)
 from .utils.case_matcher import find_nearby_case
+from .ai import detector
+from .utils.scoring import ANIMAL_REQUIRED, refresh_case_score, refresh_unanswered_scores_if_due
 from .utils.location_utils import calculate_distance
 
 
@@ -31,6 +39,44 @@ def case_is_within_organization_radius(case, organization):
         case.longitude,
     )
     return distance_m <= organization.radius * 1000
+
+
+def _photo_check_error(image):
+    """Run the animal detector on an uploaded photo before anything is saved.
+    Returns (result, None) when it shows an animal, or (None, error response)."""
+    result = detector.detect_animal(image)
+    if result is None:
+        return None, Response(
+            {
+                "error": "We can't check photos right now. Please try again in a minute.",
+                "code": "detector_unavailable",
+            },
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
+    if result["confidence"] < ANIMAL_REQUIRED:
+        return None, Response(
+            {
+                "error": "We couldn't find an animal in this photo. Please retake a clear photo of the animal.",
+                "code": "not_an_animal",
+                "confidence": result["confidence"],
+            },
+            status=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        )
+    return result, None
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def check_photo(request):
+    """Check a report photo as soon as it's picked (Stitch 7), so a photo without an animal
+    can be retaken before the report is filled in. Nothing is stored."""
+    image = request.FILES.get("image")
+    if not image:
+        return Response({"error": "Image is required"}, status=status.HTTP_400_BAD_REQUEST)
+    result, error = _photo_check_error(image)
+    if error:
+        return error
+    return Response({"is_animal": True, "animal": result["label"], "confidence": result["confidence"]})
 
 
 @api_view(['POST'])
@@ -76,8 +122,13 @@ def report_case(request):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    # If a similar nearby case exists, attach the report instead of creating a new case.
-    existing_case = find_nearby_case(latitude, longitude)
+    # Reports must show an animal: photos without one are refused, to keep out false reports.
+    detection, error = _photo_check_error(image)
+    if error:
+        return error
+
+    # If this is a repeat sighting of a nearby open case, attach the report to it.
+    existing_case = find_nearby_case(latitude, longitude, user=user, animal=detection["label"])
 
     if existing_case:
         case = existing_case
@@ -114,7 +165,14 @@ def report_case(request):
         longitude=longitude,
         severity=severity,
         notify_reporter=notify_reporter,
+        ai_animal_confidence=detection["confidence"],
+        ai_animal_label=detection["label"],
+        ai_box=detection["box"],
     )
+    # AI confidence (Stitch 11), from this photo plus any earlier sightings. Reload the case
+    # first: the matcher's copy has its report list cached from before this report.
+    case = Case.objects.get(pk=case.pk)
+    refresh_case_score(case)
 
     return Response(
         {
@@ -179,8 +237,38 @@ SEVERITY_RANK = CaseWhen(
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
+def map_cases(request):
+    """Open rescue cases for the rescue map (Stitch 12), most urgent first.
+
+    Optional ?lat=&lng=&radius_km= keeps only cases within that distance (default 25 km,
+    at most 100 km). Without a position every open case is returned (up to 300)."""
+    refresh_unanswered_scores_if_due()
+    queryset = (
+        Case.objects.filter(status__in=ACTIVE_RESCUE_STATUSES)
+        .annotate(severity_rank=SEVERITY_RANK, report_count=Count("reports"))
+        .prefetch_related("reports")
+        .order_by("-severity_rank", F("confidence_score").desc(nulls_last=True), "-created_at")
+    )
+    cases = list(queryset[:300])
+    try:
+        lat = float(request.query_params["lat"])
+        lng = float(request.query_params["lng"])
+    except (KeyError, ValueError):
+        lat = lng = None
+    if lat is not None:
+        try:
+            radius_km = min(max(float(request.query_params.get("radius_km", 25)), 1), 100)
+        except ValueError:
+            radius_km = 25
+        cases = [case for case in cases if calculate_distance(lat, lng, case.latitude, case.longitude) <= radius_km * 1000]
+    return Response(TrendingCaseSerializer(cases, many=True, context={"request": request}).data)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
 def trending_cases(request):
     """Open rescue cases for the public home screen, most urgent first."""
+    refresh_unanswered_scores_if_due()
     try:
         limit = min(max(int(request.query_params.get("limit", 3)), 1), 20)
     except ValueError:
@@ -229,6 +317,7 @@ class CaseViewSet(viewsets.ReadOnlyModelViewSet):
         return queryset.filter(Q(organization__isnull=True) | Q(organization=organization))
 
     def list(self, request, *args, **kwargs):
+        refresh_unanswered_scores_if_due()
         organization = request.user.organization_profile
         queryset = self.get_queryset()
         visible_cases = [
@@ -241,6 +330,7 @@ class CaseViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail=False, methods=["get"], url_path="nearby")
     def nearby(self, request):
+        refresh_unanswered_scores_if_due()
         organization = request.user.organization_profile
         queryset = self.get_queryset().filter(organization__isnull=True).exclude(status="closed")
         try:
@@ -296,6 +386,18 @@ class CaseViewSet(viewsets.ReadOnlyModelViewSet):
         serializer = self.get_serializer(case, context={"request": request})
         return Response(serializer.data)
 
+    @action(detail=True, methods=["post"], url_path="add-update")
+    def add_update(self, request, pk=None):
+        """Organizations post a note to the case history their reporters and followers see."""
+        case = self.get_object()
+        if case.organization_id != request.user.organization_profile.id:
+            return Response({"detail": "You can only post updates on your own cases."}, status=status.HTTP_403_FORBIDDEN)
+        message = (request.data.get("message") or "").strip()
+        if not message:
+            return Response({"detail": "Write a message for the update."}, status=status.HTTP_400_BAD_REQUEST)
+        update = CaseUpdate.objects.create(case=case, message=message[:2000], author=request.user)
+        return Response(CaseUpdateSerializer(update).data, status=status.HTTP_201_CREATED)
+
     @action(detail=True, methods=["patch"], url_path="update-status")
     def update_status(self, request, pk=None):
         case = self.get_object()
@@ -321,3 +423,81 @@ class CaseViewSet(viewsets.ReadOnlyModelViewSet):
 
         serializer = self.get_serializer(case, context={"request": request})
         return Response(serializer.data)
+
+
+# ── Public case page (Stitch 10) ─────────────────────────────────────────────
+
+def _public_case(case_id):
+    return (
+        Case.objects.select_related("organization")
+        .prefetch_related("reports__user", "updates")
+        .filter(pk=case_id)
+        .first()
+    )
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def case_detail(request, case_id):
+    case = _public_case(case_id)
+    if not case:
+        return Response({"error": "Case not found"}, status=status.HTTP_404_NOT_FOUND)
+    # Unanswered cases lose confidence over time, so bring the saved score up to date.
+    refresh_case_score(case)
+    return Response(CaseDetailSerializer(case, context={"request": request}).data)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def case_updates(request, case_id):
+    case = _public_case(case_id)
+    if not case:
+        return Response({"error": "Case not found"}, status=status.HTTP_404_NOT_FOUND)
+    updates = case.updates.select_related("author__organization_profile")
+    return Response(CaseUpdateSerializer(updates, many=True).data)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def case_reports(request, case_id):
+    case = _public_case(case_id)
+    if not case:
+        return Response({"error": "Case not found"}, status=status.HTTP_404_NOT_FOUND)
+    return Response(PublicReportSerializer(case.reports.all(), many=True, context={"request": request}).data)
+
+
+@api_view(["POST", "DELETE"])
+@permission_classes([IsAuthenticated])
+def case_keep_updated(request, case_id):
+    """The case page's "Keep me updated" switch. Reporters turn their own reports' updates on
+    or off; anyone else follows or unfollows the case."""
+    from notifications.models import CaseFollow
+
+    case = Case.objects.filter(pk=case_id).first()
+    if not case:
+        return Response({"error": "Case not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    keep_updated = request.method == "POST"
+    own_reports = case.reports.filter(user=request.user)
+    if own_reports.exists():
+        own_reports.update(notify_reporter=keep_updated)
+    elif keep_updated:
+        CaseFollow.objects.get_or_create(user=request.user, case=case)
+    else:
+        CaseFollow.objects.filter(user=request.user, case=case).delete()
+    return Response({"keep_updated": keep_updated})
+
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def case_ai_feedback(request, case_id):
+    """"Report incorrect AI detection" (Stitch 11). One answer per person per case."""
+    case = Case.objects.filter(pk=case_id).first()
+    if not case:
+        return Response({"error": "Case not found"}, status=status.HTTP_404_NOT_FOUND)
+    reason = request.data.get("reason")
+    if reason not in dict(AIFeedback.REASON_CHOICES):
+        return Response({"error": "Choose what's wrong with the detection"}, status=status.HTTP_400_BAD_REQUEST)
+    AIFeedback.objects.update_or_create(case=case, user=request.user, defaults={"reason": reason})
+    return Response({"reason": reason}, status=status.HTTP_201_CREATED)

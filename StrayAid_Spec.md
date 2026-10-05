@@ -172,11 +172,17 @@ Every service, API and deployment must be free. Where a card is unavoidable, a s
   - `Report.severity` (low / medium / high / critical) and `Report.ai_animal_confidence`
   - `Case.confidence_score` (0–100) and `Case.possibly_invalid`
 - **Detector:** a pretrained COCO detector (SSD-MobileNet or YOLOv8n) exported to ONNX, run with `onnxruntime` and loaded once per worker. Its confidence is the highest score among dog, cat, bird, horse, sheep and cow.
-- **Formula:** score = round(100 × (0.5 × detector + 0.3 × severity + 0.2 × reports))
+- **Formula:** score = round(100 × (0.5 × photo + 0.3 × severity + 0.2 × reports) × freshness)
+  - photo: the detector confidence of every report photo combined, as "chance at least one photo shows an animal": 1 − (1 − c₁)(1 − c₂)…; one photo is just its own confidence
   - severity: low 0.25 / medium 0.5 / high 0.75 / critical 1
   - reports: 1 → 0.33, 2 → 0.67, 3 or more → 1
-  - recalculated each time a report merges into the case
-- **`possibly_invalid`** when the detector confidence is below 0.3. **Nothing is rejected automatically.** Nearby cases sort by severity, then score.
+  - freshness: 1 for 6 hours after the latest report, then falls linearly to 0.5 at 72 hours and stays there. It only runs while no organization has responded: accepting the case stops the clock, and a new report restarts it.
+  - recalculated each time a report merges into the case, when the status changes, when the case page is opened, and (at most every 10 minutes) when score-sorted lists load
+- **Detector:** SSD-MobileNet v1 from the ONNX Model Zoo (Apache-2.0). `python manage.py download_ai_model` fetches it (checksum-verified); `python manage.py check_ai_model` tests it on a dog photo and a logo.
+- **Photos must show an animal.** The app checks the photo as soon as it's picked (`POST /api/cases/check-photo/`) and shows a "No animal found" window asking for a retake. The server checks again on submit and refuses the report (422 `not_an_animal`) if the detector confidence is below 0.3, or answers 503 if the detector isn't available, so false reports can't get through.
+- **One photo per report and per case.** The case page shows the photo of the report that started it; later sightings keep their own photos under Related Reports.
+- **Merging sightings:** a new report joins an open case only if it is within 15 ft, the case had a report in the last 48 hours, it shows the same kind of animal (when known), and the reporter hasn't already reported that case. "reports" in the score counts different people, so one person can't inflate it.
+- **`possibly_invalid`** remains for older reports saved before the photo check (combined photo confidence below 0.3). Nearby cases sort by severity, then score.
 - **"Condition"** comes from the severity the reporter picks plus the description. It isn't judged from the photo; say so honestly in the viva.
 
 ### 5. Case status rules

@@ -107,6 +107,10 @@ else:
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER or "StrayAid <no-reply@strayaid.local>")
 
+# Animal detector for report photos (free ONNX model, run locally). Fetch it with
+# `python manage.py download_ai_model`; without it, reports are saved unscored.
+AI_MODEL_PATH = Path(os.getenv("AI_MODEL_PATH", BASE_DIR / "ai_models" / "ssd_mobilenet_v1_12.onnx"))
+
 SIMPLE_JWT = {
     "TOKEN_OBTAIN_SERIALIZER": "accounts.serializers.UsernameOrEmailTokenObtainPairSerializer",
     # The library default is 5 minutes, which logged phones out mid-task. Clients renew the

@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Case, Report
+from .models import AIFeedback, Case, CaseUpdate, Report
 
 
 class ReportInline(admin.TabularInline):
@@ -24,3 +24,16 @@ class ReportAdmin(admin.ModelAdmin):
     list_filter = ("created_at",)
     search_fields = ("description", "user__email", "case__description")
     autocomplete_fields = ("case", "user")
+
+
+@admin.register(CaseUpdate)
+class CaseUpdateAdmin(admin.ModelAdmin):
+    list_display = ("case", "status", "author", "created_at")
+    list_filter = ("status",)
+    search_fields = ("message",)
+
+
+@admin.register(AIFeedback)
+class AIFeedbackAdmin(admin.ModelAdmin):
+    list_display = ("case", "user", "reason", "created_at")
+    list_filter = ("reason",)
