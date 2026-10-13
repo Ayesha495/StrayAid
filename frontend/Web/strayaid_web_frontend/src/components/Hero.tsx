@@ -12,6 +12,11 @@ interface HeroProps {
 const Hero: React.FC<HeroProps> = ({ onLogin, onSignup }) => {
   return (
     <section id="home" className="hero-section">
+      {/* Half-screen photo on the right; fades into the page (see .lp-split) */}
+      <div className="hero-image-side lp-split lp-split--right">
+        <img src={heroImage} alt="Volunteer caring for a rescued dog" className="lp-split-img" />
+      </div>
+
       <div className="hero-container">
         <div className="hero-content">
           <span className="eyebrow-pill animate-text">
@@ -19,7 +24,9 @@ const Hero: React.FC<HeroProps> = ({ onLogin, onSignup }) => {
           </span>
 
           <h1 className="hero-title animate-text">
-            Manage. <em>Protect.</em>
+            Manage.
+            <br />
+            Protect.
             <br />
             Transform Lives.
           </h1>
@@ -49,11 +56,6 @@ const Hero: React.FC<HeroProps> = ({ onLogin, onSignup }) => {
           </div>
         </div>
 
-        <div className="hero-image-side">
-          <div className="hero-image-frame">
-            <img src={heroImage} alt="Volunteer caring for a rescued dog" className="hero-image" />
-          </div>
-        </div>
       </div>
     </section>
   );

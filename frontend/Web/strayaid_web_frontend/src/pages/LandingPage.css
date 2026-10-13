@@ -5,6 +5,7 @@
   --lp-container: 75rem;
   --lp-gutter: clamp(1rem, 0.5rem + 2.5vw, 2rem);
   --lp-section-y: clamp(2.5rem, 1.75rem + 3.5vw, 4.5rem);
+  --lp-nav: 4rem; /* height of the fixed navbar */
   --lp-border: #e6e8ec;
   --lp-card-shadow: 0 1px 2px rgba(15, 23, 42, 0.03), 0 12px 24px rgba(15, 23, 42, 0.05);
 
@@ -28,9 +29,18 @@
   padding-inline: var(--lp-gutter);
 }
 
+/* Every section fills the screen (below the fixed navbar) and centres its
+   content, so the next section never peeks in underneath. If the content is
+   taller than the screen the section simply grows. */
 .lp-section {
-  padding-block: var(--lp-section-y);
-  scroll-margin-top: 4.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 100vh;
+  min-height: 100svh;
+  padding-top: calc(var(--lp-nav) + var(--lp-section-y));
+  padding-bottom: var(--lp-section-y);
+  scroll-margin-top: 0;
 }
 
 .lp-section--surface {
@@ -125,4 +135,295 @@
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+}
+
+
+/* ==========================================================================
+   Card motion
+   Scroll: cards rise + scale in, staggered, then their icon pops.
+   Hover (mouse): the card leans toward the pointer in 3D, a tinted spotlight
+   and a glowing border follow the cursor, the shadow takes on the card's
+   colour and the icon tile fills in. See components/Reveal.tsx.
+   ========================================================================== */
+
+/* Tinted cards: same blue / amber / green / violet as the dashboard stat cards */
+.lp-card[data-tone="blue"] {
+  --tone-from: #eff6ff; --tone-soft: #dbeafe; --tone-ink: #1d4ed8;
+  --tone-solid: #2563eb; --tone-glow: rgba(59, 130, 246, 0.2);
+}
+.lp-card[data-tone="amber"] {
+  --tone-from: #fffbeb; --tone-soft: #fef3c7; --tone-ink: #b45309;
+  --tone-solid: #d97706; --tone-glow: rgba(245, 158, 11, 0.22);
+}
+.lp-card[data-tone="green"] {
+  --tone-from: #f0fdf4; --tone-soft: #dcfce7; --tone-ink: #15803d;
+  --tone-solid: #16a34a; --tone-glow: rgba(34, 197, 94, 0.2);
+}
+.lp-card[data-tone="violet"] {
+  --tone-from: #f5f3ff; --tone-soft: #ede9fe; --tone-ink: #6d28d9;
+  --tone-solid: #7c3aed; --tone-glow: rgba(139, 92, 246, 0.2);
+}
+
+.lp-card[data-tone] {
+  background: linear-gradient(160deg, var(--tone-from) 0%, #ffffff 60%);
+}
+
+.lp-card[data-tone] .lp-icon {
+  background: var(--tone-soft);
+  color: var(--tone-ink);
+  transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.4), background-color 0.25s ease, color 0.25s ease;
+}
+
+.lp-card:hover {
+  border-color: transparent;
+}
+
+.lp-card[data-tone]:hover .lp-icon {
+  background: var(--tone-solid);
+  color: #ffffff;
+  transform: translateY(-3px) scale(1.12);
+}
+
+.lp-card[data-tone]:hover {
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 26px 44px -12px var(--tone-glow);
+}
+
+/* Shared tilt + spotlight mechanics (light cards and dark chips) */
+.is-tilt {
+  position: relative;
+  overflow: hidden;
+  transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateY(var(--ty, 0px));
+  transition: transform 0.18s ease-out, box-shadow 0.35s ease, border-color 0.25s ease;
+  will-change: transform;
+}
+
+.is-tilt:hover {
+  --ty: -8px;
+}
+
+.is-tilt::before,
+.is-tilt::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+/* soft tinted light under the cursor */
+.is-tilt::before {
+  background: radial-gradient(17rem circle at var(--mx, 50%) var(--my, 50%), var(--tone-glow, rgba(34, 197, 94, 0.18)), transparent 65%);
+}
+
+/* glowing 1px border that follows the cursor */
+.is-tilt::after {
+  padding: 1.5px;
+  background: radial-gradient(12rem circle at var(--mx, 50%) var(--my, 50%), var(--tone-solid, #16a34a), transparent 70%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+
+.is-tilt:hover::before,
+.is-tilt:hover::after {
+  opacity: 1;
+}
+
+.is-tilt > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Scroll reveal. `backwards` fill: the hidden pose applies during the stagger
+   delay, then the element returns to its normal style so hover keeps working. */
+.reveal:not(.is-visible) {
+  opacity: 0;
+}
+
+.reveal.is-visible {
+  animation: lpReveal 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+  animation-delay: var(--reveal-delay, 0ms);
+}
+
+@keyframes lpReveal {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Icon tile pops in just after its card lands */
+.reveal.is-visible .lp-icon {
+  animation: lpIconPop 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.5) backwards;
+  animation-delay: calc(var(--reveal-delay, 0ms) + 0.3s);
+}
+
+@keyframes lpIconPop {
+  from {
+    opacity: 0;
+    transform: scale(0.4) rotate(-20deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+}
+
+/* Eyebrow pills pop in just after their section appears */
+.reveal.is-visible .eyebrow-pill {
+  animation: lpPillPop 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.3) 0.15s backwards;
+}
+
+@keyframes lpPillPop {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Scroll progress bar */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 5100;
+  height: 3px;
+  background: linear-gradient(90deg, var(--color-accent-600), var(--color-accent-300));
+  transform: scaleX(0);
+  transform-origin: left;
+  pointer-events: none;
+}
+
+/* Touch screens have no hover: skip the lean and spotlight there */
+@media (hover: none) {
+  .is-tilt {
+    transform: none;
+    will-change: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-page *,
+  .landing-page *::before,
+  .landing-page *::after {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .reveal:not(.is-visible),
+  .animate-text {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .is-tilt {
+    transform: none !important;
+  }
+}
+
+
+/* ==========================================================================
+   Split image
+   The photo fills half of the screen at full height and fades into the page
+   background on its inner edge, so it reads as part of the section instead
+   of a separate box. The photo drifts very slowly inside its frame.
+   Right half in the hero, left half in About.
+   ========================================================================== */
+.landing-page {
+  /* distance from the content edge to the screen edge */
+  --lp-bleed: calc((100vw - min(var(--lp-container), 100vw)) / 2 + var(--lp-gutter));
+}
+
+.hero-section,
+.about-section {
+  position: relative;
+  overflow: hidden;
+}
+
+.lp-split {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 0;
+  width: 46%;
+  overflow: hidden;
+  animation: splitIn 1s cubic-bezier(0.2, 0.7, 0.2, 1) 0.15s backwards;
+}
+
+.lp-split--right {
+  right: 0;
+  --split-from: 60px;
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 30%);
+  mask-image: linear-gradient(to right, transparent 0%, #000 30%);
+}
+
+.lp-split--left {
+  left: 0;
+  --split-from: -60px;
+  -webkit-mask-image: linear-gradient(to left, transparent 0%, #000 30%);
+  mask-image: linear-gradient(to left, transparent 0%, #000 30%);
+}
+
+/* in About the entrance is driven by scroll (Reveal), not page load */
+.lp-split.reveal:not(.is-visible) {
+  animation: none;
+  opacity: 0;
+}
+
+.lp-split.reveal.is-visible {
+  animation: splitIn 1s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+}
+
+.lp-split-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: splitDrift 22s ease-in-out infinite alternate;
+}
+
+@keyframes splitIn {
+  from {
+    opacity: 0;
+    transform: translateX(var(--split-from, 0px));
+  }
+}
+
+@keyframes splitDrift {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.08);
+  }
+}
+
+@media (max-width: 56rem) {
+  .lp-split {
+    position: relative;
+    top: auto;
+    bottom: auto;
+    width: 100%;
+    height: min(18rem, 38svh);
+    flex-shrink: 0;
+    --split-from: 0px;
+  }
+
+  .lp-split--right,
+  .lp-split--left {
+    -webkit-mask-image: linear-gradient(to bottom, #000 65%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 65%, transparent 100%);
+  }
 }

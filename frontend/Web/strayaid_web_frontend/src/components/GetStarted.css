@@ -50,6 +50,8 @@
   background: var(--color-brand-700);
   border: 1px solid #33604d;
   text-align: left;
+  --tone-glow: rgba(134, 239, 172, 0.22);
+  --tone-solid: #86efac;
 }
 
 .gs-stat-icon {

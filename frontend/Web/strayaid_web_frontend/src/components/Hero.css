@@ -1,41 +1,43 @@
+/* Fills the whole screen below the fixed navbar; content is centred */
 .hero-section {
+  display: flex;
+  align-items: center;
   width: 100%;
-  /* clear the fixed navbar (~4rem), then a modest gap; no bottom padding
-     because the next section already has its own top padding */
-  padding: calc(4rem + clamp(1.5rem, 1rem + 2vw, 3rem)) 0 0;
+  min-height: 100vh;
+  min-height: 100svh;
+  padding: calc(var(--lp-nav) + var(--space-5)) 0 var(--space-6);
+  scroll-margin-top: 0;
 }
 
 .hero-container {
+  position: relative;
+  z-index: 1;
   width: 100%;
   max-width: var(--lp-container);
   margin: 0 auto;
   padding-inline: var(--lp-gutter);
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  grid-template-columns: minmax(0, 1fr);
   align-items: center;
-  gap: var(--space-7);
 }
 
+/* The text keeps clear of the photo, which fills the right 46% of the screen */
 .hero-content {
   text-align: left;
+  max-width: min(38rem, calc(54vw - var(--lp-bleed) - 2rem));
 }
 
 .hero-content .eyebrow-pill {
   margin-bottom: var(--space-4);
 }
 
+/* Three stacked lines, so slightly smaller than the old two-line title */
 .hero-title {
-  font-size: var(--text-3xl);
+  font-size: clamp(2rem, 1.35rem + 2.8vw, 3.3rem);
   font-weight: 800;
   color: #12291f;
-  line-height: var(--leading-tight);
+  line-height: 1.1;
   margin: 0 0 var(--space-4);
-}
-
-.hero-title em {
-  font-style: italic;
-  font-weight: 800;
-  color: var(--color-accent-700);
 }
 
 .hero-description {
@@ -78,27 +80,6 @@
   line-height: 1.5;
 }
 
-.hero-image-side {
-  position: relative;
-  min-width: 0;
-}
-
-.hero-image-frame {
-  position: relative;
-  border-radius: var(--radius-xl);
-}
-
-.hero-image {
-  display: block;
-  width: 100%;
-  aspect-ratio: 5 / 4;
-  max-height: 30rem;
-  object-fit: cover;
-  border-radius: var(--radius-xl);
-  border: 1px solid var(--lp-border);
-  box-shadow: var(--lp-card-shadow);
-}
-
 /* Animations */
 .animate-text {
   opacity: 0;
@@ -121,18 +102,20 @@
 
 /* Stack when two columns no longer fit (width-based, so zoom behaves too) */
 @media (max-width: 56rem) {
+  .hero-section {
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    padding-top: 3rem; /* mobile navbar height */
+    padding-bottom: var(--space-6);
+  }
+
   .hero-container {
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-5);
+    margin-top: var(--space-4);
   }
 
-  .hero-image-side {
-    order: -1;
-  }
-
-  .hero-image {
-    aspect-ratio: 16 / 9;
-    max-height: 20rem;
+  .hero-content {
+    max-width: none;
   }
 
   .hero-description {

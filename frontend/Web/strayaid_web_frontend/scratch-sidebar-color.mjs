@@ -1,0 +1,15 @@
+import { chromium } from "playwright-core";
+const browser = await chromium.launch();
+const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+const errors = [];
+page.on("pageerror", (e) => errors.push(String(e)));
+await page.goto("http://localhost:5173/login", { waitUntil: "networkidle" });
+await page.fill('input[placeholder="Enter your email or username"]', "safe-paws@strayaid.local");
+await page.fill('input[placeholder="Enter your password"]', "org12345");
+await page.click('button[type="submit"]');
+await page.waitForURL("**/dashboard", { timeout: 10000 });
+await page.waitForTimeout(800);
+if (errors.length) console.log("ERRORS", JSON.stringify(errors));
+await page.screenshot({ path: "D:/Temp/claude/c--Users-HP-OneDrive-Documents-university-SDP-2/851d46a6-1e4b-4d0b-ad15-f37098cba7de/scratchpad/sidebar-color.png" });
+await browser.close();
+console.log("DONE");
