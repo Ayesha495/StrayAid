@@ -1,77 +1,76 @@
-.about-intro {
-  display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
-  gap: var(--space-7);
-  align-items: center;
-  margin-bottom: var(--space-7);
+/* Photo fills the left 46% of the screen (see .lp-split); the text and the
+   three cards sit in a single column on the right. */
+.lp-section.about-section {
+  /* tighter than other sections so the whole thing fits one screen */
+  padding-top: calc(var(--lp-nav) + var(--space-3));
+  padding-bottom: var(--space-4);
+}
+
+.about-section .lp-container {
+  position: relative;
+  z-index: 1;
+}
+
+.about-body {
+  margin-left: max(0px, calc(46vw + 2.5rem - var(--lp-bleed)));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
 }
 
 .about-intro-text .eyebrow-pill {
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-3);
 }
 
 .about-intro-text .lp-section-title {
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-3);
+  font-size: clamp(1.6rem, 1.2rem + 1.6vw, 2.4rem);
 }
 
 .about-intro-text .lp-section-lead {
-  max-width: 30rem;
+  max-width: none;
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
 }
 
-.about-intro-image img {
-  display: block;
-  width: 100%;
-  aspect-ratio: 4 / 3;
-  max-height: 22rem;
-  object-fit: cover;
-  border-radius: var(--radius-xl);
-  border: 1px solid var(--lp-border);
-  box-shadow: var(--lp-card-shadow);
-}
-
-/* 1 column on phones, 2 (last card spanning) on tablets, 3 on desktop */
+/* Compact horizontal cards: icon on the left, title + text on the right */
 .about-content {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-5);
+  grid-auto-rows: 1fr; /* all three cards share the height of the tallest */
+  gap: var(--space-3);
 }
 
-@media (min-width: 36rem) {
-  .about-content {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .about-content > :last-child {
-    grid-column: 1 / -1;
-  }
+.about-content .lp-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-content: center; /* text block centred vertically in the card */
+  column-gap: var(--space-4);
+  row-gap: 2px;
+  padding: var(--space-3) var(--space-5);
 }
 
-@media (min-width: 60rem) {
-  .about-content {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .about-content > :last-child {
-    grid-column: auto;
-  }
+.about-content .lp-card p {
+  line-height: var(--leading-normal);
 }
 
+/* same icon tile size as the Features cards, centred against the text */
+.about-content .lp-icon {
+  grid-row: 1 / span 2;
+  align-self: center;
+}
+
+/* Stacked layout: the photo becomes a banner under the navbar */
 @media (max-width: 56rem) {
-  .about-intro {
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-5);
+  .lp-section.about-section {
+    justify-content: flex-start;
+    padding-top: 3rem; /* mobile navbar height */
+    padding-bottom: var(--space-6);
   }
 
-  .about-intro-image {
-    order: -1;
-  }
-
-  .about-intro-image img {
-    aspect-ratio: 16 / 9;
-    max-height: 18rem;
-  }
-
-  .about-intro-text .lp-section-lead {
-    max-width: none;
+  .about-body {
+    margin-left: 0;
+    margin-top: var(--space-4);
   }
 }

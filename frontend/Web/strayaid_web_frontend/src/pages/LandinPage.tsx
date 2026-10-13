@@ -5,6 +5,7 @@ import Hero from '../components/Hero';
 import About from '../components/About';
 import Features from '../components/Features';
 import GetStarted from '../components/GetStarted';
+import ScrollProgress from '../components/ScrollProgress';
 import './LandingPage.css';
 
 const LandingPage: React.FC = () => {
@@ -73,6 +74,7 @@ const LandingPage: React.FC = () => {
 
   return (
     <div className="landing-page">
+      <ScrollProgress />
       <Navbar 
         activeSection={activeSection} 
         scrollToSection={scrollToSection}
