@@ -32,11 +32,15 @@ def find_nearby_case(latitude, longitude, user=None, animal=""):
     if user is not None:
         open_cases = open_cases.exclude(reports__user=user)
 
+    # Several open cases can be close by; join the nearest, and the oldest if they're as near.
+    # (The query has no reliable order: Django skips Meta.ordering when aggregating.)
+    matches = []
     for case in open_cases:
-        if calculate_distance(latitude, longitude, case.latitude, case.longitude) > FIFTEEN_FEET_IN_METERS:
+        distance = calculate_distance(latitude, longitude, case.latitude, case.longitude)
+        if distance > FIFTEEN_FEET_IN_METERS:
             continue
         labels = {report.ai_animal_label for report in case.reports.all() if report.ai_animal_label}
         if animal and labels and animal not in labels:
             continue
-        return case
-    return None
+        matches.append((distance, case.created_at, case.pk, case))
+    return min(matches, key=lambda match: match[:3])[3] if matches else None

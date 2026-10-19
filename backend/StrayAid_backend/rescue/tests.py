@@ -1069,7 +1069,7 @@ class ScoreOverTimeTests(MediaEnabledAPITestCase):
         from .utils import scoring
 
         self.age_reports(500)
-        scoring._last_refresh = 0.0
+        scoring._last_refresh = None
         self.client.get("/api/cases/trending/")
 
         self.case.refresh_from_db()

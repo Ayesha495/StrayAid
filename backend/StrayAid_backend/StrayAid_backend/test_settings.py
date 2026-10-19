@@ -21,6 +21,7 @@ MIGRATION_MODULES = {
     "accounts": None,
     "notifications": None,
     "animals": None,
+    "chat": None,
     "organizations": None,
     "posts": None,
     "rescue": None,

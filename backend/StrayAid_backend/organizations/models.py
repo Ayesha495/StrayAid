@@ -29,9 +29,31 @@ class Organization(models.Model):
     bank_account_number = models.CharField(max_length=100, blank=True)
     tax_id = models.CharField(max_length=100, blank=True)
     payment_notes = models.CharField(max_length=255, blank=True)
+    # What the shelter hopes to raise each month for medical supplies (organization profile).
+    supply_goal_pkr = models.PositiveIntegerField(default=100000)
 
     class Meta:
         ordering = ["name"]
 
     def __str__(self):
         return self.name
+
+
+class ShelterDonation(models.Model):
+    """A gift to the shelter as a whole (the organization profile's "Sponsor Shelter Medical
+    Supplies"), confirmed by the organization once the transfer receipt checks out."""
+
+    STATUS_CHOICES = [("pending", "Pending"), ("confirmed", "Confirmed"), ("rejected", "Rejected")]
+
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name="donations")
+    donor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="shelter_donations")
+    amount_pkr = models.PositiveIntegerField()
+    receipt = models.ImageField(upload_to="receipts/", null=True, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"PKR {self.amount_pkr} for {self.organization.name} ({self.status})"

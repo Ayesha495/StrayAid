@@ -32,6 +32,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
             "bank_account_number",
             "tax_id",
             "payment_notes",
+            "supply_goal_pkr",
             "is_verified",
         ]
         read_only_fields = ["id", "user", "user_email", "user_username", "is_verified"]

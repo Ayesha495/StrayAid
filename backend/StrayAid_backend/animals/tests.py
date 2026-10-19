@@ -248,6 +248,13 @@ class AnimalProfileTests(MediaEnabledAPITestCase):
         self.assertEqual(data["application_count"], 1)  # withdrawn ones don't count
         self.assertEqual(data["sponsor_count"], 1)  # people with a confirmed pledge, counted once
         self.assertTrue(data["ai_verified"])
+
+    def test_funding_counts_only_confirmed_money_towards_the_goal(self):
+        self.animal.funding_goal_pkr = 15000
+        self.animal.save(update_fields=["funding_goal_pkr"])
+        data = self.client.get(f"/api/animals/{self.animal.id}/").data
+        # 500 + 1000 confirmed; the pending 500 waits for its receipt to be checked.
+        self.assertEqual((data["funding_goal_pkr"], data["raised_pkr"]), (15000, 1500))
         self.assertEqual(data["photos"], [])
 
     def test_unverified_rescue_has_no_shield(self):
@@ -255,3 +262,200 @@ class AnimalProfileTests(MediaEnabledAPITestCase):
         self.animal.case.save()
 
         self.assertFalse(self.client.get(f"/api/animals/{self.animal.id}/").data["ai_verified"])
+
+
+class AdoptionApplyTests(MediaEnabledAPITestCase):
+    """Sending an adoption application (Stitch 14)."""
+
+    def setUp(self):
+        from unittest.mock import patch
+
+        org_user = User.objects.create_user(email="o@example.com", username="o", password="x", role="organization")
+        self.organization = Organization.objects.create(user=org_user, name="Safe Paws", city="Islamabad")
+        reporter = User.objects.create_user(email="r@example.com", username="r", password="x")
+        self.adopter = User.objects.create_user(email="a@example.com", username="a", password="x")
+        case = Case.objects.create(description="Cat", latitude=33.7, longitude=73.0, reported_by=reporter, organization=self.organization)
+        self.animal = Animal.objects.create(case=case, organization=self.organization, name="Luna", species="Cat",
+                                            status=Animal.STATUS_ADOPTABLE)
+        self.form = {
+            "full_name": "  Hira   Malik ", "phone": "+92 300 1234567", "home_type": "apartment", "has_other_pets": False,
+            "city": "Islamabad", "ownership": "rent", "landlord_allows_pets": True, "household_size": 3,
+            "has_children": True, "hours_alone": 4, "experience": "some",
+            "reason": "We have a quiet flat and lots of time to care for Luna.", "care_plan": "",
+            "agrees_home_visit": True, "agrees_return_policy": True,
+        }
+        self.notify = patch("notifications.services.notify_users")
+        self.notified = self.notify.start()
+        self.addCleanup(self.notify.stop)
+
+    def url(self):
+        return f"/api/animals/{self.animal.id}/apply/"
+
+    def test_application_is_saved_and_the_organization_is_told(self):
+        self.client.force_authenticate(user=self.adopter)
+
+        response = self.client.post(self.url(), self.form, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+        application = self.animal.adoption_applications.get()
+        self.assertEqual((application.full_name, application.status, application.applicant), ("Hira Malik", "pending", self.adopter))
+        self.assertEqual(self.notified.call_args.args[0], [self.organization.user_id])
+        my = self.client.get(f"/api/animals/{self.animal.id}/").data["my_application"]
+        self.assertEqual(my, {"id": application.id, "status": "pending"})
+
+    def test_one_active_application_per_person(self):
+        self.client.force_authenticate(user=self.adopter)
+        self.client.post(self.url(), self.form, format="json")
+
+        again = self.client.post(self.url(), self.form, format="json")
+
+        self.assertEqual(again.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(self.animal.adoption_applications.count(), 1)
+
+    def test_only_adoptable_animals_and_signed_in_people(self):
+        self.assertEqual(self.client.post(self.url(), self.form, format="json").status_code, status.HTTP_401_UNAUTHORIZED)
+        self.animal.status = Animal.STATUS_RECOVERING
+        self.animal.save()
+        self.client.force_authenticate(user=self.adopter)
+
+        self.assertEqual(self.client.post(self.url(), self.form, format="json").status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_required_answers_and_promises(self):
+        self.client.force_authenticate(user=self.adopter)
+        bad = {**self.form, "phone": "123", "reason": "Cute", "landlord_allows_pets": None, "agrees_return_policy": False}
+
+        response = self.client.post(self.url(), bad, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        for field in ("phone", "reason"):
+            self.assertIn(field, response.data)
+        self.assertEqual(self.animal.adoption_applications.count(), 0)
+
+    def test_organization_cannot_adopt_its_own_animal(self):
+        self.client.force_authenticate(user=self.organization.user)
+
+        self.assertEqual(self.client.post(self.url(), self.form, format="json").status_code, status.HTTP_400_BAD_REQUEST)
+
+
+def make_png(name="receipt.png"):
+    """A real (tiny) image, for fields that check the upload is a picture."""
+    import io
+
+    from django.core.files.uploadedfile import SimpleUploadedFile
+    from PIL import Image
+
+    buffer = io.BytesIO()
+    Image.new("RGB", (8, 8), "green").save(buffer, format="PNG")
+    return SimpleUploadedFile(name, buffer.getvalue(), content_type="image/png")
+
+
+class MyApplicationsTests(MediaEnabledAPITestCase):
+    """My Applications (Stitch 15): listing, withdrawing, and the organization's decision."""
+
+    def setUp(self):
+        org_user = User.objects.create_user(email="o@example.com", username="o", password="x", role="organization")
+        self.org_user = org_user
+        self.organization = Organization.objects.create(user=org_user, name="Safe Paws", city="Islamabad")
+        reporter = User.objects.create_user(email="r@example.com", username="r", password="x")
+        self.adopter = User.objects.create_user(email="a@example.com", username="a", password="x", first_name="Hira")
+        case = Case.objects.create(description="Cat", latitude=33.7, longitude=73.0, reported_by=reporter, organization=self.organization)
+        self.animal = Animal.objects.create(case=case, organization=self.organization, name="Luna", species="Cat",
+                                            status=Animal.STATUS_ADOPTABLE)
+        from .models import AdoptionApplication
+
+        self.application = AdoptionApplication.objects.create(
+            animal=self.animal, applicant=self.adopter, full_name="Hira Malik", phone="+92 300 1234567", home_type="house"
+        )
+
+    def test_people_see_only_their_own_applications_with_the_animal(self):
+        stranger = User.objects.create_user(email="s@example.com", username="s", password="x")
+        self.client.force_authenticate(user=stranger)
+        self.assertEqual(self.client.get("/api/animals/applications/").data, [])
+
+        self.client.force_authenticate(user=self.adopter)
+        rows = self.client.get("/api/animals/applications/").data
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["animal"]["name"], "Luna")
+        self.assertEqual(rows[0]["animal"]["organization"]["name"], "Safe Paws")
+        self.assertEqual(self.client.get("/api/animals/applications/?status=approved").data, [])
+        # The animal list still works next to the new routes.
+        self.assertEqual(self.client.get("/api/animals/public/").status_code, status.HTTP_200_OK)
+
+    def test_withdrawing_closes_it_and_lets_you_apply_again(self):
+        self.client.force_authenticate(user=self.adopter)
+        response = self.client.post(f"/api/animals/applications/{self.application.id}/withdraw/")
+        self.assertEqual(response.data["status"], "withdrawn")
+        self.assertIsNotNone(response.data["decided_at"])
+        self.assertIsNone(self.client.get(f"/api/animals/{self.animal.id}/").data["my_application"])
+        again = self.client.post(f"/api/animals/applications/{self.application.id}/withdraw/")
+        self.assertEqual(again.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_the_organization_decides_and_the_applicant_is_told(self):
+        from notifications.models import Notification
+
+        self.client.force_authenticate(user=self.adopter)
+        forbidden = self.client.post(f"/api/animals/applications/{self.application.id}/decide/", {"status": "approved"})
+        self.assertEqual(forbidden.status_code, status.HTTP_403_FORBIDDEN)
+
+        self.client.force_authenticate(user=self.org_user)
+        self.assertEqual(len(self.client.get("/api/animals/applications/").data), 1)
+        response = self.client.post(f"/api/animals/applications/{self.application.id}/decide/", {"status": "approved"})
+        self.assertEqual(response.data["status"], "approved")
+        note = Notification.objects.get(user=self.adopter)
+        self.assertEqual((note.kind, note.data["application_id"]), ("adoption", self.application.id))
+        self.assertIn("**Luna**", note.body)
+
+
+class SponsorTests(MediaEnabledAPITestCase):
+    """Pledging support with a transfer receipt (Stitch 16)."""
+
+    def setUp(self):
+        self.org_user = User.objects.create_user(email="o@example.com", username="o", password="x", role="organization")
+        self.organization = Organization.objects.create(
+            user=self.org_user, name="Safe Paws", city="Islamabad", bank_name="HBL", bank_account_title="Safe Paws",
+            bank_account_number="0202-0000000202",
+        )
+        reporter = User.objects.create_user(email="r@example.com", username="r", password="x")
+        self.sponsor = User.objects.create_user(email="s@example.com", username="s", password="x", first_name="Sara", last_name="Ahmed")
+        case = Case.objects.create(description="Dog", latitude=33.7, longitude=73.0, reported_by=reporter, organization=self.organization)
+        self.animal = Animal.objects.create(case=case, organization=self.organization, name="Max", species="Dog",
+                                            status=Animal.STATUS_RECOVERING, sponsor_goal=50)
+
+    def pledge(self, **extra):
+        return self.client.post(f"/api/animals/{self.animal.id}/sponsor/",
+                                {"amount_pkr": 1000, "monthly": "true", "receipt": make_png(), **extra}, format="multipart")
+
+    def test_pledge_is_saved_pending_and_both_sides_are_told(self):
+        from notifications.models import Notification
+
+        self.client.force_authenticate(user=self.sponsor)
+        response = self.pledge()
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+        self.assertEqual((response.data["status"], response.data["amount_pkr"], response.data["monthly"]), ("pending", 1000, True))
+        self.assertEqual(Notification.objects.filter(kind="sponsorship").count(), 2)
+        self.assertTrue(Notification.objects.filter(user=self.org_user, body__contains="PKR 1,000 a month").exists())
+
+        profile = self.client.get(f"/api/animals/{self.animal.id}/").data
+        self.assertEqual(profile["my_sponsorship"]["status"], "pending")
+        self.assertEqual((profile["sponsor_goal"], profile["sponsor_count"]), (50, 0))
+        # One pledge waits for its receipt check before the next.
+        self.assertEqual(self.pledge().status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_confirmed_pledges_count_as_sponsors(self):
+        self.client.force_authenticate(user=self.sponsor)
+        pledge_id = self.pledge().data["id"]
+        self.client.force_authenticate(user=self.org_user)
+        response = self.client.post(f"/api/animals/sponsorships/{pledge_id}/review/", {"status": "confirmed"})
+        self.assertEqual(response.data["status"], "confirmed")
+        profile = self.client.get(f"/api/animals/{self.animal.id}/").data
+        self.assertEqual((profile["sponsor_count"], profile["sponsor_initials"]), (1, ["SA"]))
+
+    def test_receipt_amount_and_animal_are_checked(self):
+        self.client.force_authenticate(user=self.sponsor)
+        no_receipt = self.client.post(f"/api/animals/{self.animal.id}/sponsor/", {"amount_pkr": 1000}, format="multipart")
+        self.assertIn("receipt", no_receipt.data)
+        self.assertIn("amount_pkr", self.pledge(amount_pkr=50).data)
+
+        self.animal.status = Animal.STATUS_ADOPTED
+        self.animal.save()
+        self.assertEqual(self.pledge().status_code, status.HTTP_400_BAD_REQUEST)
