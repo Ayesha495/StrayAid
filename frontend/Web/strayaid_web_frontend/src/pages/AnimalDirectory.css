@@ -1,0 +1,32 @@
+.directory { display: grid; gap: 20px; }
+
+.directory-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.directory-head h1 { color: #12151c; font-size: var(--text-3xl); font-weight: 800; letter-spacing: -0.02em; }
+.directory-head p { max-width: 56ch; margin-top: 6px; color: #6b7686; }
+.directory-search { width: min(360px, 100%); }
+
+.directory-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.directory-sort { display: inline-flex; align-items: center; gap: 8px; }
+.directory-sort .select { width: auto; }
+
+.directory-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 16px;
+}
+
+.directory-more { justify-self: center; }

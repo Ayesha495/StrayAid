@@ -1,6 +1,6 @@
 import type { Animal, Case, DashboardData, Organization, Post, Report } from "../types/platform";
 
-const API_ORIGIN = "http://127.0.0.1:8000";
+import { API_ORIGIN } from "../appConfig";
 
 export const resolveMediaUrl = (value: string | null | undefined) => {
   if (!value) {

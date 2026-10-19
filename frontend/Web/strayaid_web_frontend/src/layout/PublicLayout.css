@@ -1,0 +1,33 @@
+/* Public pages for guests: the shared top bar (SiteNav), the page on the paper canvas, a footer. */
+.public-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: var(--paper);
+  background-image: var(--grain);
+}
+
+.public-main { flex: 1; }
+
+.public-footer {
+  border-top: 1px solid var(--line);
+  background: #fbfaf6;
+  box-shadow: inset 0 1px 0 #fff;
+}
+
+.public-footer-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 24px;
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.public-footer-inner p:last-child { margin-left: auto; }
+
+@media (max-width: 760px) {
+  .public-footer-inner { padding: 20px 16px; }
+  .public-footer-inner p:last-child { margin-left: 0; }
+}

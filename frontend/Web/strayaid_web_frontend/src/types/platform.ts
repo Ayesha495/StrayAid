@@ -17,6 +17,9 @@ export interface Organization {
   tax_id?: string;
   payment_notes?: string;
   is_verified?: boolean;
+  supply_goal_pkr?: number | null;
+  is_available?: boolean;
+  user?: number;
   user_email?: string;
   user_username?: string;
 }
@@ -41,7 +44,15 @@ export interface Report {
   image: string;
   created_at: string;
   user_email?: string;
+  user?: number;
+  severity?: Severity;
+  ai_animal_confidence?: number | null;
+  ai_animal_label?: string;
+  ai_box?: number[] | null;
 }
+
+export type Severity = "low" | "medium" | "high" | "critical";
+export type CaseStatus = "reported" | "assigned" | "in_progress" | "rescued" | "adoption" | "closed";
 
 export interface Case {
   id: number;
@@ -55,6 +66,18 @@ export interface Case {
   organization: Organization | null;
   distance_km?: number | null;
   reports: Report[];
+  reference?: string;
+  status_label?: string;
+  title?: string;
+  species?: string;
+  area?: string;
+  severity?: Severity;
+  confidence_score?: number | null;
+  possibly_invalid?: boolean;
+  reported_by?: number;
+  assigned_to?: number | null;
+  update_count?: number;
+  ai_feedback_count?: number;
 }
 
 export interface Animal {
@@ -76,6 +99,17 @@ export interface Animal {
   case_id: number;
   organization: Organization;
   created_at: string;
+  health?: string;
+  vaccinated?: boolean;
+  photos?: string[];
+  sponsor_count?: number;
+  sponsor_goal?: number;
+  application_count?: number;
+  funding_goal_pkr?: number;
+  raised_pkr?: number;
+  sponsor_initials?: string[];
+  ai_verified?: boolean;
+  area?: string;
 }
 
 export type PostCategory = "medical" | "adoption" | "sponsorship" | "foster" | "";
@@ -90,6 +124,11 @@ export interface Post {
   updated_at?: string;
   animal: Animal;
   organization: Organization;
+  like_count?: number;
+  comment_count?: number;
+  liked_by_me?: boolean;
+  saved_by_me?: boolean;
+  share_count?: number;
 }
 
 export interface DashboardData {

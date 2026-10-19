@@ -1,13 +1,16 @@
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
+import { Circle, CircleMarker, MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import L from "leaflet";
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
 import { Clock, Home, Inbox, Mail, MapPin, Navigation, Stethoscope, Truck } from "lucide-react";
-import type { Animal, Case, Report } from "../types/platform";
+import type { Animal, Case, Organization, Report } from "../types/platform";
+import ScoreBadge from "../ui/ScoreBadge";
+import { byScore } from "../utils/cases";
 import { formatRelativeTime } from "../utils/time";
+import { formatDuration } from "../utils/format";
 import "../styles/CasesWorkflow.css";
 
 type RescueBoardProps = {
@@ -15,6 +18,7 @@ type RescueBoardProps = {
   animals?: Animal[];
   heading?: string;
   copy?: string;
+  organization?: Organization | null;
 };
 
 type KpiTone = "blue" | "amber" | "green" | "purple";
@@ -37,6 +41,34 @@ const defaultIcon = L.icon({
 
 const DEFAULT_CENTER: [number, number] = [30.3753, 69.3451];
 
+function hasLocation(organization?: Organization | null): organization is Organization {
+  return Boolean(organization && Number.isFinite(organization.latitude) && Number.isFinite(organization.longitude));
+}
+
+// MapContainer only reads `center` and `zoom` when it first mounts, but cases arrive later.
+// Re-frame the map around the pins (and the organization's service area) whenever they change.
+function FitToCases({ cases, organization }: { cases: Case[]; organization?: Organization | null }) {
+  const map = useMap();
+  const pinKey = cases.map((caseItem) => `${caseItem.id}:${caseItem.latitude},${caseItem.longitude}`).join("|");
+  const orgKey = hasLocation(organization) ? `${organization.latitude},${organization.longitude},${organization.radius ?? 0}` : "";
+
+  useEffect(() => {
+    const bounds = L.latLngBounds([]);
+    cases.forEach((caseItem) => bounds.extend([caseItem.latitude, caseItem.longitude]));
+    if (hasLocation(organization)) {
+      const home = L.latLng(organization.latitude, organization.longitude);
+      bounds.extend(organization.radius ? home.toBounds(organization.radius * 2000) : home);
+    }
+    if (bounds.isValid()) {
+      map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
+    }
+    // pinKey and orgKey capture everything the bounds depend on.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, pinKey, orgKey]);
+
+  return null;
+}
+
 function daysInCare(dateString: string): number {
   const then = new Date(dateString).getTime();
   if (Number.isNaN(then)) {
@@ -52,8 +84,9 @@ function reporterLabel(report?: Report): string {
   return report.user_email && report.user_email.trim() ? report.user_email : "Anonymous report";
 }
 
-function RescueBoard({ cases, animals = [], heading = "Case Management", copy }: RescueBoardProps) {
-  const reportedCases = cases.filter((caseItem) => !caseItem.organization && caseItem.status === "reported");
+function RescueBoard({ cases, animals = [], heading = "Case Management", copy, organization }: RescueBoardProps) {
+  // Highest AI priority first, so the most urgent reports are at the top.
+  const reportedCases = cases.filter((caseItem) => !caseItem.organization && caseItem.status === "reported").sort(byScore);
   const inProgressCases = cases.filter(
     (caseItem) => Boolean(caseItem.organization) && ["assigned", "in_progress"].includes(caseItem.status)
   );
@@ -71,7 +104,7 @@ function RescueBoard({ cases, animals = [], heading = "Case Management", copy }:
         return total + (updated - created) / 60000;
       }, 0) / claimedCases.length
     : null;
-  const avgResponseLabel = avgResponseMinutes === null ? "N/A" : `${avgResponseMinutes.toFixed(1)} mins`;
+  const avgResponseLabel = avgResponseMinutes === null ? "N/A" : formatDuration(avgResponseMinutes);
 
   const kpis: Kpi[] = [
     { key: "pending", label: "Pending Claim", value: reportedCases.length, icon: <Inbox size={18} />, tone: "blue" },
@@ -121,10 +154,28 @@ function RescueBoard({ cases, animals = [], heading = "Case Management", copy }:
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
+            <FitToCases cases={reportedCases} organization={organization} />
+            {hasLocation(organization) && organization.radius ? (
+              <Circle
+                center={[organization.latitude, organization.longitude]}
+                radius={organization.radius * 1000}
+                pathOptions={{ color: "#2563eb", weight: 1.5, fillOpacity: 0.06 }}
+              />
+            ) : null}
+            {hasLocation(organization) ? (
+              <CircleMarker
+                center={[organization.latitude, organization.longitude]}
+                radius={7}
+                pathOptions={{ color: "#ffffff", weight: 2, fillColor: "#2563eb", fillOpacity: 1 }}
+              >
+                <Popup>Your base: {organization.name}</Popup>
+              </CircleMarker>
+            ) : null}
             {reportedCases.map((caseItem) => (
               <Marker key={caseItem.id} position={[caseItem.latitude, caseItem.longitude]} icon={defaultIcon}>
                 <Popup>
-                  <strong>Case #{caseItem.id}</strong>
+                  <strong>Case #{caseItem.id}</strong>{" "}
+                  <ScoreBadge score={caseItem.confidence_score} compact />
                   <div>{caseItem.description}</div>
                   <div style={{ marginTop: "8px" }}>
                     <Link className="inline-link" to={`/cases/${caseItem.id}`}>View case details</Link>
@@ -162,7 +213,7 @@ function RescueBoard({ cases, animals = [], heading = "Case Management", copy }:
               const report = caseItem.reports[0];
               return (
                 <Link className="status-card status-card-blue" key={caseItem.id} to={`/cases/${caseItem.id}`}>
-                  <strong>Case #{caseItem.id}</strong>
+                  <strong>Case #{caseItem.id}</strong> <ScoreBadge score={caseItem.confidence_score} compact />
                   <p>{caseItem.description}</p>
                   <p className="status-card-meta">Reported {formatRelativeTime(caseItem.created_at)}</p>
                   {report ? (

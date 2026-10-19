@@ -1,0 +1,76 @@
+.funding {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.funding-numbers {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.funding-raised {
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.funding-goal {
+  color: var(--color-ink-muted);
+  font-size: var(--text-md);
+}
+
+.funding-track {
+  position: relative;
+  height: 10px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--amber-50);
+  box-shadow: inset 0 0 0 1px var(--amber-100);
+}
+
+.funding-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--amber-500), #e9a23b);
+}
+
+.funding.is-funded .funding-fill { background: linear-gradient(90deg, var(--emerald-500), var(--green-700)); }
+
+.funding-tick {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  width: 2px;
+  border-radius: 1px;
+  background: rgba(255, 255, 255, 0.9);
+  transform: translateX(-1px);
+}
+
+.funding-tick:not(.is-reached) { background: var(--amber-100); }
+
+.funding-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  color: var(--color-ink-muted);
+  font-size: var(--text-sm);
+}
+
+.funding-meta strong { color: var(--amber-800); }
+.funding.is-funded .funding-meta strong { color: var(--emerald-700); }
+
+.funding-sm .funding-raised { font-size: var(--text-lg); }
+.funding-sm .funding-goal { font-size: var(--text-sm); }
+.funding-sm .funding-track { height: 7px; }
+.funding-sm .funding-tick { display: none; }
+
+.funding-empty {
+  color: var(--color-ink-muted);
+  font-size: var(--text-sm);
+}

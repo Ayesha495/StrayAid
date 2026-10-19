@@ -1,0 +1,51 @@
+/* Instagram-style update grid */
+.update-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.update-tile {
+  position: relative;
+  aspect-ratio: 1;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--green-50);
+}
+
+.update-tile img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+.update-tile:hover img { transform: scale(1.04); }
+
+.update-tile-text {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  padding: var(--space-3);
+  color: var(--green-800);
+  font-weight: 700;
+  text-align: center;
+}
+
+.update-tile-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  background: rgba(18, 37, 29, 0.5);
+  color: #fff;
+  font-weight: 700;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.update-tile-overlay span { display: flex; align-items: center; gap: 4px; }
+.update-tile:hover .update-tile-overlay,
+.update-tile:focus-visible .update-tile-overlay { opacity: 1; }
+
+@media (max-width: 640px) {
+  .update-grid { gap: 3px; }
+}

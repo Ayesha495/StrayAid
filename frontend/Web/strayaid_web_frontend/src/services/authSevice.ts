@@ -1,11 +1,9 @@
 import API from "../api/axios";
+import { GOOGLE_CLIENT_ID } from "../appConfig";
 import { useMemo, useSyncExternalStore } from "react";
 import type { CurrentUser, LoginData, RegisterData, TokenResponse } from "../types/authTypes";
 
 const GOOGLE_SCRIPT_SRC = "https://accounts.google.com/gsi/client";
-const GOOGLE_CLIENT_ID =
-  import.meta.env.VITE_GOOGLE_CLIENT_ID ||
-  "998658289609-9afrhr6aesljjbf2o9kdbc10k6vlq1ac.apps.googleusercontent.com";
 
 let googleScriptPromise: Promise<void> | null = null;
 
@@ -43,13 +41,43 @@ export const register = async (data: RegisterData) => {
   return API.post("/auth/users/", data);
 };
 
+/** Email a 6-digit reset code (the reply is the same whether or not the email has an account). */
+export const requestPasswordReset = async (email: string) => {
+  const response = await API.post<{ detail: string }>("/auth/password-reset/", { email });
+  return response.data.detail;
+};
+
+export const confirmPasswordReset = async (data: { email: string; code: string; new_password: string }) => {
+  const response = await API.post<{ detail: string }>("/auth/password-reset/confirm/", data);
+  return response.data.detail;
+};
+
 export const login = async (data: LoginData) => {
   const response = await API.post<TokenResponse>("/auth/jwt/create/", data);
   return response.data;
 };
 
+/** Load Google's script ahead of time, so the sign-in popup opens straight from the click
+ * (browsers block popups that open after a slow network wait). */
+export const preloadGoogle = () => {
+  loadGoogleScript().catch(() => {
+    // Retry on click; the error is shown then.
+    googleScriptPromise = null;
+  });
+};
+
+const GOOGLE_POPUP_ERRORS: Record<string, string> = {
+  popup_closed: "The Google window was closed before signing in.",
+  popup_failed_to_open: "Your browser blocked the Google window. Allow pop-ups for this site and try again.",
+};
+
 export const loginWithGoogle = async () => {
-  await loadGoogleScript();
+  try {
+    await loadGoogleScript();
+  } catch {
+    googleScriptPromise = null;
+    throw new Error("Couldn't reach Google. Check your connection and try again.");
+  }
 
   return new Promise<TokenResponse>((resolve, reject) => {
     const tokenClient = window.google?.accounts?.oauth2.initTokenClient({
@@ -57,7 +85,7 @@ export const loginWithGoogle = async () => {
       scope: "openid email profile",
       callback: async (googleResponse) => {
         if (!googleResponse.access_token) {
-          reject(new Error(googleResponse.error || "Google login failed."));
+          reject(new Error(googleResponse.error_description || googleResponse.error || "Google sign-in failed."));
           return;
         }
 
@@ -70,15 +98,41 @@ export const loginWithGoogle = async () => {
           reject(error);
         }
       },
+      // Without this, closing or blocking the popup left the button doing nothing.
+      error_callback: (error) => {
+        reject(new Error(GOOGLE_POPUP_ERRORS[error.type] || "Google sign-in didn't finish. Please try again."));
+      },
     });
 
     if (!tokenClient) {
-      reject(new Error("Google login is unavailable."));
+      reject(new Error("Google sign-in is unavailable right now."));
       return;
     }
 
     tokenClient.requestAccessToken();
   });
+};
+
+/** Sign in with Google and store the session, returning the signed-in user. */
+export const signInWithGoogle = async () => {
+  const session = await loginWithGoogle();
+  return syncCurrentUser(session);
+};
+
+/** A readable message from a failed login (bad password, Google problem, server down). */
+export const authErrorMessage = (error: unknown, fallback = "Login failed. Please try again.") => {
+  const response = (error as { response?: { status?: number; data?: { detail?: string; non_field_errors?: string[] } } })?.response;
+  if (response) {
+    const detail = response.data?.detail || response.data?.non_field_errors?.[0] || "";
+    if (response.status === 401 || String(detail).toLowerCase().includes("no active account")) {
+      return "The username/email or password is incorrect.";
+    }
+    return detail || fallback;
+  }
+  if ((error as { code?: string })?.code === "ERR_NETWORK") {
+    return "Can't reach the StrayAid server. Please try again in a moment.";
+  }
+  return error instanceof Error && error.message ? error.message : fallback;
 };
 
 const USER_STORAGE_KEY = "currentUser";
@@ -139,27 +193,20 @@ export const getDefaultAuthenticatedRoute = (user: CurrentUser | null) => (
   user?.role === "organization" ? "/dashboard" : "/feed"
 );
 
-const ORGANIZATION_ROUTES = [
-  "/dashboard",
-  "/cases",
-  "/animals",
-  "/organization/register",
-];
+// Pages only one kind of account can use; everything else is shared or public.
+const ORGANIZATION_ONLY = ["/dashboard", "/cases", "/applications", "/funds"];
+const REPORTER_ONLY = ["/my-reports", "/following", "/my-applications", "/organization/register"];
 
+const startsWithAny = (path: string, prefixes: string[]) => prefixes.some((prefix) => path === prefix || path.startsWith(`${prefix}/`));
+
+/** Where to go after logging in: back to where you were, if your account can use that page. */
 export const resolvePostLoginRoute = (user: CurrentUser | null, from?: string) => {
-  if (!from) {
-    return getDefaultAuthenticatedRoute(user);
-  }
-
-  if (user?.role === "organization") {
-    return ORGANIZATION_ROUTES.some((route) => from.startsWith(route))
-      ? from
-      : "/dashboard";
-  }
-
-  return from === "/feed" || from.startsWith("/animals/")
-    ? from
-    : "/feed";
+  const home = getDefaultAuthenticatedRoute(user);
+  if (!from || from === "/" || from === "/login" || from === "/register") return home;
+  const isOrganization = user?.role === "organization";
+  if (isOrganization && startsWithAny(from, REPORTER_ONLY)) return home;
+  if (!isOrganization && (startsWithAny(from, ORGANIZATION_ONLY) || from === "/animals")) return home;
+  return from;
 };
 
 const subscribeToAuth = (callback: () => void) => {
