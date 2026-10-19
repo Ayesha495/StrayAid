@@ -1,175 +1,110 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { login, loginWithGoogle, syncCurrentUser } from "../services/authSevice";
-import "../styles/Login.css";
+import { useState, type FormEvent } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { authErrorMessage, login, resolvePostLoginRoute, signInWithGoogle, syncCurrentUser } from "../services/authSevice";
+import AuthLayout from "../components/auth/AuthLayout";
+import GoogleButton from "../components/auth/GoogleButton";
+import PasswordInput from "../components/auth/PasswordInput";
 
 function Login() {
-    const navigate = useNavigate();
-    const [formData, setFormData] = useState({
-        email: "",
-        password: "",
-    });
-    const [errors, setErrors] = useState<Partial<typeof formData>>({});
-    const [authError, setAuthError] = useState("");
+  const navigate = useNavigate();
+  const location = useLocation();
+  const from = (location.state as { from?: string } | null)?.from;
+  const [form, setForm] = useState({ email: "", password: "" });
+  const [errors, setErrors] = useState<Partial<typeof form>>({});
+  const [authError, setAuthError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-    const getLoginErrorMessage = (error: unknown) => {
-        const response = (error as {
-            response?: {
-                status?: number;
-                data?: { detail?: string; non_field_errors?: string[] };
-            };
-        })?.response;
+  const update = (name: keyof typeof form, value: string) => {
+    setForm((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => ({ ...prev, [name]: "" }));
+    setAuthError("");
+  };
 
-        const detail = response?.data?.detail || response?.data?.non_field_errors?.[0] || "";
-        const normalizedDetail = String(detail).toLowerCase();
+  // Organizations land on their dashboard, everyone else on the feed, or back where they were.
+  const goHome = (user: Awaited<ReturnType<typeof syncCurrentUser>>) => {
+    navigate(resolvePostLoginRoute(user, from), { replace: true });
+  };
 
-        if (response?.status === 401 || normalizedDetail.includes("no active account")) {
-            return "The username/email or password is incorrect.";
-        }
+  const handleGoogle = async () => {
+    setAuthError("");
+    try {
+      goHome(await signInWithGoogle());
+    } catch (error) {
+      setAuthError(authErrorMessage(error, "Google sign-in failed. Please try again."));
+    }
+  };
 
-        return detail || "Login failed. Please try again.";
-    };
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    const nextErrors: Partial<typeof form> = {};
+    if (!form.email.trim()) nextErrors.email = "Enter your email or username.";
+    if (!form.password) nextErrors.password = "Enter your password.";
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length) return;
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
-        setAuthError("");
+    setSubmitting(true);
+    setAuthError("");
+    try {
+      const session = await login({ email: form.email.trim(), password: form.password });
+      goHome(await syncCurrentUser(session));
+    } catch (error) {
+      setAuthError(authErrorMessage(error));
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
-        if (errors[name as keyof typeof formData]) {
-            setErrors((prev) => ({
-                ...prev,
-                [name]: "",
-            }));
-        }
-    };
+  return (
+    <AuthLayout
+      mode="login"
+      title="Welcome back"
+      subtitle="Log in to follow rescues, message rescue teams and manage your work."
+      quote={<><strong>Welcome home.</strong>Every rescue on StrayAid started with someone who stopped to help.</>}
+    >
+      {authError ? <p className="alert alert-error" role="alert">{authError}</p> : null}
 
-    const validateForm = () => {
-        const newErrors: Partial<typeof formData> = {};
+      <GoogleButton onClick={handleGoogle} />
+      <div className="auth-divider">or with your email</div>
 
-        if (!formData.email.trim()) {
-            newErrors.email = "Email or username is required";
-        }
-
-        if (!formData.password) {
-            newErrors.password = "Password is required";
-        }
-
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
-
-    const handleGoogleLogin = () => {
-        loginWithGoogle()
-            .then(async (data) => {
-                await syncCurrentUser(data);
-                navigate("/dashboard", { replace: true });
-            })
-            .catch((error) => {
-                console.error(error);
-                setAuthError(getLoginErrorMessage(error));
-            });
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-
-        if (!validateForm()) {
-            return;
-        }
-        setAuthError("");
-
-        try {
-            const data = await login({
-                email: formData.email,
-                password: formData.password,
-            });
-            await syncCurrentUser(data);
-            navigate("/dashboard", { replace: true });
-        } catch (error) {
-            console.error(error);
-            setAuthError(getLoginErrorMessage(error));
-        }
-
-    };
-
-    return (
-        <div className="login-container">
-            <div className="login-left-image">
-                <div className="image-overlay">
-                    <div className="inspirational-text">
-                        Every life matters.<br />Make a difference.
-                    </div>
-                </div>
-            </div>
-
-            <div className="right-container">
-                <div className="login-card">
-                    <div className="login-header">
-                        <h2>Welcome Back</h2>
-                        <p>Login to manage and protect stray animals with StrayAid.</p>
-                    </div>
-                    {authError && <p className="auth-error">{authError}</p>}
-
-                    <form className="login-form" onSubmit={handleSubmit}>
-                        <div className="form-group">
-                            <label htmlFor="email">Email or Username</label>
-                            <input
-                                id="email"
-                                type="text"
-                                name="email"
-                                value={formData.email}
-                                onChange={handleChange}
-                                placeholder="Enter your email or username"
-                            />
-                            {errors.email && <span>{errors.email}</span>}
-                        </div>
-
-                        <div className="form-group">
-                            <label htmlFor="password">Password</label>
-                            <input
-                                id="password"
-                                type="password"
-                                name="password"
-                                value={formData.password}
-                                onChange={handleChange}
-                                placeholder="Enter your password"
-                            />
-                            {errors.password && <span>{errors.password}</span>}
-                        </div>
-
-                        <div className="forgot-password">
-                            <a href="/forgot-password">Forgot Password?</a>
-                        </div>
-
-                        <button type="submit" className="login-btn">
-                            Login
-                        </button>
-
-                        <div className="or-divider">
-                            <span>OR</span>
-                        </div>
-
-                        <button type="button" className="google-btn" onClick={handleGoogleLogin}>
-                            <svg className="google-icon" viewBox="0 0 24 24" aria-hidden="true">
-                                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                            </svg>
-                            Continue with Google
-                        </button>
-                    </form>
-
-                    <div className="login-footer">
-                        Don't have an account? <Link to="/register">Sign up</Link>
-                    </div>
-                </div>
-            </div>
+      <form className="auth-form" onSubmit={handleSubmit} noValidate>
+        <div className="field">
+          <label className="field-label" htmlFor="email">Email or username</label>
+          <input
+            id="email"
+            className="input"
+            autoComplete="username"
+            value={form.email}
+            onChange={(event) => update("email", event.target.value)}
+            aria-invalid={Boolean(errors.email)}
+            aria-describedby={errors.email ? "email-error" : undefined}
+          />
+          {errors.email ? <span id="email-error" className="field-error">{errors.email}</span> : null}
         </div>
-    );
+
+        <div className="field">
+          <div className="auth-row">
+            <label className="field-label" htmlFor="password">Password</label>
+            <Link to="/forgot-password" className="auth-link">Forgot password?</Link>
+          </div>
+          <PasswordInput
+            id="password"
+            autoComplete="current-password"
+            value={form.password}
+            onChange={(event) => update("password", event.target.value)}
+            aria-invalid={Boolean(errors.password)}
+            aria-describedby={errors.password ? "password-error" : undefined}
+          />
+          {errors.password ? <span id="password-error" className="field-error">{errors.password}</span> : null}
+        </div>
+
+        <button type="submit" className="btn btn-primary btn-block auth-submit" disabled={submitting}>
+          {submitting ? "Logging in…" : "Log in"}
+        </button>
+      </form>
+
+      <p className="auth-foot">New to StrayAid? <Link to="/register">Create a free account</Link></p>
+    </AuthLayout>
+  );
 }
 
 export default Login;

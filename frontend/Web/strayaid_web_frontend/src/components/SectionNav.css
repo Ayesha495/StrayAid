@@ -1,0 +1,32 @@
+.section-nav {
+  position: sticky;
+  top: calc(var(--section-nav-offset, 0px));
+  z-index: 20;
+  display: flex;
+  gap: var(--space-1);
+  margin: 0 0 var(--space-5);
+  padding: 6px;
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: var(--shadow-1);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  scrollbar-width: none;
+}
+
+.section-nav a {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  color: var(--color-ink-muted);
+  font-size: var(--text-md);
+  font-weight: 600;
+}
+
+.section-nav a:hover { background: var(--navy-50); color: var(--color-ink); }
+.section-nav a.is-active { background: var(--green-50); color: var(--green-700); }
+
+/* Anchored sections stop below the sticky header and this nav. */
+.profile-section { scroll-margin-top: 140px; }

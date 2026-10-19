@@ -11,16 +11,19 @@ import {
   Megaphone,
   PawPrint,
   Plus,
-  RotateCcw,
   Send,
   Stethoscope,
   UploadCloud,
   Users,
 } from "lucide-react";
 import AnimalCard from "../components/AnimalCard";
+import FundingMeter from "../components/FundingMeter";
+import Modal from "../ui/Modal";
 import { createAnimal, createPost, getMyCases, getOrganizationAnimals, getPublicFeed, updateAnimal } from "../services/platformService";
 import type { Animal, Case, Post, PostCategory } from "../types/platform";
 import { formatRelativeTime } from "../utils/time";
+import Combobox from "../ui/Combobox";
+import { breedsFor } from "../data/breeds";
 import "../styles/Portal.css";
 import "../styles/AnimalManagement.css";
 
@@ -33,6 +36,7 @@ const emptyAnimalForm = {
   age: "",
   color: "",
   microchip_id: "",
+  funding_goal_pkr: "",
   description: "",
   medical_info: "",
   status: "rescued",
@@ -52,13 +56,6 @@ const CATEGORY_OPTIONS: { value: PostCategory; label: string; icon: LucideIcon }
   { value: "adoption", label: "Adoption Ready", icon: House },
   { value: "sponsorship", label: "Sponsorship Goal", icon: HeartHandshake },
   { value: "foster", label: "Foster Found", icon: Users },
-];
-
-const FILTERS: { key: "all" | "recovering" | "adoptable" | "adopted"; label: string }[] = [
-  { key: "all", label: "All Animals" },
-  { key: "recovering", label: "Recovering" },
-  { key: "adoptable", label: "Adoptable" },
-  { key: "adopted", label: "Adopted" },
 ];
 
 function toFormData(values: Record<string, string | File | null>): FormData {
@@ -88,6 +85,9 @@ function AnimalManagement() {
   });
   const [postForm, setPostForm] = useState(emptyPostForm);
   const [animalImagePreview, setAnimalImagePreview] = useState<string | null>(null);
+  // Arriving from a case ("Create animal profile") opens the form straight away.
+  const [showForm, setShowForm] = useState(Boolean(searchParams.get("caseId")));
+  const [showPost, setShowPost] = useState(false);
 
   const loadData = async () => {
     const [animalsData, casesData] = await Promise.all([getOrganizationAnimals(), getMyCases()]);
@@ -114,6 +114,7 @@ function AnimalManagement() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- loadData only sets state after its first await
     loadData().catch(console.error);
   }, []);
 
@@ -141,6 +142,7 @@ function AnimalManagement() {
     event.preventDefault();
     await createAnimal(toFormData(animalForm));
     resetAnimalForm();
+    setShowForm(false);
     loadData().catch(console.error);
   };
 
@@ -153,6 +155,7 @@ function AnimalManagement() {
     event.preventDefault();
     await createPost(toFormData(postForm));
     setPostForm(emptyPostForm);
+    setShowPost(false);
     loadData().catch(console.error);
   };
 
@@ -169,25 +172,56 @@ function AnimalManagement() {
 
   const filteredAnimals = activeFilter === "all" ? animals : animals.filter((animal) => animal.status === activeFilter);
 
+  const TILES: { key: typeof activeFilter; label: string; hint: string; icon: LucideIcon; tint: string }[] = [
+    { key: "all", label: "All animals", hint: "in your care", icon: LayoutGrid, tint: "blue" },
+    { key: "recovering", label: "Recovering", hint: "being treated", icon: Stethoscope, tint: "coral" },
+    { key: "adoptable", label: "Adoptable", hint: "ready for a home", icon: House, tint: "purple" },
+    { key: "adopted", label: "Adopted", hint: "happy endings", icon: HeartHandshake, tint: "green" },
+  ];
+
   return (
     <div className="portal-page">
       <div className="portal-header">
         <div>
           <h1>Animals</h1>
-          <p>Create profiles for rescued animals, move them into adoption, mark them adopted, and publish public updates.</p>
+          <p>Every animal in your care: track recovery, open them for adoption and share updates.</p>
+        </div>
+        <div className="portal-actions">
+          <button className="secondary-btn" type="button" onClick={() => setShowPost(true)} disabled={!animals.length}>
+            <Megaphone size={15} /> Post update
+          </button>
+          <button className="primary-btn" type="button" onClick={() => setShowForm(true)} aria-expanded={showForm} aria-controls="add-animal">
+            <Plus size={15} /> Add animal
+          </button>
         </div>
       </div>
 
-      <div className="am-top-grid">
-        <section className="panel-card am-section">
+      {/* The four statuses double as filters: one glance tells the team where everyone is. */}
+      <div className="am-tiles" role="group" aria-label="Filter animals by status">
+        {TILES.map((tile) => (
+          <button
+            key={tile.key}
+            type="button"
+            className={`am-tile tint-${tile.tint}${activeFilter === tile.key ? " is-active" : ""}`}
+            aria-pressed={activeFilter === tile.key}
+            onClick={() => setActiveFilter(tile.key)}
+          >
+            <span className="am-tile-icon"><tile.icon size={16} /></span>
+            <span className="am-tile-value">{filterCounts[tile.key]}</span>
+            <span className="am-tile-label">{tile.label} <span>{tile.hint}</span></span>
+          </button>
+        ))}
+      </div>
+
+      {showForm ? (
+        <section className="panel-card am-section" id="add-animal" aria-labelledby="add-animal-title">
           <div className="am-section-heading">
             <span className="am-section-icon"><PawPrint size={16} /></span>
             <div>
-              <h2>Create Animal Profile</h2>
-              <p className="meta-line">Link rescued case, establish identification, and register medical history.</p>
+              <h2 id="add-animal-title">Add an animal</h2>
+              <p className="meta-line">Create a profile for an animal from one of your rescued cases. It appears on your public page.</p>
             </div>
           </div>
-
           <form className="am-form" onSubmit={handleAnimalCreate}>
             <label className="am-field">
               <span className="am-field-label">Case Reference <span className="am-required">*</span></span>
@@ -204,11 +238,23 @@ function AnimalManagement() {
               </label>
               <label className="am-field">
                 <span className="am-field-label">Breed</span>
-                <input value={animalForm.breed} onChange={(e) => setAnimalForm({ ...animalForm, breed: e.target.value })} />
+                <Combobox
+                  bare
+                  label="Breed"
+                  value={animalForm.breed}
+                  options={breedsFor(animalForm.species)}
+                  placeholder="Search or type a breed"
+                  onChange={(breed) => setAnimalForm({ ...animalForm, breed })}
+                />
               </label>
               <label className="am-field">
                 <span className="am-field-label">Species</span>
-                <input placeholder="Dog, Cat..." value={animalForm.species} onChange={(e) => setAnimalForm({ ...animalForm, species: e.target.value })} />
+                <select value={animalForm.species} onChange={(e) => setAnimalForm({ ...animalForm, species: e.target.value })}>
+                  <option value="">Choose…</option>
+                  <option value="Dog">Dog</option>
+                  <option value="Cat">Cat</option>
+                  <option value="Other">Other</option>
+                </select>
               </label>
               <label className="am-field">
                 <span className="am-field-label">Shelter Care Status</span>
@@ -246,6 +292,19 @@ function AnimalManagement() {
             </label>
 
             <label className="am-field">
+              <span className="am-field-label">Care Funding Goal (Rs) <span className="am-optional">(Optional)</span></span>
+              <input
+                type="number"
+                min="0"
+                step="500"
+                placeholder="e.g. 15000"
+                value={animalForm.funding_goal_pkr}
+                onChange={(e) => setAnimalForm({ ...animalForm, funding_goal_pkr: e.target.value })}
+              />
+              <span className="am-field-hint">What treatment, food and shelter will cost until adoption. Sponsors see how much is still needed.</span>
+            </label>
+
+            <label className="am-field">
               <span className="am-field-label">Public Adoption Description</span>
               <textarea value={animalForm.description} onChange={(e) => setAnimalForm({ ...animalForm, description: e.target.value })} />
             </label>
@@ -279,8 +338,8 @@ function AnimalManagement() {
             <p className="meta-line">Donation and adoption contact details are taken from your organization profile.</p>
 
             <div className="portal-actions">
-              <button className="secondary-btn" type="button" onClick={resetAnimalForm}>
-                <RotateCcw size={15} /> Reset
+              <button className="secondary-btn" type="button" onClick={() => { resetAnimalForm(); setShowForm(false); }}>
+                Cancel
               </button>
               <button className="primary-btn" type="submit">
                 <Plus size={15} /> Create Animal Profile
@@ -288,107 +347,9 @@ function AnimalManagement() {
             </div>
           </form>
         </section>
+      ) : null}
 
-        <section className="panel-card am-section">
-          <div className="am-section-heading">
-            <span className="am-section-icon am-section-icon-purple"><Megaphone size={16} /></span>
-            <div>
-              <h2>Post Milestone Update</h2>
-              <p className="meta-line">Share a real, dated update tied to one of your rescued animals.</p>
-            </div>
-          </div>
-
-          <form className="am-form" onSubmit={handlePostCreate}>
-            <label className="am-field">
-              <span className="am-field-label">Target Rescued Animal <span className="am-required">*</span></span>
-              <select value={postForm.animal} onChange={(e) => setPostForm({ ...postForm, animal: e.target.value })} required>
-                <option value="">Select animal</option>
-                {animals.map((animal) => <option key={animal.id} value={animal.id}>{animal.name}</option>)}
-              </select>
-            </label>
-
-            <label className="am-field">
-              <span className="am-field-label">Update Title <span className="am-required">*</span></span>
-              <input value={postForm.title} onChange={(e) => setPostForm({ ...postForm, title: e.target.value })} required />
-            </label>
-
-            <div className="am-field">
-              <span className="am-field-label">Milestone Category <span className="am-optional">(Optional)</span></span>
-              <div className="am-chip-row">
-                {CATEGORY_OPTIONS.map((option) => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    className={`am-chip${postForm.category === option.value ? " is-active" : ""}`}
-                    onClick={() => toggleCategory(option.value)}
-                  >
-                    <option.icon size={13} /> {option.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <label className="am-field">
-              <span className="am-field-label">Story Content &amp; Medical Notes</span>
-              <textarea value={postForm.content} onChange={(e) => setPostForm({ ...postForm, content: e.target.value })} required />
-            </label>
-
-            <label className="am-field">
-              <span className="am-field-label">Post Photo <span className="am-optional">(Optional)</span></span>
-              <input
-                className="am-file-compact"
-                type="file"
-                accept="image/*"
-                onChange={(e) => setPostForm({ ...postForm, image: e.target.files?.[0] ?? null })}
-              />
-            </label>
-
-            <div className="portal-actions">
-              <button className="primary-btn" type="submit">
-                <Send size={15} /> Publish Update
-              </button>
-            </div>
-          </form>
-
-          {recentUpdates.length ? (
-            <div className="am-recent-updates">
-              <span className="am-recent-heading"><Clock size={13} /> Recent Updates</span>
-              {recentUpdates.map((post) => (
-                <div className="am-recent-update-row" key={post.id}>
-                  <span className="am-recent-dot" />
-                  <div>
-                    <p>{post.title}</p>
-                    <span className="meta-line">{formatRelativeTime(post.created_at)}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : null}
-        </section>
-      </div>
-
-      <section className="panel-card am-section">
-        <div className="am-section-heading">
-          <span className="am-section-icon am-section-icon-green"><LayoutGrid size={16} /></span>
-          <div>
-            <h2>Your Animals</h2>
-            <p className="meta-line">{animals.length} animal profile{animals.length === 1 ? "" : "s"} under your organization's care.</p>
-          </div>
-        </div>
-
-        <div className="am-filter-row">
-          {FILTERS.map((filter) => (
-            <button
-              key={filter.key}
-              type="button"
-              className={`am-filter-chip${activeFilter === filter.key ? " is-active" : ""}`}
-              onClick={() => setActiveFilter(filter.key)}
-            >
-              {filter.label} <span className="am-filter-count">{filterCounts[filter.key]}</span>
-            </button>
-          ))}
-        </div>
-
+      <section className="am-section">
         <div className="card-grid am-animal-grid">
           {filteredAnimals.length ? filteredAnimals.map((animal) => (
             <AnimalCard
@@ -396,14 +357,95 @@ function AnimalManagement() {
               animal={animal}
               onStatusChange={handleAnimalStatusUpdate}
               footer={
-                <Link className="am-public-link" to={`/animals/${animal.id}`} target="_blank" rel="noreferrer">
-                  <ExternalLink size={14} /> Public Page
-                </Link>
+                <>
+                  {animal.funding_goal_pkr ? <FundingMeter size="sm" raised={animal.raised_pkr ?? 0} goal={animal.funding_goal_pkr} caption="raised" /> : null}
+                  <Link className="am-public-link" to={`/animals/${animal.id}`}>
+                    <ExternalLink size={14} /> Public page
+                  </Link>
+                </>
               }
             />
-          )) : <div className="empty-state">No animal profiles match this filter yet.</div>}
+          )) : (
+            <div className="empty-state">
+              {animals.length ? "No animals with this status." : "No animals yet. Add one from a rescued case to get started."}
+            </div>
+          )}
         </div>
       </section>
+
+      {showPost ? (
+        <Modal title="Post an update" onClose={() => setShowPost(false)}>
+          <div className="am-modal">
+            <p className="meta-line">Share a real, dated update about one of your animals. Followers and sponsors see it in their feed.</p>
+      <form className="am-form" onSubmit={handlePostCreate}>
+        <label className="am-field">
+          <span className="am-field-label">Target Rescued Animal <span className="am-required">*</span></span>
+          <select value={postForm.animal} onChange={(e) => setPostForm({ ...postForm, animal: e.target.value })} required>
+            <option value="">Select animal</option>
+            {animals.map((animal) => <option key={animal.id} value={animal.id}>{animal.name}</option>)}
+          </select>
+        </label>
+
+        <label className="am-field">
+          <span className="am-field-label">Update Title <span className="am-required">*</span></span>
+          <input value={postForm.title} onChange={(e) => setPostForm({ ...postForm, title: e.target.value })} required />
+        </label>
+
+        <div className="am-field">
+          <span className="am-field-label">Milestone Category <span className="am-optional">(Optional)</span></span>
+          <div className="am-chip-row">
+            {CATEGORY_OPTIONS.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                className={`am-chip${postForm.category === option.value ? " is-active" : ""}`}
+                onClick={() => toggleCategory(option.value)}
+              >
+                <option.icon size={13} /> {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <label className="am-field">
+          <span className="am-field-label">Story Content &amp; Medical Notes</span>
+          <textarea value={postForm.content} onChange={(e) => setPostForm({ ...postForm, content: e.target.value })} required />
+        </label>
+
+        <label className="am-field">
+          <span className="am-field-label">Post Photo <span className="am-optional">(Optional)</span></span>
+          <input
+            className="am-file-compact"
+            type="file"
+            accept="image/*"
+            onChange={(e) => setPostForm({ ...postForm, image: e.target.files?.[0] ?? null })}
+          />
+        </label>
+
+        <div className="portal-actions">
+          <button className="primary-btn" type="submit">
+            <Send size={15} /> Publish Update
+          </button>
+        </div>
+      </form>
+
+      {recentUpdates.length ? (
+        <div className="am-recent-updates">
+          <span className="am-recent-heading"><Clock size={13} /> Recent Updates</span>
+          {recentUpdates.map((post) => (
+            <div className="am-recent-update-row" key={post.id}>
+              <span className="am-recent-dot" />
+              <div>
+                <p>{post.title}</p>
+                <span className="meta-line">{formatRelativeTime(post.created_at)}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : null}
+          </div>
+        </Modal>
+      ) : null}
     </div>
   );
 }

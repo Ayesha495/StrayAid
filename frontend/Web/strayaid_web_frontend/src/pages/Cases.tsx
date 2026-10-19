@@ -1,14 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import RescueBoard from "../components/RescueBoard";
-import { getCases, getOrganizationAnimals } from "../services/platformService";
-import type { Animal, Case } from "../types/platform";
+import { getCases, getOrganizationAnimals, getOrganizationProfile } from "../services/platformService";
+import type { Animal, Case, Organization } from "../types/platform";
 
 function Cases() {
   const [cases, setCases] = useState<Case[]>([]);
   const [animals, setAnimals] = useState<Animal[]>([]);
+  const [organization, setOrganization] = useState<Organization | null>(null);
   const [searchParams] = useSearchParams();
   const query = searchParams.get("q")?.trim().toLowerCase() ?? "";
+
+  useEffect(() => {
+    getOrganizationProfile().then(setOrganization).catch(() => setOrganization(null));
+  }, []);
 
   useEffect(() => {
     const load = () => {
@@ -38,6 +43,7 @@ function Cases() {
     <RescueBoard
       cases={filteredCases}
       animals={filteredAnimals}
+      organization={organization}
       heading="Cases"
       copy={query ? `Showing results for "${query}".` : "Use this board to claim reported cases and monitor each rescue stage through to adoption readiness."}
     />

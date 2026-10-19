@@ -17,6 +17,7 @@ export interface CurrentUser {
     first_name: string;
     last_name: string;
     role: "public" | "organization" | "admin";
+    avatar?: string | null;
 }
 
 export interface TokenResponse {

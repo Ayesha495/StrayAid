@@ -1,0 +1,42 @@
+.my-reports {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.my-report {
+  display: flex;
+  gap: var(--space-4);
+  padding: var(--space-4);
+}
+
+.my-report:hover { border-color: var(--color-border-strong); }
+
+.my-report-photo {
+  flex-shrink: 0;
+  width: 112px;
+  height: 112px;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background: var(--navy-100);
+}
+
+.my-report-photo img { width: 100%; height: 100%; object-fit: cover; }
+
+.my-report-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.my-report-main .case-progress { margin-top: var(--space-3); }
+
+@media (max-width: 560px) {
+  .my-report { flex-direction: column; }
+  .my-report-photo { width: 100%; height: 160px; }
+}

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import AppSidebar from "./AppSidebar";
 import DashboardTopbar from "./DashboardTopbar";
 import MenuToggleIcon from "./MenuToggleIcon";
+import LiveAlerts from "../layout/LiveAlerts";
 import "./DashboardLayout.css";
 
 type AuthenticatedShellProps = {
@@ -23,7 +24,6 @@ function AuthenticatedShell({ children }: AuthenticatedShellProps) {
       }
     };
 
-    setIsMobile(mediaQuery.matches);
     mediaQuery.addEventListener("change", handleChange);
     return () => mediaQuery.removeEventListener("change", handleChange);
   }, []);
@@ -40,6 +40,7 @@ function AuthenticatedShell({ children }: AuthenticatedShellProps) {
 
   return (
     <div className={`dashboard-shell${isSidebarOpen ? " sidebar-open" : ""}`}>
+      <LiveAlerts />
       {isMobile && isSidebarOpen ? <button className="dashboard-backdrop" type="button" aria-label="Close menu" onClick={handleToggleSidebar} /> : null}
       <AppSidebar
         isCollapsed={isCollapsed}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { BadgeCheck, Check, Eye, Landmark, Mail, MapPinned, Phone, ShieldAlert, SquareUserRound, UploadCloud } from "lucide-react";
+import { BadgeCheck, Check, Eye, Landmark, Mail, MapPinned, Phone, ShieldAlert, SquareUserRound, Upload, UploadCloud } from "lucide-react";
 import AuthenticatedShell from "../components/AuthenticatedShell";
 import LocationPicker from "../components/LocationPicker";
 import { syncCurrentUser, useCurrentUser } from "../services/authSevice";
@@ -26,6 +26,7 @@ const initialForm = {
   bank_account_number: "",
   tax_id: "",
   payment_notes: "",
+  supply_goal_pkr: 100000,
 };
 
 type FormState = typeof initialForm;
@@ -85,6 +86,7 @@ function OrganizationRegistration() {
           bank_account_number: profile.bank_account_number ?? "",
           tax_id: profile.tax_id ?? "",
           payment_notes: profile.payment_notes ?? "",
+          supply_goal_pkr: profile.supply_goal_pkr ?? 100000,
         };
         setForm(loadedForm);
         setOriginalForm(loadedForm);
@@ -236,11 +238,11 @@ function OrganizationRegistration() {
   };
 
   const wizardContent = (
-    <div className="portal-page">
+    <div className="portal-page wizard-page">
       <div className="portal-header">
         <div>
-          <h1>Organization Registration</h1>
-          <p>Set your rescue identity, service range, donation information, and public image so people understand who you are and how you help.</p>
+          <h1>Register your rescue team</h1>
+          <p>Five short steps. Once you're done, nearby reports reach you and people can follow, sponsor and adopt through your page.</p>
         </div>
       </div>
 
@@ -275,17 +277,20 @@ function OrganizationRegistration() {
           <div className="wizard-step-body">
             <div className="portal-form-grid">
               <label>Name<input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></label>
-              <label>
-                Organization Image
-                <input type="file" accept="image/*" onChange={(e) => setForm({ ...form, image: e.target.files?.[0] ?? null })} />
-              </label>
-            </div>
-            {existingImage ? (
-              <div className="panel-card compact-state">
-                <strong>Current Public Image</strong>
-                <img className="detail-hero-image" src={existingImage} alt={form.name || "Organization"} />
+              <div className="wizard-logo-field">
+                <span>Logo or photo</span>
+                <div className="wizard-logo-row">
+                  <span className="wizard-logo-preview">
+                    {imagePreviewUrl || existingImage ? <img src={imagePreviewUrl ?? existingImage ?? ""} alt="" /> : <UploadCloud size={20} />}
+                  </span>
+                  <label className="secondary-btn upload-btn">
+                    {imagePreviewUrl || existingImage ? "Change image" : "Upload image"}
+                    <input className="sr-only" type="file" accept="image/*" onChange={(e) => setForm({ ...form, image: e.target.files?.[0] ?? null })} />
+                  </label>
+                </div>
               </div>
-            ) : null}
+            </div>
+
             <label>Description<textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></label>
           </div>
         ) : null}
@@ -337,6 +342,10 @@ function OrganizationRegistration() {
               <label>
                 Account Number
                 <input value={form.bank_account_number} onChange={(e) => setForm({ ...form, bank_account_number: e.target.value })} />
+              </label>
+              <label>
+                Monthly Supply Goal (Rs)
+                <input type="number" min="0" step="1000" value={form.supply_goal_pkr} onChange={(e) => setForm({ ...form, supply_goal_pkr: Number(e.target.value) })} />
               </label>
             </div>
           </div>
@@ -412,14 +421,17 @@ function OrganizationRegistration() {
               <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
               <span className="profile-field-hint">Registered non-profit or community rescue team title.</span>
             </label>
-            <label className="profile-field">
+            <div className="profile-field">
               <span className="profile-field-label">Organization Badge</span>
               <div className="profile-badge-upload">
                 <span className="profile-badge-preview">{initials}</span>
-                <input type="file" accept="image/*" onChange={(e) => setForm({ ...form, image: e.target.files?.[0] ?? null })} />
+                <label className="btn btn-secondary upload-btn">
+                  <Upload size={16} aria-hidden="true" /> {form.image ? form.image.name : "Choose an image"}
+                  <input className="sr-only" type="file" accept="image/*" onChange={(e) => setForm({ ...form, image: e.target.files?.[0] ?? null })} />
+                </label>
               </div>
               <span className="profile-field-hint">Preview generated from your organization name. PNG or JPG, under 2MB.</span>
-            </label>
+            </div>
           </div>
 
           <div className="profile-cover-block">
@@ -553,6 +565,11 @@ function OrganizationRegistration() {
               <span className="profile-field-label">Payment Reference Notes <span className="profile-optional">(Optional)</span></span>
               <input placeholder="Mention 'Animal ID' in bank transfer remarks" value={form.payment_notes} onChange={(e) => setForm({ ...form, payment_notes: e.target.value })} />
               <span className="profile-field-hint">Instruction displayed under the donor modal.</span>
+            </label>
+            <label className="profile-field">
+              <span className="profile-field-label">Monthly Medical Supply Goal (Rs)</span>
+              <input type="number" min="0" step="1000" value={form.supply_goal_pkr} onChange={(e) => setForm({ ...form, supply_goal_pkr: Number(e.target.value) })} />
+              <span className="profile-field-hint">Shown on your public page as this month's fundraising target for medicine, bandages and food.</span>
             </label>
           </div>
         </section>

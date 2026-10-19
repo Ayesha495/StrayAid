@@ -1,0 +1,131 @@
+/* The depth layer: loads after ui.css and gives the shared building blocks weight.
+   Buttons are pressable, cards sit above the paper, inputs are sunk into it.
+   The dashboard (.overview-page) keeps its own look; its classes aren't touched here. */
+
+/* ---------- Canvas ---------- */
+.ds-page,
+.dashboard-shell { background-color: var(--paper); background-image: var(--grain); }
+
+/* ---------- Buttons ---------- */
+.btn {
+  position: relative;
+  height: 40px;
+  padding: 0 18px;
+  border-radius: var(--r-control);
+  font-weight: 650;
+  letter-spacing: -0.005em;
+  transition: transform 0.15s var(--ease-out), box-shadow 0.15s var(--ease-out), background-color 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.btn:active:not(:disabled) { transform: translateY(1px); }
+
+.btn-primary {
+  border-color: var(--green-800);
+  background: var(--green-700);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(18, 37, 29, 0.3), 0 6px 14px -6px rgba(30, 107, 86, 0.7);
+}
+.btn-primary:hover:not(:disabled) {
+  background: #22775f;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 2px 4px rgba(18, 37, 29, 0.3), 0 10px 20px -8px rgba(30, 107, 86, 0.75);
+  transform: translateY(-1px);
+}
+.btn-primary:active:not(:disabled) { background: var(--green-800); box-shadow: var(--press); }
+
+.btn-secondary {
+  border-color: var(--line-strong);
+  background: #fff;
+  box-shadow: var(--elev-1);
+}
+.btn-secondary:hover:not(:disabled) { background: #fff; border-color: rgba(36, 52, 71, 0.28); box-shadow: var(--elev-2); transform: translateY(-1px); }
+.btn-secondary:active:not(:disabled) { background: var(--navy-50); box-shadow: var(--press); }
+
+.btn-danger {
+  border-color: var(--coral-700);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(120, 30, 20, 0.3), 0 6px 14px -6px rgba(212, 81, 63, 0.6);
+}
+.btn-danger-outline { box-shadow: var(--elev-1); }
+
+.btn-sm { height: 32px; padding: 0 12px; border-radius: 8px; }
+.btn-lg { height: 48px; padding: 0 24px; border-radius: 12px; }
+
+.sa-icon-btn { border-radius: var(--r-control); transition: background-color 0.15s, box-shadow 0.15s; }
+.sa-icon-btn:hover { background: #fff; box-shadow: var(--elev-1); }
+
+/* ---------- Inputs: sunk into the surface ---------- */
+.input,
+.select,
+.textarea {
+  border-color: transparent;
+  border-radius: var(--r-control);
+  background: #fbfaf7;
+  box-shadow: var(--well);
+  transition: box-shadow 0.15s, background-color 0.15s;
+}
+.input:hover, .select:hover, .textarea:hover { background: #fff; }
+.input:focus,
+.select:focus,
+.textarea:focus {
+  border-color: transparent;
+  background: #fff;
+  box-shadow: inset 0 0 0 1.5px var(--green-700), 0 0 0 4px rgba(30, 107, 86, 0.14);
+}
+
+/* ---------- Cards ---------- */
+.card {
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  background: #fff;
+  box-shadow: var(--elev-1);
+}
+
+a.card, .card.is-interactive { transition: transform 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out); }
+a.card:hover, .card.is-interactive:hover { transform: translateY(-2px); box-shadow: var(--elev-2); }
+
+.card-header { border-bottom-color: var(--line); }
+
+/* ---------- Chips ---------- */
+.chip { box-shadow: inset 0 0 0 1px rgba(36, 52, 71, 0.06); }
+
+/* ---------- Segmented tabs (newer pages only; the dashboard keeps its own) ---------- */
+.ds .tabs, .page .tabs {
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--paper-deep);
+  box-shadow: inset 0 1px 2px rgba(18, 37, 29, 0.08);
+}
+.ds .tab, .page .tab { border-radius: 9px; transition: color 0.15s, background-color 0.15s, box-shadow 0.15s; }
+.ds .tab[aria-selected="true"], .page .tab[aria-selected="true"] { box-shadow: var(--elev-1); }
+
+/* ---------- Filter pills ---------- */
+.filter-pill { transition: background-color 0.15s, box-shadow 0.15s, color 0.15s; }
+.filter-pill[aria-pressed="true"] { box-shadow: var(--elev-1); }
+
+/* ---------- Page header ---------- */
+.page-header { align-items: flex-end; padding-bottom: 20px; margin-bottom: 24px; border-bottom: 1px solid var(--line); }
+.page-header h1 { color: var(--navy-900); font-size: clamp(26px, 2.4vw, 32px); letter-spacing: -0.025em; }
+.page-header p { color: var(--navy-500); font-weight: 500; }
+
+/* ---------- Tables ---------- */
+.table th { background: #faf9f5; }
+
+/* ---------- Overlays ---------- */
+.sa-modal-backdrop { background: rgba(12, 24, 19, 0.5); backdrop-filter: blur(3px); }
+.modal { border-radius: 18px; box-shadow: var(--elev-3), 0 0 0 1px rgba(36, 52, 71, 0.06); }
+.dropdown { border-color: var(--line); border-radius: 14px; box-shadow: var(--elev-3); }
+.toast { border-radius: 12px; box-shadow: var(--elev-3); }
+
+/* ---------- Empty and loading states ---------- */
+.state-icon { box-shadow: var(--elev-1); }
+
+/* ---------- Older team pages (not the dashboard) share the same surfaces ---------- */
+.portal-page:not(.overview-page) .panel-card,
+.portal-page:not(.overview-page) .card {
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  box-shadow: var(--elev-1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn, a.card, .card.is-interactive { transition: none; }
+  .btn:hover, .btn:active, a.card:hover { transform: none !important; }
+}

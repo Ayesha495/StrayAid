@@ -22,6 +22,8 @@ module.exports = {
     ],
   },
   moduleNameMapper: {
+    "^@/(.*)$": "<rootDir>/src/$1",
+    "^(\.{1,2}/)+appConfig$": "<rootDir>/src/test/appConfig.ts",
     "\\.(css|less|scss|sass)$": "identity-obj-proxy",
   },
 };

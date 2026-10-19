@@ -9,3 +9,29 @@ if (!global.TextEncoder) {
 if (!global.TextDecoder) {
   global.TextDecoder = TextDecoder as typeof global.TextDecoder;
 }
+
+// jsdom doesn't implement scrolling.
+if (!Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = () => {};
+}
+
+// jsdom has no IntersectionObserver (scroll reveals and the section nav use it).
+// Report everything as visible straight away.
+class TestIntersectionObserver {
+  private callback: IntersectionObserverCallback;
+  constructor(callback: IntersectionObserverCallback) {
+    this.callback = callback;
+  }
+  observe(target: Element) {
+    this.callback([{ isIntersecting: true, target, intersectionRatio: 1, boundingClientRect: target.getBoundingClientRect() } as IntersectionObserverEntry], this as unknown as IntersectionObserver);
+  }
+  unobserve() {}
+  disconnect() {}
+  takeRecords() {
+    return [];
+  }
+}
+if (!("IntersectionObserver" in window)) {
+  Object.assign(window, { IntersectionObserver: TestIntersectionObserver });
+  Object.assign(global, { IntersectionObserver: TestIntersectionObserver });
+}

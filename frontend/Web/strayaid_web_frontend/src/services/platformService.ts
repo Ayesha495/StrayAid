@@ -1,8 +1,13 @@
 import API, { PublicAPI } from "../api/axios";
+import { getStoredUser } from "./authSevice";
 import type { Animal, Case, DashboardData, Organization, Post } from "../types/platform";
 import { normalizeAnimal, normalizeCase, normalizeDashboard, normalizeOrganization, normalizePost } from "../utils/media";
 
 // These helpers keep component code focused on rendering instead of request details.
+
+// Public pages read as the signed-in user when there is one, so the API can say what's
+// theirs (their application, what they liked).
+const reader = () => (getStoredUser() ? API : PublicAPI);
 export const getOrganizationProfile = async () => {
   const response = await API.get<Organization>("/api/organizations/me/");
   return normalizeOrganization(response.data);
@@ -101,7 +106,7 @@ export const getPublicAnimals = async (filters?: { organizationId?: string | num
 };
 
 export const getAnimal = async (animalId: string) => {
-  const response = await PublicAPI.get<Animal>(`/api/animals/${animalId}/`);
+  const response = await reader().get<Animal>(`/api/animals/${animalId}/`);
   return normalizeAnimal(response.data);
 };
 
@@ -113,11 +118,15 @@ export const createPost = async (data: FormData) => {
 };
 
 export const getAnimalPosts = async (animalId: string) => {
-  const response = await PublicAPI.get<Post[]>(`/api/posts/by-animal/?animal_id=${animalId}`);
+  const response = await reader().get<Post[]>(`/api/posts/by-animal/?animal_id=${animalId}`);
   return response.data.map(normalizePost);
 };
 
 export const getPublicFeed = async () => {
   const response = await PublicAPI.get<Post[]>("/api/posts/public-feed/");
   return response.data.map(normalizePost);
+};
+
+export const deleteAnimal = async (animalId: number) => {
+  await API.delete(`/api/animals/${animalId}/`);
 };

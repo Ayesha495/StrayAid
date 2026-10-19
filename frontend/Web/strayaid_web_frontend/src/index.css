@@ -1,5 +1,21 @@
+/* Global reset. (It used to live in the login page's stylesheet, which every page relied on.)
+   It sits in the "base" cascade layer so the Tailwind utilities used by the UI library
+   components (layer "utilities") can still set padding and margin. */
+@layer theme, base, components, utilities;
+
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+}
+
+h1, h2, h3 { font-family: "Manrope", "Inter", system-ui, sans-serif; }
+
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  /* The design system's fonts everywhere, so old and new screens read as one app. */
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   line-height: 1.5;
   font-weight: 400;
   font-synthesis: none;

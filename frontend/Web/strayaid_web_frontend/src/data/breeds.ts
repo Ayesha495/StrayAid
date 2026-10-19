@@ -1,0 +1,113 @@
+// Breed lists for the animal profile's breed picker. Not AI: a fixed list the organization
+// picks from (it can still type something else). Local Pakistani types come first, since
+// most rescues are street animals. The breed is saved as plain text.
+
+export const DOG_BREEDS = [
+  "Desi (Pakistani street dog)",
+  "Mixed breed",
+  "Bully Kutta",
+  "Gull Terrier",
+  "Gull Dong",
+  "Pakistani Mastiff",
+  "Gaddi Kutta",
+  "Kohistani",
+  "Afghan Hound",
+  "Airedale Terrier",
+  "Akita",
+  "Alaskan Malamute",
+  "American Bulldog",
+  "American Pit Bull Terrier",
+  "Australian Shepherd",
+  "Basset Hound",
+  "Beagle",
+  "Belgian Malinois",
+  "Bernese Mountain Dog",
+  "Bichon Frise",
+  "Border Collie",
+  "Boston Terrier",
+  "Boxer",
+  "Bull Terrier",
+  "Bulldog",
+  "Bullmastiff",
+  "Cane Corso",
+  "Cavalier King Charles Spaniel",
+  "Chihuahua",
+  "Chow Chow",
+  "Cocker Spaniel",
+  "Collie",
+  "Dachshund",
+  "Dalmatian",
+  "Doberman Pinscher",
+  "English Springer Spaniel",
+  "French Bulldog",
+  "German Shepherd",
+  "German Shorthaired Pointer",
+  "Golden Retriever",
+  "Great Dane",
+  "Greyhound",
+  "Husky (Siberian)",
+  "Jack Russell Terrier",
+  "Labrador Retriever",
+  "Lhasa Apso",
+  "Maltese",
+  "Mastiff",
+  "Miniature Schnauzer",
+  "Newfoundland",
+  "Pekingese",
+  "Pomeranian",
+  "Poodle",
+  "Pug",
+  "Rottweiler",
+  "Saint Bernard",
+  "Saluki",
+  "Samoyed",
+  "Shar Pei",
+  "Shih Tzu",
+  "Tibetan Mastiff",
+  "Vizsla",
+  "Weimaraner",
+  "Whippet",
+  "Yorkshire Terrier",
+];
+
+export const CAT_BREEDS = [
+  "Domestic Short Hair (street cat)",
+  "Domestic Long Hair",
+  "Mixed breed",
+  "Persian",
+  "Doll Face Persian",
+  "Himalayan",
+  "Siamese",
+  "Abyssinian",
+  "American Shorthair",
+  "Bengal",
+  "Birman",
+  "Bombay",
+  "British Shorthair",
+  "Burmese",
+  "Devon Rex",
+  "Egyptian Mau",
+  "Exotic Shorthair",
+  "Maine Coon",
+  "Munchkin",
+  "Norwegian Forest Cat",
+  "Ragdoll",
+  "Russian Blue",
+  "Scottish Fold",
+  "Siberian",
+  "Sphynx",
+  "Turkish Angora",
+  "Turkish Van",
+];
+
+export const SPECIES = ["Dog", "Cat", "Bird", "Other"];
+
+/** The breed list for a species, or none (the field stays free text). */
+export function breedsFor(species: string): string[] {
+  const key = species.trim().toLowerCase();
+  if (key === "dog") return DOG_BREEDS;
+  if (key === "cat") return CAT_BREEDS;
+  // Species not chosen yet: suggest both lists.
+  if (!key) return [...DOG_BREEDS, ...CAT_BREEDS.filter((breed) => breed !== "Mixed breed")];
+  return [];
+}

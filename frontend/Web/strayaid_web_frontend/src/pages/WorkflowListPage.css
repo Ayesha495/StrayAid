@@ -1,0 +1,69 @@
+/* Workflow lists: one segmented switcher, then photo rows that read like the dashboard's cards. */
+.wf-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  color: #536172;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.wf-back:hover { color: #12151c; }
+.wf-tabs { width: fit-content; }
+.wf-tabs .tab { text-decoration: none; }
+
+.wf-list { padding: 8px 8px 4px; }
+.wf-count { margin: 6px 10px 4px; font-size: 13px; }
+.wf-list ul { margin: 0; padding: 0; list-style: none; }
+
+.wf-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 10px;
+  border-radius: 10px;
+  color: inherit;
+}
+
+.wf-list li + li .wf-row { border-top: 1px solid #f0f2f5; }
+.wf-row:hover, .wf-row:focus-visible { background: #f6f8fa; }
+
+.wf-thumb {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #eef1f5;
+  color: #8590a0;
+}
+
+.wf-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.wf-body { display: grid; flex: 1; gap: 3px; min-width: 0; }
+.wf-body strong { color: #12151c; font-size: 15px; }
+
+.wf-desc {
+  overflow: hidden;
+  color: #536172;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wf-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; color: #8590a0; font-size: 12px; }
+.wf-money { color: var(--amber-800); font-weight: 600; }
+.wf-chevron { flex-shrink: 0; color: #a0a8b4; }
+
+.wf-status {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.wf-status-rescued, .wf-status-recovering { background: #fff4e5; color: #b45309; }
+.wf-status-adoptable { background: #ede9fe; color: #6d28d9; }
+.wf-status-adopted { background: var(--green-50); color: var(--green-700); }

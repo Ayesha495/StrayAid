@@ -1,0 +1,327 @@
+/* Animal profile. Golden-ratio split: photo 1.618 : card 1. */
+
+.animal-page { max-width: 1240px; }
+/* Leaves room for the old app's sticky top bar or the public header. */
+.animal-page { --section-nav-offset: 72px; }
+
+.animal-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.618fr) minmax(320px, 1fr);
+  gap: var(--space-6);
+  align-items: start;
+}
+
+.animal-main { min-width: 0; }
+
+/* ---------- Hero gallery ---------- */
+.animal-hero { display: flex; flex-direction: column; gap: var(--space-3); }
+
+.animal-hero-frame {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--navy-100);
+  box-shadow: var(--shadow-2);
+}
+
+.animal-hero-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.animal-hero-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 100%;
+  color: var(--navy-500);
+}
+
+.animal-hero-badges {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.animal-hero-badges .chip {
+  height: 26px;
+  padding: 0 10px;
+  font-size: var(--text-sm);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.animal-hero-count {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.animal-thumbs {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+}
+
+.animal-thumbs button {
+  flex-shrink: 0;
+  width: 84px;
+  height: 64px;
+  padding: 0;
+  overflow: hidden;
+  border: 2px solid transparent;
+  border-radius: var(--radius-lg);
+  background: none;
+  opacity: 0.75;
+  transition: opacity 0.15s, border-color 0.15s;
+}
+
+.animal-thumbs button:hover { opacity: 1; }
+.animal-thumbs button[aria-pressed="true"] { border-color: var(--green-700); opacity: 1; }
+.animal-thumbs img { width: 100%; height: 100%; object-fit: cover; }
+
+/* ---------- Action card ---------- */
+.animal-card {
+  position: sticky;
+  top: calc(var(--section-nav-offset, 0px) + 16px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  border-radius: 12px;
+}
+
+.animal-card-head { position: relative; padding-right: 44px; }
+.animal-card-head .animal-share { position: absolute; top: 0; right: 0; }
+
+.animal-name {
+  font-size: var(--display-md);
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+
+.animal-subtitle {
+  margin-top: 6px;
+  color: var(--color-ink-muted);
+  font-size: var(--text-lg);
+}
+
+.animal-where {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+  color: var(--color-ink-muted);
+  font-size: var(--text-md);
+}
+
+.animal-org {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.animal-org > span { display: flex; flex-direction: column; min-width: 0; }
+.animal-org:hover { border-color: var(--color-border-strong); background: var(--navy-50); }
+
+.animal-funding {
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--amber-50);
+}
+
+.goal-edit { margin-top: 8px; padding-left: 0; color: var(--amber-800); }
+.goal-form { display: flex; gap: 6px; margin-top: 10px; }
+.goal-form .input { min-height: 32px; padding: 4px 10px; }
+
+.animal-secondary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.animal-secondary .btn { flex: 1 1 auto; }
+.animal-pending { align-self: center; flex: 1 1 100%; }
+
+.animal-trust {
+  display: flex;
+  gap: 6px;
+  color: var(--color-ink-muted);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+}
+
+.animal-trust svg { flex-shrink: 0; margin-top: 2px; color: var(--emerald-700); }
+
+/* ---------- Sections ---------- */
+.animal-body { margin-top: var(--space-8); }
+
+.animal-body > .profile-section { margin-bottom: var(--space-5); }
+.animal-body h2 { display: flex; align-items: center; gap: 8px; font-size: var(--text-2xl); }
+
+.profile-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.animal-about {
+  margin: var(--space-3) 0 var(--space-5);
+  font-size: var(--text-lg);
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+.animal-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: var(--space-3);
+}
+
+.animal-fact {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.animal-fact > span:last-child { display: flex; flex-direction: column; min-width: 0; }
+.animal-fact-label { color: var(--color-ink-muted); font-size: var(--text-sm); }
+.animal-fact-value { font-weight: 700; overflow-wrap: anywhere; }
+
+.animal-fact-icon {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-lg);
+}
+
+
+.animal-health {
+  border-left: 4px solid var(--blue-500);
+}
+
+.animal-health h2 svg { color: var(--blue-700); }
+.animal-health p + p { margin-top: var(--space-2); }
+
+/* Rescue story timeline */
+.story {
+  margin: var(--space-4) 0;
+  padding: 0;
+  list-style: none;
+}
+
+.story li {
+  position: relative;
+  display: flex;
+  gap: var(--space-3);
+  padding-bottom: var(--space-4);
+}
+
+.story li::after {
+  content: "";
+  position: absolute;
+  top: 18px;
+  bottom: 0;
+  left: 7px;
+  width: 2px;
+  background: var(--color-border);
+}
+
+.story li:last-child::after { display: none; }
+.story li > div { display: flex; flex-direction: column; gap: 2px; }
+
+.story-dot {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  margin-top: 3px;
+  border: 3px solid var(--color-surface);
+  border-radius: 50%;
+  background: var(--navy-300);
+  box-shadow: 0 0 0 1px var(--navy-300);
+}
+
+.story-dot.tone-coral { background: var(--coral-500); box-shadow: 0 0 0 1px var(--coral-500); }
+.story-dot.tone-green { background: var(--green-700); box-shadow: 0 0 0 1px var(--green-700); }
+
+.animal-adopting { background: linear-gradient(180deg, var(--green-50), var(--color-surface) 60%); }
+
+.adopt-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+  margin: var(--space-4) 0;
+  padding: 0;
+  list-style: none;
+}
+
+.adopt-steps li { display: flex; flex-direction: column; gap: 4px; }
+
+.adopt-step-number {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin-bottom: 4px;
+  border-radius: 50%;
+  background: var(--green-700);
+  color: #fff;
+  font-weight: 800;
+}
+
+.animal-mobile-cta { display: none; }
+
+@media (max-width: 960px) {
+  /* Phones and tablets: photos, then the card, then the sections. */
+  .animal-layout { grid-template-columns: minmax(0, 1fr); }
+  .animal-main { display: contents; }
+  .animal-hero { order: 1; }
+  .animal-card { position: static; order: 2; }
+  .animal-body { order: 3; margin-top: 0; }
+}
+
+@media (max-width: 640px) {
+  .animal-page { padding-bottom: 110px; }
+  .animal-hero-frame { border-radius: var(--radius-xl); }
+  .animal-card { padding: var(--space-4); }
+  .adopt-steps { grid-template-columns: minmax(0, 1fr); }
+
+  .animal-mobile-cta {
+    position: fixed;
+    right: 12px;
+    bottom: 12px;
+    left: 12px;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: 10px 10px 10px 16px;
+    border-radius: 12px;
+  }
+
+  .animal-mobile-cta > div { display: flex; flex: 1; flex-direction: column; min-width: 0; }
+  .animal-mobile-cta .btn { width: auto; height: 44px; padding: 0 16px; font-size: var(--text-md); }
+}
