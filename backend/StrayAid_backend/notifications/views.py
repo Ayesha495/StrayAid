@@ -1,10 +1,11 @@
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from .models import AnimalFollow, OrganizationFollow, PushToken
-from .serializers import PushTokenSerializer
+from .models import AnimalFollow, Notification, OrganizationFollow, PushToken
+from .serializers import NotificationSerializer, PushTokenSerializer
 
 
 @api_view(["POST"])
@@ -79,3 +80,48 @@ def follow_status(request):
             user=request.user, organization_id=org_id
         ).exists()
     return Response(result)
+
+
+# ── Notifications screen (Stitch 20) ─────────────────────────────────────────
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def notification_list(request):
+    """The latest notifications, newest first; ?unread=1 for unread ones only."""
+    queryset = Notification.objects.filter(user=request.user)
+    if request.query_params.get("unread") in ("1", "true"):
+        queryset = queryset.filter(read_at__isnull=True)
+    return Response(NotificationSerializer(queryset[:100], many=True).data)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def unread_counts(request):
+    """Red dots on the home header: unread notifications and unread chat messages."""
+    from chat.services import unread_message_count
+
+    return Response({
+        "notifications": Notification.objects.filter(user=request.user, read_at__isnull=True).count(),
+        "messages": unread_message_count(request.user),
+    })
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def mark_notification_read(request, notification_id):
+    Notification.objects.filter(user=request.user, pk=notification_id, read_at__isnull=True).update(read_at=timezone.now())
+    return Response({"unread": False})
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def mark_all_notifications_read(request):
+    updated = Notification.objects.filter(user=request.user, read_at__isnull=True).update(read_at=timezone.now())
+    return Response({"marked": updated})
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def clear_read_notifications(request):
+    deleted, _ = Notification.objects.filter(user=request.user, read_at__isnull=False).delete()
+    return Response({"deleted": deleted})

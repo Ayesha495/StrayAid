@@ -19,11 +19,18 @@ class CaseSerializer(serializers.ModelSerializer):
     distance_km = serializers.SerializerMethodField()
     reference = serializers.ReadOnlyField()
     ai_feedback_count = serializers.SerializerMethodField()
+    # Report cards on the Profile screen: "In Progress", "3 team updates".
+    status_label = serializers.CharField(source="get_status_display", read_only=True)
+    update_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Case
         fields = '__all__'
         read_only_fields = ["organization", "assigned_to", "resolved_at", "updated_at"]
+
+    def get_update_count(self, obj):
+        # Notes and status changes after the report itself.
+        return max(obj.updates.count() - 1, 0)
 
     def get_ai_feedback_count(self, obj):
         return obj.ai_feedback.count()

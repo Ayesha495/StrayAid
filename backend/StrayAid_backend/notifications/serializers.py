@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import AnimalFollow, OrganizationFollow, PushToken
+from .models import AnimalFollow, Notification, OrganizationFollow, PushToken
 
 
 class PushTokenSerializer(serializers.ModelSerializer):
@@ -27,3 +27,14 @@ class OrganizationFollowSerializer(serializers.ModelSerializer):
         model = OrganizationFollow
         fields = ["id", "organization", "created_at"]
         read_only_fields = ["id", "created_at"]
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    unread = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Notification
+        fields = ["id", "kind", "title", "body", "data", "unread", "created_at"]
+
+    def get_unread(self, obj):
+        return obj.read_at is None

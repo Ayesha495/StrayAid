@@ -351,3 +351,72 @@ class TokenLifetimeTests(APITestCase):
         self.assertEqual(refreshed.status_code, status.HTTP_200_OK)
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refreshed.data['access']}")
         self.assertEqual(self.client.get("/auth/me/").status_code, status.HTTP_200_OK)
+
+
+class ProfileAndActivityTests(APITestCase):
+    """Profile, impact and Activity (Stitch 24 and the profile screen)."""
+
+    def setUp(self):
+        from animals.models import AdoptionApplication, Animal, Sponsorship
+        from rescue.models import Case, Report
+
+        org_user = User.objects.create_user(email="o@example.com", username="o", password="x", role="organization")
+        organization = Organization.objects.create(user=org_user, name="Paws & Care Rescue")
+        self.user = User.objects.create_user(email="u@example.com", username="u", password="x", first_name="Sara")
+        for status_name in ["rescued", "assigned"]:
+            case = Case.objects.create(description="Dog", latitude=33.7, longitude=73.0, reported_by=self.user,
+                                       status=status_name, species="dog", area="G-11", confidence_score=90, organization=organization)
+            Report.objects.create(case=case, user=self.user, image="reports/x.jpg", description="d", latitude=33.7, longitude=73.0)
+        other = Case.objects.create(description="Cat", latitude=33.7, longitude=73.0, reported_by=org_user)
+        luna = Animal.objects.create(case=other, organization=organization, name="Luna", species="Cat", status="adoptable")
+        AdoptionApplication.objects.create(animal=luna, applicant=self.user, full_name="Sara", phone="03001234567",
+                                           home_type="house", status="approved")
+        Sponsorship.objects.create(animal=luna, sponsor=self.user, amount_pkr=1500, monthly=True, status="confirmed")
+        self.client.force_authenticate(user=self.user)
+
+    def test_impact_points_level_and_badges(self):
+        data = self.client.get("/auth/me/impact/").data
+        self.assertEqual((data["reports"], data["rescued"], data["active_cases"], data["pledged_pkr"], data["adoptions"]), (2, 1, 1, 1500, 1))
+        # 2 reports x 20 + 1 rescued x 30 + 15 for PKR 1,500 + 100 for the adoption.
+        self.assertEqual(data["points"], 185)
+        self.assertEqual((data["level"]["number"], data["level"]["name"], data["level"]["next_name"]), (2, "Hero", "Guardian"))
+        self.assertEqual(data["accuracy"], 100)
+        earned = {badge["key"] for badge in data["badges"] if badge["earned"]}
+        self.assertTrue({"first_responder", "forever_friend", "kind_heart", "monthly_guardian"} <= earned)
+        self.assertNotIn("eagle_eye", earned)
+
+    def test_activity_timeline_and_filters(self):
+        data = self.client.get("/auth/me/activity/").data
+        self.assertEqual(data["counts"], {"reports": 2, "followed": 0, "applications": 1, "sponsorships": 1, "saved": 0, "all": 4})
+        self.assertEqual({item["kind"] for item in data["items"]}, {"report", "application", "sponsorship"})
+        pledge = next(item for item in data["items"] if item["kind"] == "sponsorship")
+        self.assertEqual((pledge["title"], pledge["status"]["label"]), ("Monthly sponsorship", "Active donor"))
+        self.assertIn("Renews in", pledge["extra"])
+
+    def test_profile_edits_and_alert_rules(self):
+        response = self.client.patch("/auth/me/profile/", {"area": "G-11, Islamabad", "phone": "+92 300 1234567"}, format="json")
+        self.assertEqual((response.data["area"], response.data["phone_masked"]), ("G-11, Islamabad", "+92 300••••567"))
+        self.assertEqual(self.client.patch("/auth/me/profile/", {"radius_alerts": True}, format="json").status_code, 400)
+        on = self.client.patch("/auth/me/profile/", {"radius_alerts": True, "alert_latitude": 33.68, "alert_longitude": 73.0}, format="json")
+        self.assertTrue(on.data["radius_alerts"])
+        self.assertEqual(self.client.patch("/auth/me/profile/", {"phone": "12"}, format="json").status_code, 400)
+
+    def test_radius_alerts_reach_people_nearby(self):
+        from unittest.mock import patch as mock_patch
+
+        from notifications.models import Notification
+        from rescue.models import Case
+        from rescue.views import alert_nearby_organizations
+
+        near = User.objects.create_user(email="n@example.com", username="n", password="x", radius_alerts=True,
+                                        alert_latitude=33.701, alert_longitude=73.001)
+        far = User.objects.create_user(email="f@example.com", username="f", password="x", radius_alerts=True,
+                                       alert_latitude=31.5, alert_longitude=74.3)
+        case = Case.objects.create(description="Hit by car", latitude=33.7, longitude=73.0, reported_by=self.user,
+                                   severity="critical", area="G-11, Islamabad")
+        with mock_patch("notifications.services.send_push_notifications"):
+            alert_nearby_organizations(case)
+        alerted = set(Notification.objects.filter(kind="alert").values_list("user_id", flat=True))
+        self.assertIn(near.id, alerted)
+        self.assertNotIn(far.id, alerted)
+        self.assertNotIn(self.user.id, alerted)

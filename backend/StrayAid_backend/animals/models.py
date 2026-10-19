@@ -48,6 +48,11 @@ class Animal(models.Model):
     ]
     health = models.CharField(max_length=20, choices=HEALTH_CHOICES, blank=True)
     vaccinated = models.BooleanField(default=False)
+    # How many sponsors the organization is looking for ("Pledged support 18 / 50", Stitch 16).
+    sponsor_goal = models.PositiveSmallIntegerField(default=20)
+    # What the animal's care costs (treatment, food, shelter), in PKR. Confirmed sponsorships
+    # count towards it. 0 means the organization hasn't set a goal yet.
+    funding_goal_pkr = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -59,7 +64,8 @@ class Animal(models.Model):
 
 
 class AdoptionApplication(models.Model):
-    """Someone asking to adopt an animal (Stitch 14 fills it in; the profile counts them)."""
+    """Someone asking to adopt an animal: the 4-step form on Stitch 14 (applicant, home and
+    lifestyle, why adopt, review). The organization reviews it; the profile counts them."""
 
     STATUS_CHOICES = [
         ("pending", "Pending"),
@@ -68,6 +74,15 @@ class AdoptionApplication(models.Model):
         ("withdrawn", "Withdrawn"),
     ]
     HOME_CHOICES = [("apartment", "Apartment"), ("house", "House"), ("other", "Other")]
+    OWNERSHIP_CHOICES = [("own", "Own"), ("rent", "Rent")]
+    EXPERIENCE_CHOICES = [
+        ("first_time", "First pet"),
+        ("some", "Had pets before"),
+        ("experienced", "Very experienced"),
+    ]
+
+    # A person can have only one of these per animal at a time.
+    ACTIVE_STATUSES = ["pending", "approved"]
 
     animal = models.ForeignKey(Animal, on_delete=models.CASCADE, related_name="adoption_applications")
     applicant = models.ForeignKey("accounts.User", on_delete=models.CASCADE, related_name="adoption_applications")
@@ -75,8 +90,23 @@ class AdoptionApplication(models.Model):
     phone = models.CharField(max_length=30)
     home_type = models.CharField(max_length=20, choices=HOME_CHOICES)
     has_other_pets = models.BooleanField(default=False)
+    # Step 2: home and lifestyle.
+    city = models.CharField(max_length=100, blank=True)
+    ownership = models.CharField(max_length=10, choices=OWNERSHIP_CHOICES, blank=True)
+    landlord_allows_pets = models.BooleanField(null=True, blank=True)
+    household_size = models.PositiveSmallIntegerField(null=True, blank=True)
+    has_children = models.BooleanField(default=False)
+    hours_alone = models.PositiveSmallIntegerField(null=True, blank=True)
+    experience = models.CharField(max_length=20, choices=EXPERIENCE_CHOICES, blank=True)
+    # Step 3: why adopt and promises.
+    reason = models.TextField(blank=True)
+    care_plan = models.TextField(blank=True)
+    agrees_home_visit = models.BooleanField(default=False)
+    agrees_return_policy = models.BooleanField(default=False)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
     created_at = models.DateTimeField(auto_now_add=True)
+    # When it was approved, rejected or withdrawn.
+    decided_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ["-created_at"]

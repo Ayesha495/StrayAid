@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     'animals',
     'posts',
     'notifications',
+    'chat',
     'rest_framework',
     'django.contrib.sites',
     'djoser',

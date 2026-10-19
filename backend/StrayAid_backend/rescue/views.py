@@ -41,6 +41,37 @@ def case_is_within_organization_radius(case, organization):
     return distance_m <= organization.radius * 1000
 
 
+def alert_nearby_organizations(case):
+    """A critical case goes to every available organization whose service area covers it,
+    and to people who turned on "Urgent Radius Alerts" near the spot ("Rescue Alert" on
+    the Notifications screen, Stitch 20)."""
+    from accounts.models import User
+    from notifications.services import notify_users
+    from organizations.models import Organization
+
+    nearby = [
+        organization.user_id
+        for organization in Organization.objects.filter(
+            is_available=True, latitude__isnull=False, longitude__isnull=False, radius__isnull=False
+        )
+        if case_is_within_organization_radius(case, organization)
+    ]
+    nearby += [
+        person.id
+        for person in User.objects.filter(radius_alerts=True, alert_latitude__isnull=False, alert_longitude__isnull=False)
+        .exclude(pk=case.reported_by_id)
+        if calculate_distance(person.alert_latitude, person.alert_longitude, case.latitude, case.longitude)
+        <= User.ALERT_RADIUS_KM * 1000
+    ]
+    place = case.area.split(",")[0].strip() if case.area else "your area"
+    notify_users(
+        nearby,
+        title="Rescue Alert",
+        body=f"Critical case reported near **{place}**. Tap to review details.",
+        data={"type": "critical_case", "case_id": case.id},
+    )
+
+
 def _photo_check_error(image):
     """Run the animal detector on an uploaded photo before anything is saved.
     Returns (result, None) when it shows an animal, or (None, error response)."""
@@ -132,6 +163,7 @@ def report_case(request):
 
     if existing_case:
         case = existing_case
+        was_critical = case.severity == "critical"
         changed = []
         if area and not case.area:
             case.area = area
@@ -153,6 +185,7 @@ def report_case(request):
             severity=severity,
             reported_by=user
         )
+        was_critical = False
         message = "New case created and report added"
 
     # Every submission still gets its own report record for history.
@@ -173,6 +206,8 @@ def report_case(request):
     # first: the matcher's copy has its report list cached from before this report.
     case = Case.objects.get(pk=case.pk)
     refresh_case_score(case)
+    if case.severity == "critical" and not was_critical and case.status == "reported":
+        alert_nearby_organizations(case)
 
     return Response(
         {
@@ -396,6 +431,23 @@ class CaseViewSet(viewsets.ReadOnlyModelViewSet):
         if not message:
             return Response({"detail": "Write a message for the update."}, status=status.HTTP_400_BAD_REQUEST)
         update = CaseUpdate.objects.create(case=case, message=message[:2000], author=request.user)
+
+        from notifications.services import notify_users
+        from notifications.signals import case_audience
+
+        reporter_ids, follower_ids = case_audience(case)
+        recipients = (reporter_ids | follower_ids) - {request.user.id}
+        if hasattr(case, "animal"):
+            from notifications.models import AnimalFollow
+
+            recipients |= set(AnimalFollow.objects.filter(animal=case.animal).values_list("user_id", flat=True)) - {request.user.id}
+        preview = message if len(message) <= 140 else f"{message[:137]}..."
+        notify_users(
+            list(recipients),
+            title="Rescue Update",
+            body=f"**{case.organization.name}** posted an update on case {case.reference}: {preview}",
+            data={"type": "case_note", "case_id": case.pk, "update_id": update.pk},
+        )
         return Response(CaseUpdateSerializer(update).data, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=["patch"], url_path="update-status")

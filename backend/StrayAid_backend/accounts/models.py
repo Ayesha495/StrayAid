@@ -13,6 +13,17 @@ class User(AbstractUser):
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='public')
     # Optional profile photo, set at sign-up (Stitch screen 6) or later in settings.
     avatar = models.ImageField(upload_to="avatars/", null=True, blank=True)
+    # Profile (Stitch profile screen): where they're based and an emergency contact number.
+    area = models.CharField(max_length=100, blank=True)
+    phone = models.CharField(max_length=30, blank=True)
+    # "Emergency Field Readiness": happy to be called to check a case on site.
+    field_ready = models.BooleanField(default=False)
+    # "Urgent Radius Alerts": critical reports within ALERT_RADIUS_KM of this spot.
+    radius_alerts = models.BooleanField(default=False)
+    alert_latitude = models.FloatField(null=True, blank=True)
+    alert_longitude = models.FloatField(null=True, blank=True)
+
+    ALERT_RADIUS_KM = 5
 
     # Keep Django auth compatible while using email for authentication.
     USERNAME_FIELD = "email"

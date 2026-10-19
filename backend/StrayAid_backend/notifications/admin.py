@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import AnimalFollow, OrganizationFollow, PushToken
+from .models import AnimalFollow, Notification, OrganizationFollow, PushToken
 
 
 @admin.register(PushToken)
@@ -18,3 +18,10 @@ class AnimalFollowAdmin(admin.ModelAdmin):
 class OrganizationFollowAdmin(admin.ModelAdmin):
     list_display = ("user", "organization", "created_at")
     search_fields = ("user__email", "organization__name")
+
+
+@admin.register(Notification)
+class NotificationAdmin(admin.ModelAdmin):
+    list_display = ("user", "kind", "body", "read_at", "created_at")
+    list_filter = ("kind",)
+    search_fields = ("user__email", "body")

@@ -191,16 +191,22 @@ def refresh_unanswered_scores(now=None):
 # Lists that sort by score call this; it does the refresh at most every few minutes per
 # server process, so no scheduled job is needed.
 REFRESH_EVERY_SECONDS = 600
-_last_refresh = 0.0
+# None until the first refresh. (Not 0.0: the monotonic clock can start near zero after a
+# reboot, which would skip the first refresh for ten minutes.)
+_last_refresh = None
 _refresh_lock = threading.Lock()
+
+
+def _refresh_is_due():
+    return _last_refresh is None or time.monotonic() - _last_refresh >= REFRESH_EVERY_SECONDS
 
 
 def refresh_unanswered_scores_if_due():
     global _last_refresh
-    if time.monotonic() - _last_refresh < REFRESH_EVERY_SECONDS:
+    if not _refresh_is_due():
         return
     with _refresh_lock:
-        if time.monotonic() - _last_refresh < REFRESH_EVERY_SECONDS:
+        if not _refresh_is_due():
             return
         _last_refresh = time.monotonic()
     refresh_unanswered_scores()

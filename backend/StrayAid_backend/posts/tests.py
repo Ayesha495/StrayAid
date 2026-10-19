@@ -280,6 +280,33 @@ class CommunityEngagementTests(MediaEnabledAPITestCase):
         self.assertEqual(response.data[1]["stories"][0]["caption"], "Meet Luna")
         self.assertEqual(response.data[1]["stories"][0]["organization"]["name"], "Paws & Care")
 
+    def test_organizations_upload_stories_about_their_own_animals(self):
+        from animals.tests import make_png
+
+        from .models import Story
+
+        story = {"category": "rescue_update", "headline": "Luna is eating again", "caption": "Day 3",
+                 "animal_id": self.post.animal_id}
+        self.client.force_authenticate(user=self.org_user)
+        response = self.client.post("/api/posts/stories/", {**story, "image": make_png("story.png")}, format="multipart")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+        self.assertEqual(response.data["organization"]["name"], "Paws & Care")
+        self.assertEqual(response.data["animal"]["name"], "Luna")
+        self.assertTrue(Story.objects.filter(headline="Luna is eating again", organization=self.organization).exists())
+
+        missing_image = self.client.post("/api/posts/stories/", story, format="multipart")
+        self.assertEqual(missing_image.status_code, status.HTTP_400_BAD_REQUEST)
+
+        other_user = User.objects.create_user(email="o3@example.com", username="o3", password="x", role="organization")
+        Organization.objects.create(user=other_user, name="Other Shelter")
+        self.client.force_authenticate(user=other_user)
+        not_theirs = self.client.post("/api/posts/stories/", {**story, "image": make_png("s.png")}, format="multipart")
+        self.assertEqual(not_theirs.status_code, status.HTTP_403_FORBIDDEN)
+
+        self.client.force_authenticate(user=self.reporter)
+        reporter = self.client.post("/api/posts/stories/", {**story, "image": make_png("s.png")}, format="multipart")
+        self.assertEqual(reporter.status_code, status.HTTP_403_FORBIDDEN)
+
     def test_feed_is_newest_first_even_with_engagement_counts(self):
         from datetime import timedelta
 
@@ -294,3 +321,91 @@ class CommunityEngagementTests(MediaEnabledAPITestCase):
         response = self.client.get("/api/posts/public-feed/")
 
         self.assertEqual([item["title"] for item in response.data], ["Luna", "Older"])
+
+
+class CommentsAndSavesTests(MediaEnabledAPITestCase):
+    """The post page and comments sheet (Stitch 22 and 23)."""
+
+    def setUp(self):
+        from animals.models import Sponsorship
+
+        from .models import PostComment
+
+        self.org_user = User.objects.create_user(email="org3@example.com", username="org3", password="x", role="organization")
+        self.organization = Organization.objects.create(user=self.org_user, name="Hope Animal Shelter")
+        self.reporter = User.objects.create_user(email="rep@example.com", username="rep", password="x", first_name="Sara", last_name="Ahmed")
+        self.donor = User.objects.create_user(email="don@example.com", username="don", password="x", first_name="Bilal")
+        case = Case.objects.create(description="Kitten", latitude=33.7, longitude=73.0, reported_by=self.reporter)
+        self.animal = Animal.objects.create(case=case, organization=self.organization, name="Coco", species="Cat")
+        Sponsorship.objects.create(animal=self.animal, sponsor=self.donor, amount_pkr=1000, status="confirmed")
+        self.post = Post.objects.create(animal=self.animal, organization=self.organization, title="Coco", content="Warm now")
+        self.first = PostComment.objects.create(post=self.post, user=self.reporter, body="So glad Coco is safe")
+
+    def url(self, suffix=""):
+        return f"/api/posts/{self.post.id}/{suffix}"
+
+    def test_comments_have_badges_replies_and_likes(self):
+        from notifications.models import Notification
+
+        self.client.force_authenticate(user=self.org_user)
+        reply = self.client.post(self.url("comments/"), {"body": "Thank you Sara!", "parent": self.first.id}, format="json")
+        self.assertEqual(reply.status_code, status.HTTP_201_CREATED, reply.data)
+        self.client.force_authenticate(user=self.donor)
+        self.client.post(self.url("comments/"), {"body": "Sending love"}, format="json")
+        self.client.post(f"/api/posts/comments/{self.first.id}/like/")
+
+        self.client.force_authenticate(user=None)
+        data = self.client.get(self.url("comments/")).data
+        self.assertEqual(data["count"], 3)
+        top = data["results"][0]
+        self.assertEqual((top["author"]["badge"], top["like_count"], top["liked_by_me"]), ("Reporter", 1, False))
+        reply_author = top["replies"][0]["author"]
+        self.assertEqual((reply_author["badge"], reply_author["name"]), ("Author", "Hope Animal Shelter"))
+        self.assertEqual(data["results"][1]["author"]["badge"], "Donor")
+        # The reporter heard about the reply, the organization about the new comment.
+        self.assertTrue(Notification.objects.filter(user=self.reporter, body__contains="replied").exists())
+        self.assertTrue(Notification.objects.filter(user=self.org_user, body__contains="commented").exists())
+
+    def test_only_the_organization_pins_and_pinned_comes_first(self):
+        from .models import PostComment
+
+        newer = PostComment.objects.create(post=self.post, user=self.donor, body="Newest")
+        self.client.force_authenticate(user=self.donor)
+        self.assertEqual(self.client.post(f"/api/posts/comments/{newer.id}/pin/").status_code, status.HTTP_403_FORBIDDEN)
+        self.client.force_authenticate(user=self.org_user)
+        self.assertTrue(self.client.post(f"/api/posts/comments/{self.first.id}/pin/").data["is_pinned"])
+        results = self.client.get(self.url("comments/?sort=new")).data["results"]
+        self.assertEqual([row["body"] for row in results], ["So glad Coco is safe", "Newest"])
+        self.assertTrue(results[0]["is_pinned"])
+
+    def test_deleting_is_for_the_writer_or_the_organization(self):
+        self.client.force_authenticate(user=self.donor)
+        self.assertEqual(self.client.delete(f"/api/posts/comments/{self.first.id}/").status_code, status.HTTP_403_FORBIDDEN)
+        self.client.force_authenticate(user=self.reporter)
+        self.assertEqual(self.client.delete(f"/api/posts/comments/{self.first.id}/").status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_saving_sharing_and_the_saved_list(self):
+        self.client.force_authenticate(user=self.reporter)
+        self.assertTrue(self.client.post(self.url("save/")).data["saved_by_me"])
+        self.assertTrue(self.client.get(self.url()).data["saved_by_me"])
+        self.assertEqual([row["id"] for row in self.client.get("/api/posts/saved/").data], [self.post.id])
+        self.client.delete(self.url("save/"))
+        self.assertEqual(self.client.get("/api/posts/saved/").data, [])
+        self.client.force_authenticate(user=None)
+        self.assertEqual(self.client.post(self.url("share/")).data["share_count"], 1)
+        self.assertEqual(self.client.post(self.url("save/")).status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_stories_show_the_animal_and_whether_you_watched_them(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        from .models import Story
+
+        story = Story.objects.create(organization=self.organization, category="rescue_update", animal=self.animal,
+                                     headline="Warm and safe", image=SimpleUploadedFile("s.jpg", b"x", content_type="image/jpeg"))
+        self.client.force_authenticate(user=self.reporter)
+        group = self.client.get("/api/posts/stories/").data[0]
+        self.assertFalse(group["seen"])
+        self.assertEqual(group["stories"][0]["animal"]["sponsor_count"], 1)
+        self.assertEqual(group["stories"][0]["animal"]["update_number"], 2)
+        self.client.post(f"/api/posts/stories/{story.id}/seen/")
+        self.assertTrue(self.client.get("/api/posts/stories/").data[0]["seen"])
