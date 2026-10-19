@@ -36,3 +36,38 @@ export function distanceKm(
 export function formatDistance(km: number): string {
   return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(1)} km`;
 }
+
+// Compact times for lists: "2m", "3h", "Yesterday", "Mon", "12 Apr".
+export function shortTime(isoDate: string, now: Date = new Date()): string {
+  const date = new Date(isoDate);
+  const minutes = Math.max(0, Math.floor((now.getTime() - date.getTime()) / 60000));
+  if (minutes < 1) return "now";
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24 && date.getDate() === now.getDate()) return `${hours}h`;
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
+  if (hours < 24) return `${hours}h`;
+  if (hours < 24 * 6) return date.toLocaleDateString("en-US", { weekday: "short" });
+  return date.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+}
+
+// "10:24 AM"
+export function clockTime(isoDate: string): string {
+  return new Date(isoDate).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+}
+
+// "Today, 10:20 AM", "Yesterday, 4:05 PM", "Mon 12 Apr, 9:00 AM"
+export function dayLabel(isoDate: string, now: Date = new Date()): string {
+  const date = new Date(isoDate);
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  const day =
+    date.toDateString() === now.toDateString()
+      ? "Today"
+      : date.toDateString() === yesterday.toDateString()
+      ? "Yesterday"
+      : date.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+  return `${day}, ${clockTime(isoDate)}`;
+}

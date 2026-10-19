@@ -1,20 +1,22 @@
 import { MaterialIcons } from "@expo/vector-icons";
-import { Href, router } from "expo-router";
+import { Href, router, useFocusEffect } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Alert, FlatList, Pressable, RefreshControl, Share, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { HomeHeader, HomeSearchBar, ReportAnimalButton } from "../../../components/home/HomeTop";
 import PostCard from "../../../components/home/PostCard";
 import StoriesRow from "../../../components/home/StoriesRow";
+import { usePostActions } from "../../../components/home/usePostActions";
 import { useSession } from "../../../hooks/useSession";
-import { FeedPost, getHomeFeed, getStoryGroups, setPostLiked, StoryGroup } from "../../../services/homeService";
+import { FeedPost, getHomeFeed, getStoryGroups, StoryGroup } from "../../../services/homeService";
+import { getUnreadCounts, UnreadCounts } from "../../../services/inboxService";
+import { getOrganizationDirectory } from "../../../services/mobileContentService";
+import { flushQueue, saveRescueContacts } from "../../../services/offlineQueue";
 import { colors, fonts, type } from "../../../theme/tokens";
 
 // Stitch screen 2: the community home feed for guests and signed-in users.
-
-const SIGN_IN_SHEET = "/auth-sheet" as Href;
 
 export default function HomeScreen() {
   const { isSignedIn } = useSession();
@@ -24,6 +26,24 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [searching, setSearching] = useState(false);
+  const [unread, setUnread] = useState<UnreadCounts>({ notifications: 0, messages: 0 });
+
+  // Red dots on the header and watched stories, refreshed whenever Home comes back into view.
+  useFocusEffect(
+    useCallback(() => {
+      getUnreadCounts().then(setUnread);
+      getStoryGroups()
+        .then(setStories)
+        .catch(() => null);
+      // Reports saved while offline go out now, and rescue numbers are kept for the next time
+      // there's no connection.
+      if (isSignedIn) flushQueue().catch(() => null);
+      getOrganizationDirectory()
+        .then((organizations) => saveRescueContacts(organizations))
+        .catch(() => null);
+    }, [isSignedIn])
+  );
 
   const load = useCallback(async () => {
     const [feed, storyGroups] = await Promise.allSettled([getHomeFeed(), getStoryGroups()]);
@@ -42,52 +62,16 @@ export default function HomeScreen() {
     setRefreshing(false);
   }, [load]);
 
-  const requireAccount = useCallback(
-    (action: () => void) => {
-      if (isSignedIn) action();
-      else router.push(SIGN_IN_SHEET);
-    },
-    [isSignedIn]
+  const { requireAccount, toggleLike, share, openComments, openOrganization, openAnimal, showOptions } = usePostActions(
+    setPosts,
+    isSignedIn
   );
 
-  const toggleLike = useCallback(
-    (post: FeedPost) =>
-      requireAccount(async () => {
-        const liked = !post.liked_by_me;
-        setPosts((current) =>
-          current.map((item) =>
-            item.id === post.id ? { ...item, liked_by_me: liked, like_count: item.like_count + (liked ? 1 : -1) } : item
-          )
-        );
-        try {
-          const result = await setPostLiked(post.id, liked);
-          setPosts((current) => current.map((item) => (item.id === post.id ? { ...item, ...result } : item)));
-        } catch {
-          setPosts((current) => current.map((item) => (item.id === post.id ? post : item)));
-          Alert.alert("Couldn't update like", "Please check your connection and try again.");
-        }
-      }),
-    [requireAccount]
-  );
-
-  const sharePost = useCallback((post: FeedPost) => {
-    Share.share({ message: `${post.content}\n\n— ${post.organization.name} on StrayAid` }).catch(() => null);
+  // The search bar opens from the header's search icon and closes again with Cancel.
+  const closeSearch = useCallback(() => {
+    setSearching(false);
+    setQuery("");
   }, []);
-
-  const openOrganization = useCallback(
-    (post: FeedPost) => router.push(`/organizations/${post.organization.id}` as Href),
-    []
-  );
-
-  const showPostOptions = useCallback(
-    (post: FeedPost) =>
-      Alert.alert(post.organization.name, undefined, [
-        { text: "View organization", onPress: () => openOrganization(post) },
-        { text: "Share post", onPress: () => sharePost(post) },
-        { text: "Cancel", style: "cancel" },
-      ]),
-    [openOrganization, sharePost]
-  );
 
   const search = query.trim().toLowerCase();
   const visiblePosts = useMemo(
@@ -104,7 +88,7 @@ export default function HomeScreen() {
 
   const header = (
     <View>
-      <HomeSearchBar value={query} onChangeText={setQuery} />
+      {searching && <HomeSearchBar value={query} onChangeText={setQuery} onCancel={closeSearch} />}
       {!search && (
         <>
           <ReportAnimalButton onPress={() => requireAccount(() => router.push("/report" as Href))} />
@@ -143,7 +127,14 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.screen} edges={["top"]}>
       <StatusBar style="dark" />
-      <HomeHeader hasUnread={false} onNotificationsPress={() => requireAccount(() => null)} />
+      <HomeHeader
+        hasUnread={unread.notifications > 0}
+        onNotificationsPress={() => requireAccount(() => router.push("/notifications" as Href))}
+        unreadMessages={unread.messages}
+        onMessagesPress={() => requireAccount(() => router.push("/messages" as Href))}
+        searching={searching}
+        onSearchPress={() => (searching ? closeSearch() : setSearching(true))}
+      />
       <FlatList
         data={loading || error ? [] : visiblePosts}
         keyExtractor={(post) => String(post.id)}
@@ -153,10 +144,10 @@ export default function HomeScreen() {
           <PostCard
             post={item}
             onLike={() => toggleLike(item)}
-            onComment={() => requireAccount(() => null)}
-            onShare={() => sharePost(item)}
-            onMore={() => showPostOptions(item)}
-            onOpenAnimal={() => router.push(`/animals/${item.animal.id}` as Href)}
+            onComment={() => openComments(item)}
+            onShare={() => share(item)}
+            onMore={() => showOptions(item)}
+            onOpenAnimal={() => openAnimal(item)}
             onOpenOrganization={() => openOrganization(item)}
           />
         )}
@@ -169,8 +160,10 @@ export default function HomeScreen() {
   );
 }
 
-// The story viewer (screen 21) is a separate screen still to be built.
-function openStories(_group: StoryGroup) {}
+// The story viewer (Stitch 21).
+function openStories(group: StoryGroup) {
+  router.push(`/stories/${group.category}` as Href);
+}
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.surface },

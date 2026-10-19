@@ -17,6 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Toggle from "../../components/ui/Toggle";
 import VoiceInputButton from "../../components/VoiceInputButton";
 import { SessionExpiredError } from "../../services/apiClient";
+import { isNetworkError, queueReport } from "../../services/offlineQueue";
 import { submitReport } from "../../services/mobileContentService";
 import { registerForPushNotifications, sendPushTokenToBackend } from "../../services/notificationService";
 import { resetReportDraft, Severity, updateReportDraft, useReportDraft } from "../../services/reportDraft";
@@ -89,6 +90,19 @@ export default function ReportDetailsScreen() {
         // The draft stays in memory, so after signing in they come back here and resend.
         setError("Your sign-in expired. Sign in again, then tap Submit. Your report is saved.");
         router.push("/auth-sheet");
+      } else if (isNetworkError(err) && draft.photo && draft.location) {
+        // No connection: keep the report on the phone and send it when the app is back online.
+        await queueReport({
+          photo: draft.photo,
+          location: draft.location,
+          address: draft.address,
+          description: draft.description.trim(),
+          severity: draft.severity,
+          keepUpdated: draft.keepUpdated,
+        });
+        resetReportDraft();
+        router.dismissAll();
+        router.push({ pathname: "/offline", params: { reason: "report" } });
       } else {
         setError(err instanceof Error ? err.message : "We couldn't send your report. Please try again.");
       }

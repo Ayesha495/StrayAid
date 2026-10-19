@@ -5,6 +5,8 @@ export type FeedPost = MobilePost & {
   like_count: number;
   comment_count: number;
   liked_by_me: boolean;
+  saved_by_me: boolean;
+  share_count: number;
 };
 
 export type Severity = "low" | "medium" | "high" | "critical";
@@ -30,15 +32,29 @@ export type Story = {
   id: number;
   category: string;
   image: string | null;
+  headline: string;
   caption: string;
+  seen: boolean;
   created_at: string;
-  organization: { id: number; name: string; image: string | null };
+  organization: { id: number; name: string; image: string | null; is_verified?: boolean };
+  // The animal the story is about, if any (Stitch 21).
+  animal: {
+    id: number;
+    name: string;
+    species: string;
+    status: string;
+    area: string;
+    sponsor_count: number;
+    sponsor_goal: number;
+    update_number: number;
+  } | null;
 };
 
 export type StoryGroup = {
   category: string;
   label: string;
   latest_at: string;
+  seen: boolean;
   stories: Story[];
 };
 

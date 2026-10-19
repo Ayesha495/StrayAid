@@ -8,8 +8,6 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
-  Linking,
-  Modal,
   NativeScrollEvent,
   NativeSyntheticEvent,
   Pressable,
@@ -22,14 +20,18 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useSession } from "../../hooks/useSession";
-import { getAnimal, MobileAnimal } from "../../services/mobileContentService";
-import { followAnimal, getFollowStatus, unfollowAnimal } from "../../services/notificationService";
-import { colors, fonts } from "../../theme/tokens";
+import { useSession } from "../../../hooks/useSession";
+import { startConversation } from "../../../services/chatService";
+import { getAnimal, getAnimalPosts, MobileAnimal, MobilePost } from "../../../services/mobileContentService";
+import { followAnimal, getFollowStatus, unfollowAnimal } from "../../../services/notificationService";
+import { colors, fonts } from "../../../theme/tokens";
+import { timeAgo } from "../../../utils/format";
 
-// Stitch screen 13: Animal profile.
+// Stitch screen 13: Animal profile, with the organization's posts about the animal in a
+// photo grid at the bottom.
 
 const HERO_HEIGHT = 370;
+const GRID_GAP = 2;
 const HEALTH_LABELS: Record<string, string> = {
   healthy: "Healthy",
   minor_issues: "Minor issues",
@@ -60,16 +62,19 @@ export default function AnimalProfileScreen() {
   const [error, setError] = useState<string | null>(null);
   const [following, setFollowing] = useState(false);
   const [page, setPage] = useState(0);
-  const [showSponsor, setShowSponsor] = useState(false);
+  const [posts, setPosts] = useState<MobilePost[]>([]);
+  const [messaging, setMessaging] = useState(false);
 
   const load = useCallback(async () => {
     try {
-      const [data, follow] = await Promise.all([
+      const [data, follow, animalPosts] = await Promise.all([
         getAnimal(animalId),
         getFollowStatus({ animalId: Number(animalId) }).catch(() => ({ followingAnimal: false })),
+        getAnimalPosts(animalId).catch(() => [] as MobilePost[]),
       ]);
       setAnimal(data);
       setFollowing(!!follow.followingAnimal);
+      setPosts(animalPosts);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "We couldn't load this animal.");
@@ -106,38 +111,38 @@ export default function AnimalProfileScreen() {
     }).catch(() => null);
   };
 
-  // The adoption form is Stitch 14; until then, people contact the organization directly.
+  // Opens the adoption form (Stitch 14).
   const adopt = () => {
     if (!animal) return;
     if (!isSignedIn) {
       router.push("/auth-sheet");
       return;
     }
-    const info = animal.adoption_info;
-    const options = [
-      info?.phone && { text: `Call ${info.phone}`, onPress: () => Linking.openURL(`tel:${info.phone}`) },
-      info?.email && {
-        text: "Send an email",
-        onPress: () =>
-          Linking.openURL(`mailto:${info.email}?subject=${encodeURIComponent(`Adopting ${animal.name}`)}`),
-      },
-    ].filter(Boolean) as { text: string; onPress: () => void }[];
-    if (!options.length) {
-      Alert.alert(`Adopt ${animal.name}`, `${animal.organization.name} hasn't added contact details yet.`);
-      return;
-    }
-    Alert.alert(`Adopt ${animal.name}`, `${info?.message ?? "Contact"} phone or email.`, [
-      ...options,
-      { text: "Cancel", style: "cancel" },
-    ]);
+    router.push(`/animals/${animal.id}/adopt` as Href);
   };
 
+  // The sponsor screen (Stitch 16) is open to guests; pledging asks them to sign in.
   const sponsor = () => {
+    if (!animal) return;
+    router.push(`/animals/${animal.id}/sponsor` as Href);
+  };
+
+  // Chat with the organization about this animal (Stitch 19).
+  const message = async () => {
+    if (!animal) return;
     if (!isSignedIn) {
       router.push("/auth-sheet");
       return;
     }
-    setShowSponsor(true);
+    setMessaging(true);
+    try {
+      const conversation = await startConversation({ animalId: animal.id });
+      router.push(`/messages/${conversation.id}` as Href);
+    } catch (err) {
+      Alert.alert("Couldn't open the chat", err instanceof Error ? err.message : "Please try again.");
+    } finally {
+      setMessaging(false);
+    }
   };
 
   const onScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) =>
@@ -171,7 +176,17 @@ export default function AnimalProfileScreen() {
     capitalize(animal.gender),
   ].filter(Boolean) as string[];
   const place = [animal.organization.city, "Pakistan"].filter(Boolean).join(", ");
-  const adoptLabel = adopted ? "Adopted" : adoptable ? `Adopt ${animal.name}` : "In recovery";
+  const applied = animal.my_application;
+  const canApply = adoptable && !applied;
+  const adoptLabel = applied
+    ? applied.status === "approved"
+      ? "Approved"
+      : "Application sent"
+    : adopted
+    ? "Adopted"
+    : adoptable
+    ? `Adopt ${animal.name}`
+    : "In recovery";
 
   return (
     <View style={styles.screen}>
@@ -290,6 +305,20 @@ export default function AnimalProfileScreen() {
                 </View>
               </View>
             </View>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Message ${animal.organization.name} about ${animal.name}`}
+              disabled={messaging}
+              onPress={message}
+              hitSlop={6}
+              style={({ pressed }) => [styles.shelterMessage, pressed && styles.pressed]}
+            >
+              {messaging ? (
+                <ActivityIndicator size="small" color={colors.primary} />
+              ) : (
+                <Feather name="message-square" size={15} color={colors.primary} />
+              )}
+            </Pressable>
             <View style={styles.shelterArrow}>
               <Feather name="chevron-right" size={16} color="#9CA3AF" />
             </View>
@@ -341,15 +370,51 @@ export default function AnimalProfileScreen() {
             </View>
           </View>
         </View>
+
+        {posts.length > 0 && (
+          <View style={styles.posts}>
+            <View style={styles.postsHeader}>
+              <MaterialIcons name="grid-on" size={16} color="#374151" />
+              <Text style={styles.postsTitle}>Posts</Text>
+              <Text style={styles.postsCount}>{posts.length}</Text>
+            </View>
+            <View style={styles.grid}>
+              {posts.map((post) => {
+                const size = (width - GRID_GAP * 2) / 3;
+                return (
+                  <Pressable
+                    key={post.id}
+                    accessibilityRole="imagebutton"
+                    accessibilityLabel={`Post from ${timeAgo(post.created_at)}: ${post.content}`}
+                    onPress={() => router.push(`/animals/${animal.id}/posts?post=${post.id}` as Href)}
+                    style={({ pressed }) => [{ width: size, height: size }, styles.tile, pressed && styles.tilePressed]}
+                  >
+                    {post.image ? (
+                      <Image source={{ uri: post.image }} style={StyleSheet.absoluteFill} contentFit="cover" transition={150} />
+                    ) : (
+                      <Text style={styles.tileText} numberOfLines={5}>
+                        {post.content}
+                      </Text>
+                    )}
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+        )}
       </ScrollView>
 
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 12) + 12 }]}>
         <Pressable
           accessibilityRole="button"
-          accessibilityState={{ disabled: !adoptable }}
-          disabled={!adoptable}
+          accessibilityState={{ disabled: !canApply }}
+          disabled={!canApply}
           onPress={adopt}
-          style={({ pressed }) => [styles.adopt, pressed && styles.adoptPressed, !adoptable && styles.adoptDisabled]}
+          style={({ pressed }) => [
+            styles.adopt,
+            pressed && styles.adoptPressed,
+            !canApply && (applied ? styles.adoptApplied : styles.adoptDisabled),
+          ]}
         >
           <Text style={styles.adoptText} numberOfLines={1}>
             {adoptLabel}
@@ -367,48 +432,6 @@ export default function AnimalProfileScreen() {
         </Pressable>
       </View>
 
-      <Modal visible={showSponsor} transparent animationType="fade" onRequestClose={() => setShowSponsor(false)}>
-        <Pressable style={styles.modalBackdrop} onPress={() => setShowSponsor(false)}>
-          <Pressable style={[styles.modalCard, { paddingBottom: Math.max(insets.bottom, 16) + 8 }]} onPress={() => null}>
-            <View style={styles.modalHandle} />
-            <Text style={styles.modalTitle}>Sponsor {animal.name}</Text>
-            {animal.donation_info ? (
-              <>
-                <Text style={styles.modalBody}>
-                  Transfer any amount to {animal.organization.name}. It goes towards {animal.name}&apos;s food, medical care and
-                  shelter.
-                </Text>
-                <View style={styles.bank}>
-                  <Text style={styles.bankLabel}>Bank</Text>
-                  <Text style={styles.bankValue} selectable>
-                    {animal.donation_info.bank}
-                  </Text>
-                  <Text style={styles.bankLabel}>Account title</Text>
-                  <Text style={styles.bankValue} selectable>
-                    {animal.donation_info.account_name}
-                  </Text>
-                  <Text style={styles.bankLabel}>Account number</Text>
-                  <Text style={[styles.bankValue, styles.bankNumber]} selectable>
-                    {animal.donation_info.account_number}
-                  </Text>
-                </View>
-                {!!animal.adoption_info?.email && (
-                  <Text style={styles.modalNote}>
-                    After transferring, email the receipt to {animal.adoption_info.email} so they can confirm your pledge.
-                  </Text>
-                )}
-              </>
-            ) : (
-              <Text style={styles.modalBody}>
-                {animal.organization.name} hasn&apos;t added bank details yet. Contact them from their profile to help {animal.name}.
-              </Text>
-            )}
-            <Pressable accessibilityRole="button" onPress={() => setShowSponsor(false)} style={styles.modalClose}>
-              <Text style={styles.modalCloseText}>Done</Text>
-            </Pressable>
-          </Pressable>
-        </Pressable>
-      </Modal>
     </View>
   );
 }
@@ -592,6 +615,7 @@ const styles = StyleSheet.create({
   },
   adoptPressed: { backgroundColor: "#165242", transform: [{ scale: 0.98 }] },
   adoptDisabled: { backgroundColor: "#94A3B8", shadowOpacity: 0 },
+  adoptApplied: { backgroundColor: colors.secondary, shadowOpacity: 0 },
   adoptText: { fontFamily: fonts.displayBold, fontSize: 16, color: colors.onPrimary },
   sponsor: {
     flex: 1,
@@ -608,30 +632,37 @@ const styles = StyleSheet.create({
   sponsorPressed: { backgroundColor: "#DDF0E8", transform: [{ scale: 0.98 }] },
   sponsorDisabled: { opacity: 0.5 },
   sponsorText: { fontFamily: fonts.displayBold, fontSize: 16, color: colors.primary },
-  modalBackdrop: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(15,23,42,0.5)" },
-  modalCard: {
-    paddingHorizontal: 24,
-    paddingTop: 12,
-    gap: 12,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    backgroundColor: colors.surface,
-  },
-  modalHandle: { alignSelf: "center", width: 40, height: 5, borderRadius: 3, backgroundColor: "#CBD5E1", marginBottom: 4 },
-  modalTitle: { fontFamily: fonts.displayExtraBold, fontSize: 20, color: "#111827" },
-  modalBody: { fontFamily: fonts.body, fontSize: 14, lineHeight: 21, color: "#4B5563" },
-  bank: { padding: 14, gap: 2, borderRadius: 16, backgroundColor: "#F8FAF9", borderWidth: 1, borderColor: "#E8ECE9" },
-  bankLabel: { marginTop: 6, fontFamily: fonts.bodySemiBold, fontSize: 11, letterSpacing: 0.4, textTransform: "uppercase", color: "#94A3B8" },
-  bankValue: { fontFamily: fonts.bodySemiBold, fontSize: 15, color: "#111827" },
-  bankNumber: { fontFamily: fonts.displayBold, letterSpacing: 1 },
-  modalNote: { fontFamily: fonts.bodyMedium, fontSize: 12.5, lineHeight: 18, color: "#64748B" },
-  modalClose: {
-    height: 50,
-    marginTop: 4,
+  shelterMessage: {
+    width: 32,
+    height: 32,
+    marginRight: 8,
     borderRadius: 16,
-    backgroundColor: colors.primary,
+    backgroundColor: "#EAF3F0",
     alignItems: "center",
     justifyContent: "center",
   },
-  modalCloseText: { fontFamily: fonts.displayBold, fontSize: 15, color: colors.onPrimary },
+  posts: { marginTop: 8, paddingBottom: 8 },
+  postsHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 24,
+    paddingTop: 14,
+    paddingBottom: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#EEF1F0",
+  },
+  postsTitle: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 11,
+    lineHeight: 16,
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+    color: "#374151",
+  },
+  postsCount: { fontFamily: fonts.bodySemiBold, fontSize: 11, color: "#9CA3AF" },
+  grid: { flexDirection: "row", flexWrap: "wrap", gap: GRID_GAP },
+  tile: { backgroundColor: "#E5EBE8", overflow: "hidden", justifyContent: "center" },
+  tilePressed: { opacity: 0.85 },
+  tileText: { padding: 10, fontFamily: fonts.bodyMedium, fontSize: 11, lineHeight: 15, color: colors.primary },
 });

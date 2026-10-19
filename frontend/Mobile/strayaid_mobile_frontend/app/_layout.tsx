@@ -11,9 +11,11 @@ import {
   Manrope_800ExtraBold,
 } from "@expo-google-fonts/manrope";
 import { useFonts } from "expo-font";
-import { Href, router, Stack } from "expo-router";
+import { router, Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useRef } from "react";
+
+import { notificationTarget } from "../services/inboxService";
 
 // Keep the native splash up until the fonts are ready, so no screen renders in the wrong font.
 SplashScreen.preventAutoHideAsync().catch(() => null);
@@ -64,11 +66,10 @@ export default function RootLayout() {
       notificationListener.current = Notifications.addNotificationReceivedListener(() => {
         // Foreground notification received — handler in notificationService shows it.
       });
-      // Tapping a push opens what it is about.
+      // Tapping a push opens what it is about (the same place as on the Notifications screen).
       responseListener.current = Notifications.addNotificationResponseReceivedListener((response) => {
-        const data = response.notification.request.content.data as { case_id?: number; animal_id?: number };
-        if (data?.case_id) router.push(`/cases/${data.case_id}` as Href);
-        else if (data?.animal_id) router.push(`/animals/${data.animal_id}` as Href);
+        const target = notificationTarget(response.notification.request.content.data as Record<string, unknown>);
+        if (target) router.push(target);
       });
     }
 
@@ -88,6 +89,13 @@ export default function RootLayout() {
         name="auth-sheet"
         options={{ presentation: "transparentModal", animation: "fade", contentStyle: { backgroundColor: "transparent" } }}
       />
+      {/* Comments slide up over the feed like the sign-in sheet (Stitch 23). */}
+      <Stack.Screen
+        name="posts/[postId]/comments"
+        options={{ presentation: "transparentModal", animation: "fade", contentStyle: { backgroundColor: "transparent" } }}
+      />
+      {/* Stories play full screen over everything (Stitch 21). */}
+      <Stack.Screen name="stories/[category]" options={{ presentation: "fullScreenModal", animation: "fade" }} />
     </Stack>
   );
 }

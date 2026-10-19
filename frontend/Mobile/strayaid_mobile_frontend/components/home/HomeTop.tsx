@@ -6,7 +6,16 @@ import LogoMark from "../brand/Logo";
 
 // Stitch screen 2: app header, search and the "Report an Animal" call to action.
 
-export function HomeHeader({ onNotificationsPress, hasUnread }: { onNotificationsPress: () => void; hasUnread: boolean }) {
+type HeaderProps = {
+  onNotificationsPress: () => void;
+  hasUnread: boolean;
+  onMessagesPress: () => void;
+  unreadMessages: number;
+  onSearchPress: () => void;
+  searching: boolean;
+};
+
+export function HomeHeader({ onNotificationsPress, hasUnread, onMessagesPress, unreadMessages, onSearchPress, searching }: HeaderProps) {
   return (
     <View style={styles.header}>
       <View style={styles.brand}>
@@ -15,22 +24,53 @@ export function HomeHeader({ onNotificationsPress, hasUnread }: { onNotification
         </View>
         <Text style={styles.wordmark}>StrayAid</Text>
       </View>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={hasUnread ? "Notifications, unread" : "Notifications"}
-        onPress={onNotificationsPress}
-        hitSlop={8}
-        style={({ pressed }) => [styles.bell, pressed && styles.pressed]}
-      >
-        <MaterialIcons name="notifications-none" size={24} color={colors.ink} />
-        {hasUnread && <View style={styles.unreadDot} />}
-      </Pressable>
+      <View style={styles.actions}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={searching ? "Close search" : "Search the feed"}
+          accessibilityState={{ expanded: searching }}
+          onPress={onSearchPress}
+          hitSlop={4}
+          style={({ pressed }) => [styles.bell, searching && styles.searchOn, pressed && styles.pressed]}
+        >
+          <MaterialIcons name="search" size={23} color={searching ? colors.primary : colors.ink} />
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={unreadMessages ? `Messages, ${unreadMessages} unread` : "Messages"}
+          onPress={onMessagesPress}
+          hitSlop={4}
+          style={({ pressed }) => [styles.bell, pressed && styles.pressed]}
+        >
+          <MaterialIcons name="chat-bubble-outline" size={21} color={colors.ink} />
+          {unreadMessages > 0 && <View style={styles.unreadDot} />}
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={hasUnread ? "Notifications, unread" : "Notifications"}
+          onPress={onNotificationsPress}
+          hitSlop={4}
+          style={({ pressed }) => [styles.bell, pressed && styles.pressed]}
+        >
+          <MaterialIcons name="notifications-none" size={24} color={colors.ink} />
+          {hasUnread && <View style={styles.unreadDot} />}
+        </Pressable>
+      </View>
     </View>
   );
 }
 
-export function HomeSearchBar({ value, onChangeText }: { value: string; onChangeText: (text: string) => void }) {
+export function HomeSearchBar({
+  value,
+  onChangeText,
+  onCancel,
+}: {
+  value: string;
+  onChangeText: (text: string) => void;
+  onCancel: () => void;
+}) {
   return (
+    <View style={styles.searchRow}>
     <View style={styles.searchWrap}>
       <MaterialIcons name="search" size={18} color={colors.inkMuted} style={styles.searchIcon} />
       <TextInput
@@ -42,7 +82,12 @@ export function HomeSearchBar({ value, onChangeText }: { value: string; onChange
         returnKeyType="search"
         accessibilityLabel="Search the feed"
         clearButtonMode="while-editing"
+        autoFocus
       />
+    </View>
+      <Pressable accessibilityRole="button" onPress={onCancel} hitSlop={8} style={styles.cancel}>
+        <Text style={styles.cancelText}>Cancel</Text>
+      </Pressable>
     </View>
   );
 }
@@ -85,6 +130,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.4,
     color: colors.ink,
   },
+  actions: { flexDirection: "row", alignItems: "center", gap: 2, marginRight: -8 },
   bell: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
   pressed: { backgroundColor: "#F1F5F9" },
   unreadDot: {
@@ -98,10 +144,12 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.surface,
   },
+  searchOn: { backgroundColor: colors.mint },
+  searchRow: { flexDirection: "row", alignItems: "center", gap: 12, marginHorizontal: 20, marginTop: 4, marginBottom: 12 },
+  cancel: { paddingVertical: 8 },
+  cancelText: { fontFamily: fonts.bodySemiBold, fontSize: 14, color: colors.primary },
   searchWrap: {
-    marginHorizontal: 20,
-    marginTop: 4,
-    marginBottom: 12,
+    flex: 1,
     height: 40,
     borderRadius: 20,
     borderWidth: 1,
