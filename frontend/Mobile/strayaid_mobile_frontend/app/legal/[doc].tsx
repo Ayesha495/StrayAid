@@ -4,14 +4,16 @@ import { StatusBar } from "expo-status-bar";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { LEGAL_DOCS } from "../../constants/legal";
+import { BrandBadge } from "../../components/brand/BrandHeader";
+import { LEGAL_DOCS, LegalDocKey } from "../../constants/legal";
 import { colors, fonts } from "../../theme/tokens";
 
-// Terms of Service / Privacy Policy, opened from the sign-up screen (Stitch 6 footer links).
+// Terms of Service / Privacy Policy (sign-up screen links) and the volunteer guidelines
+// (Profile screen).
 
 export default function LegalScreen() {
   const { doc } = useLocalSearchParams<{ doc: string }>();
-  const content = LEGAL_DOCS[doc === "privacy" ? "privacy" : "terms"];
+  const content = LEGAL_DOCS[(doc in LEGAL_DOCS ? doc : "terms") as LegalDocKey];
 
   const goBack = () => (router.canGoBack() ? router.back() : router.replace("/(tabs)/home"));
 
@@ -31,6 +33,9 @@ export default function LegalScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <View style={styles.logo}>
+          <BrandBadge size={52} />
+        </View>
         <Text style={styles.title} accessibilityRole="header">
           {content.title}
         </Text>
@@ -53,6 +58,7 @@ const styles = StyleSheet.create({
   back: { width: 32, height: 32, borderRadius: 16, marginLeft: -10, alignItems: "center", justifyContent: "center" },
   backPressed: { backgroundColor: "#F3F4F6" },
   content: { paddingHorizontal: 24, paddingTop: 8, paddingBottom: 40 },
+  logo: { marginBottom: 14 },
   title: { fontFamily: fonts.displayBold, fontSize: 24, lineHeight: 32, letterSpacing: -0.5, color: colors.ink },
   updated: { fontFamily: fonts.bodyMedium, fontSize: 13, lineHeight: 18, color: colors.inkMuted, marginTop: 4 },
   section: { marginTop: 24, gap: 6 },

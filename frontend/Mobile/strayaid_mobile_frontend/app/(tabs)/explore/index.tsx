@@ -1,6 +1,6 @@
 import { Feather, MaterialIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import { Href, router, useFocusEffect } from "expo-router";
+import { Href, router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
@@ -48,6 +48,8 @@ const matchesQuery = (item: TrendingCase, query: string) => {
 
 export default function ExploreScreen() {
   const insets = useSafeAreaInsets();
+  // "Find … on the rescue map" from the Search screen.
+  const { place } = useLocalSearchParams<{ place?: string }>();
   const map = useRef<RescueMapHandle>(null);
   const [mapReady, setMapReady] = useState(false);
   const [cases, setCases] = useState<TrendingCase[]>([]);
@@ -113,6 +115,16 @@ export default function ExploreScreen() {
     if (mapReady && me) map.current?.post({ type: "user", lat: me.latitude, lng: me.longitude });
   }, [mapReady, me]);
 
+  // A place picked on the Search screen ("Find … on the rescue map"), once per place.
+  const searchedPlace = useRef<string | null>(null);
+  useEffect(() => {
+    if (!mapReady || loading || !place || searchedPlace.current === place) return;
+    searchedPlace.current = place;
+    setQuery(place);
+    search(place);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapReady, loading, place]);
+
   // First time there's something to show, frame the person and the nearest few cases.
   const framed = useRef(false);
   useEffect(() => {
@@ -160,10 +172,10 @@ export default function ExploreScreen() {
   };
 
   // Matching cases are filtered as you type; if none match, the text is treated as a place.
-  const search = async () => {
+  const search = async (typed?: string) => {
     Keyboard.dismiss();
     setNotice(null);
-    const text = query.trim();
+    const text = (typed ?? query).trim();
     if (!text) return;
     const matches = cases.filter((item) => matchesFilter(item, filter) && matchesQuery(item, text));
     if (matches.length) {
@@ -191,7 +203,8 @@ export default function ExploreScreen() {
       <RescueMap ref={map} initialCenter={FALLBACK} onMessage={onMapMessage} />
 
       <View style={[styles.top, { paddingTop: insets.top + 8 }]} pointerEvents="box-none">
-        <View style={styles.search}>
+        <View style={styles.searchRow}>
+        <View style={[styles.search, styles.searchFlex]}>
           <Feather name="search" size={19} color="#9CA3AF" />
           <TextInput
             style={styles.searchInput}
@@ -200,7 +213,7 @@ export default function ExploreScreen() {
               setQuery(value);
               setNotice(null);
             }}
-            onSubmitEditing={search}
+            onSubmitEditing={() => search()}
             placeholder="Search nearby cases"
             placeholderTextColor="#9CA3AF"
             returnKeyType="search"
@@ -212,6 +225,15 @@ export default function ExploreScreen() {
               <MaterialIcons name="close" size={18} color="#9CA3AF" />
             </Pressable>
           )}
+        </View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Search animals, cases and shelters"
+            onPress={() => router.push("/search" as Href)}
+            style={({ pressed }) => [styles.searchButton, pressed && styles.pressed]}
+          >
+            <MaterialIcons name="manage-search" size={24} color={colors.primary} />
+          </Pressable>
         </View>
 
         <ScrollView
@@ -326,6 +348,21 @@ export default function ExploreScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: "#EBF1E9" },
   top: { position: "absolute", top: 0, left: 0, right: 0, paddingHorizontal: 16, gap: 10 },
+  searchRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  searchFlex: { flex: 1 },
+  searchButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    backgroundColor: colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 15,
+    elevation: 6,
+  },
   search: {
     flexDirection: "row",
     alignItems: "center",

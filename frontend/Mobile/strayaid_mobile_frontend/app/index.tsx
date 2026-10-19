@@ -1,6 +1,6 @@
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
+import { useNavigation, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { Platform, StyleSheet, Text, View } from "react-native";
@@ -15,12 +15,16 @@ const GLOW_SIZE = 240;
 
 export default function SplashScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
 
   useEffect(() => {
     // Everyone lands on Home; guests can browse and sign in when they want to act.
-    const timer = setTimeout(() => router.replace("/(tabs)/home"), SPLASH_DURATION_MS);
+    // Skipped when something opened on top of the splash meanwhile (a tapped push or a link).
+    const timer = setTimeout(() => {
+      if (navigation.isFocused()) router.replace("/(tabs)/home");
+    }, SPLASH_DURATION_MS);
     return () => clearTimeout(timer);
-  }, [router]);
+  }, [router, navigation]);
 
   return (
     <View style={styles.container}>

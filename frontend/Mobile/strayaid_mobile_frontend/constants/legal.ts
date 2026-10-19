@@ -1,4 +1,5 @@
-// Terms of Service and Privacy Policy shown from the sign-up screen (Stitch 6).
+// Terms of Service and Privacy Policy shown from the sign-up screen (Stitch 6), and the
+// volunteer guidelines linked from the Profile screen.
 // Plain language, and limited to what StrayAid actually does with data.
 
 export type LegalDoc = {
@@ -7,7 +8,9 @@ export type LegalDoc = {
   sections: { heading: string; body: string }[];
 };
 
-export const LEGAL_DOCS: Record<"terms" | "privacy", LegalDoc> = {
+export type LegalDocKey = "terms" | "privacy" | "guidelines";
+
+export const LEGAL_DOCS: Record<LegalDocKey, LegalDoc> = {
   terms: {
     title: "Terms of Service",
     updated: "October 2026",
@@ -86,6 +89,47 @@ export const LEGAL_DOCS: Record<"terms" | "privacy", LegalDoc> = {
       {
         heading: "Contact",
         body: "Questions about your data? Reach the StrayAid team through Settings → About and help.",
+      },
+    ],
+  },
+  guidelines: {
+    title: "Volunteer Guidelines & FAQ",
+    updated: "October 2026",
+    sections: [
+      {
+        heading: "Your safety comes first",
+        body:
+          "Never put yourself in danger to reach an animal. Stay off busy roads, keep a safe distance from animals that growl, bite or run, and don't try to catch an injured animal with bare hands. Report it and let the rescue team handle it.",
+      },
+      {
+        heading: "Making a good report",
+        body:
+          "Take a clear photo from a safe distance with the whole animal in view. Drop the pin where the animal is, not where you are standing, and describe what you saw: injuries, behaviour, and how long it has been there. Reports with a clear photo are checked faster.",
+      },
+      {
+        heading: "While you wait",
+        body:
+          "If it's safe, stay nearby until the team arrives, keep children and other animals away, and offer water in a shallow bowl. Don't give human food or medicine. You can follow the case and chat with the organization from the case page.",
+      },
+      {
+        heading: "Emergency Field Readiness",
+        body:
+          "Turning this on tells rescue teams you are happy to be called to check on a case near you. They see your phone number only when they contact you about a case. Turn it off any time from your profile.",
+      },
+      {
+        heading: "Urgent Radius Alerts",
+        body:
+          "Get a notification when someone reports a critical case within 5 km of the spot you choose. The alert shows the area, never the reporter's details.",
+      },
+      {
+        heading: "Adopting and sponsoring",
+        body:
+          "Adoption applications go straight to the organization caring for the animal, who may call you or visit your home. Sponsorships are bank transfers to the organization; attach your receipt so they can confirm it.",
+      },
+      {
+        heading: "Points, levels and badges",
+        body:
+          "You earn points for reports (more when the rescue team acts on them), adoptions, confirmed pledges and supportive comments. Levels go Helper, Hero, Guardian, Champion and Legend. Reports flagged as invalid don't earn points.",
       },
     ],
   },

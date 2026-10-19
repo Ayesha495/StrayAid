@@ -63,12 +63,26 @@ export default function PostCard({ post, onLike, onComment, onShare, onMore, onO
               </Text>
             </View>
           </Pressable>
+          {!!post.animal?.name && (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`About ${post.animal.name}, open profile`}
+              onPress={onOpenAnimal}
+              hitSlop={6}
+              style={({ pressed }) => [styles.animalChip, pressed && styles.animalChipPressed]}
+            >
+              <MaterialIcons name="pets" size={13} color={colors.primary} />
+              <Text style={styles.animalName} numberOfLines={1}>
+                {post.animal.name}
+              </Text>
+            </Pressable>
+          )}
           <Pressable accessibilityRole="button" accessibilityLabel="More options" onPress={onMore} hitSlop={10}>
             <MaterialIcons name="more-vert" size={20} color="#94A3B8" />
           </Pressable>
         </View>
 
-        <Pressable accessibilityRole="button" accessibilityLabel={`Open ${post.animal?.name ?? "animal"}'s profile`} onPress={onOpenAnimal}>
+        <Pressable accessibilityRole="button" accessibilityLabel={`Open ${post.animal?.name ?? "the animal"}'s profile`} onPress={onOpenAnimal}>
           <Text style={styles.content}>{post.content}</Text>
           {post.image && (
             <View style={styles.media}>
@@ -121,19 +135,9 @@ export default function PostCard({ post, onLike, onComment, onShare, onMore, onO
 }
 
 const styles = StyleSheet.create({
-  wrapper: { paddingHorizontal: 16, paddingVertical: 8 },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#F1F5F9",
-    overflow: "hidden",
-    shadowColor: colors.ink,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 1,
-  },
+  // Posts run edge to edge; a thin grey gap separates them.
+  wrapper: { borderBottomWidth: 8, borderBottomColor: "#F1F5F9" },
+  card: { backgroundColor: colors.surface, overflow: "hidden" },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: 14 },
   author: { flexDirection: "row", alignItems: "center", gap: 10, flex: 1, minWidth: 0 },
   avatar: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: "#F1F5F9" },
@@ -153,6 +157,19 @@ const styles = StyleSheet.create({
     borderColor: colors.surface,
   },
   authorText: { flex: 1, minWidth: 0 },
+  animalChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    maxWidth: 120,
+    marginRight: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: colors.mint,
+  },
+  animalChipPressed: { opacity: 0.75 },
+  animalName: { flexShrink: 1, fontFamily: fonts.bodyBold, fontSize: 12, lineHeight: 16, color: colors.primary },
   orgName: { fontFamily: fonts.bodyBold, fontSize: 14, lineHeight: 18, color: colors.ink },
   meta: { fontFamily: fonts.body, fontSize: 11, lineHeight: 15, color: colors.inkMuted, marginTop: 2 },
   content: {
@@ -163,7 +180,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingBottom: 12,
   },
-  media: { height: 224, backgroundColor: "#F1F5F9" },
+  media: { aspectRatio: 4 / 3, backgroundColor: "#F1F5F9" },
   statusChip: {
     position: "absolute",
     top: 12,

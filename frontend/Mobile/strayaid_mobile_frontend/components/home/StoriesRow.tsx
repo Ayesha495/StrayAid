@@ -25,11 +25,11 @@ export default function StoriesRow({ groups, onOpen }: Props) {
           <Pressable
             key={group.category}
             accessibilityRole="button"
-            accessibilityLabel={`${group.label} stories, ${group.stories.length} new`}
+            accessibilityLabel={`${group.label} stories, ${group.seen ? "watched" : `${group.stories.length} new`}`}
             onPress={() => onOpen(group)}
             style={({ pressed }) => [styles.item, pressed && styles.pressed]}
           >
-            <View style={styles.ring}>
+            <View style={[styles.ring, group.seen && styles.ringSeen]}>
               <View style={styles.photoFrame}>
                 {cover ? (
                   <Image source={{ uri: cover }} style={styles.photo} contentFit="cover" transition={150} />
@@ -60,6 +60,8 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.primary,
   },
+  // Watched stories fade back like on other social apps.
+  ringSeen: { borderColor: "#CBD5E1" },
   photoFrame: {
     borderRadius: 999,
     borderWidth: 2,

@@ -10,7 +10,6 @@ import {
   Dimensions,
   FlatList,
   LayoutChangeEvent,
-  Linking,
   Modal,
   Pressable,
   ScrollView,
@@ -24,6 +23,7 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import Toggle from "../../../components/ui/Toggle";
 import { useSession } from "../../../hooks/useSession";
 import { SessionExpiredError } from "../../../services/apiClient";
+import { startConversation } from "../../../services/chatService";
 import {
   CaseDetail,
   CaseStatus,
@@ -261,26 +261,20 @@ export default function CaseDetailsScreen() {
     }
   };
 
-  // Chat (Stitch 18-19) isn't built yet, so this offers the organization's phone and email.
-  const contactOrganization = () => {
-    const organization = item?.organization;
-    if (!organization) return;
-    const options = [
-      organization.phone && { text: `Call ${organization.phone}`, onPress: () => Linking.openURL(`tel:${organization.phone}`) },
-      organization.email && {
-        text: "Send an email",
-        onPress: () =>
-          Linking.openURL(`mailto:${organization.email}?subject=${encodeURIComponent(`Case #${item.reference}`)}`),
-      },
-    ].filter(Boolean) as { text: string; onPress: () => void }[];
-    if (!options.length) {
-      Alert.alert(organization.name, "This organization hasn't added contact details yet.");
+  // Opens the chat with the organization handling the case (Stitch 19).
+  const contactOrganization = async () => {
+    if (!item?.organization) return;
+    if (!isSignedIn) {
+      router.push("/auth-sheet");
       return;
     }
-    Alert.alert(`Contact ${organization.name}`, `About case #${item.reference}`, [
-      ...options,
-      { text: "Cancel", style: "cancel" },
-    ]);
+    try {
+      const conversation = await startConversation({ caseId: item.id });
+      router.push(`/messages/${conversation.id}` as Href);
+    } catch (err) {
+      if (err instanceof SessionExpiredError) router.push("/auth-sheet");
+      else Alert.alert("Couldn't open the chat", err instanceof Error ? err.message : "Please try again.");
+    }
   };
 
   if (!item) {
