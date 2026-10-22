@@ -3,6 +3,7 @@
 Run:   python manage.py seed_demo_data
 Fresh: python manage.py seed_demo_data --reset   (deletes every @strayaid.local demo account first)
 Ducky paws Rescue only: python manage.py seed_demo_data --only-ducky-paws
+Stories only (they last 24 hours): python manage.py seed_demo_data --stories
 
 Safe to re-run: records are matched by stable keys and photos are only attached once.
 Timestamps are relative to "now", so stories stay inside their 24-hour window; re-run before a demo.
@@ -659,6 +660,22 @@ DUCKY_PAWS_ANIMALS = [
     },
 ]
 
+# Ducky paws stories: (category, photo in images/, crop or None, caption, headline, animal, hours ago).
+# Stories last 24 hours; run `seed_demo_data --stories` before a demo to bring them all back.
+DUCKY_PAWS_STORIES = [
+    ("rescue_update", "reports/4377.Rocky.jpg", (0.18, 0.05, 0.85, 0.75), "Rocky's stitches come out next week 🐾",
+     "Rocky is walking on all four legs again", "Rocky", 1),
+    ("adoption", "animals/dog-hero.jpg", (0.4, 0.0, 1.0, 1.0), "Chai is house-trained and ready for her family.",
+     "Meet Chai", "Chai", 3),
+    ("adoption", "reports/_130505861_mediaitem130505860.jpg", None, "Black cats wait the longest. Kali has waited a month.",
+     "Kali needs a quiet home", "Kali", 7),
+    ("happy_ending", "animals/awsmaine_peachesDOG_0325-scaled-e1742240776863-1024x1024.jpg", None,
+     "Bholu sent us a photo from his new home in Rawalpindi! 🏡", "Bholu's first week at home", "Bholu", 5),
+    ("behind_the_scenes", "organizations/images (3).jpg", None, "Evening feeding round in Kahuta.", "", None, 9),
+    ("behind_the_scenes", "organizations/images.jpg", None, "Every rescue starts with trust.", "", None, 12),
+    ("sanctuary", "organizations/download.jpg", None, "Clean kennels, full bowls, everyone settled for the night.", "", None, 15),
+]
+
 DUCKY_PAWS_COMMENTS = ["Poor baby, thank you for helping!", "Sharing this now 🙏", "So glad he's safe", "What a sweetheart"]
 
 # A Kahuta reporter to demo the reporter side with: reports at every stage, an adoption
@@ -857,6 +874,11 @@ class Command(BaseCommand):
             help=f"Delete all {DEMO_DOMAIN} demo accounts (and everything they own) before seeding.",
         )
         parser.add_argument(
+            "--stories",
+            action="store_true",
+            help="Only bring every demo story back inside its 24-hour window (and add any missing ones).",
+        )
+        parser.add_argument(
             "--only-ducky-paws",
             action="store_true",
             help=f"Only add the animals and posts for {DUCKY_PAWS_NAME} (needs the demo reporters to exist).",
@@ -864,6 +886,19 @@ class Command(BaseCommand):
 
     @transaction.atomic
     def handle(self, *args, **options):
+        if options["stories"]:
+            organizations = {
+                data["key"]: organization
+                for data in ORGANIZATIONS
+                if (organization := Organization.objects.filter(user__email=f"{data['key']}{DEMO_DOMAIN}").first())
+            }
+            self.seed_stories(organizations)
+            ducky = Organization.objects.filter(name__iexact=DUCKY_PAWS_NAME).first()
+            if ducky:
+                self.seed_ducky_paws_stories(ducky)
+            self.stdout.write(self.style.SUCCESS("Stories refreshed: they stay up for the next 24 hours."))
+            return
+
         if options["only_ducky_paws"]:
             self.seed_ducky_paws()
             return
@@ -1375,6 +1410,8 @@ class Command(BaseCommand):
 
     def seed_stories(self, organizations):
         for org_key, category, image, caption, hours_ago in STORIES:
+            if org_key not in organizations:
+                continue
             story, _ = Story.objects.get_or_create(
                 organization=organizations[org_key],
                 category=category,
@@ -1490,6 +1527,7 @@ class Command(BaseCommand):
             # Posts dropped from the list above are removed on the next run.
             Post.objects.filter(animal=animal, organization=organization).exclude(id__in=kept).delete()
 
+        self.seed_ducky_paws_stories(organization)
         cases = self.seed_ducky_paws_cases(organization, people)
         self.seed_case_history(Case.objects.filter(Q(organization=organization) | Q(id__in=[case.id for case in cases])))
         self.seed_ducky_paws_people(organization, people, maryam)
@@ -1731,3 +1769,17 @@ class Command(BaseCommand):
                     minutes = (now - conversation.last_message_at).total_seconds() / 60
                     add(viewer, "chat", "Chat", f"New message from **{label}**.",
                         {"type": "chat_message", "conversation_id": conversation.id}, minutes, read=False, key=f"chat:{conversation.id}")
+
+    def seed_ducky_paws_stories(self, organization):
+        for category, image, crop, caption, headline, animal_name, hours_ago in DUCKY_PAWS_STORIES:
+            story, created = Story.objects.get_or_create(
+                organization=organization,
+                category=category,
+                caption=caption,
+                defaults={"image": real_photo(image, crop)},
+            )
+            story.animal = Animal.objects.filter(name=animal_name, organization=organization).first() if animal_name else None
+            story.headline = headline
+            story.save(update_fields=["animal", "headline"])
+            # Stories stay fresh: every run moves them back inside the 24-hour window.
+            backdate(story, hours=hours_ago)
