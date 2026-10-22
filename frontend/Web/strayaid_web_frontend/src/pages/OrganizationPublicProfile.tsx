@@ -269,11 +269,11 @@ function OrganizationPublicProfile() {
           <motion.section id="updates" className="profile-section" {...reveal}>
             <div className="profile-section-head">
               <h2>Latest updates</h2>
-              <Link to="/feed" className="link small">See the community feed</Link>
+              <Link to={`/organizations/${organizationId}/posts`} className="link small">See all posts</Link>
             </div>
             {feed.data ? (
               posts.length ? (
-                <UpdateGrid posts={posts} />
+                <UpdateGrid posts={posts} hrefFor={(post) => `/organizations/${organizationId}/posts?post=${post.id}`} />
               ) : (
                 <div className="card"><EmptyState title="No updates yet" message={`Follow ${org.name} to hear about new rescues.`} /></div>
               )

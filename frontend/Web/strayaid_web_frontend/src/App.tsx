@@ -54,6 +54,7 @@ function App() {
               <Route path="/animals/:animalId" element={<AnimalDetail />} />
               <Route path="/organizations" element={<Organizations />} />
               <Route path="/organizations/:organizationId" element={<OrganizationPublicProfile />} />
+              <Route path="/organizations/:organizationId/posts" element={<PostFeed />} />
               <Route path="/case/:caseId" element={<PublicCase />} />
             </Route>
 

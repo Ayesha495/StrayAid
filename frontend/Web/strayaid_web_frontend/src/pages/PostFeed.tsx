@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
-import { Bookmark, ImagePlus, Newspaper, PenSquare, Smartphone } from "lucide-react";
+import { Link, useParams, useSearchParams } from "react-router-dom";
+import { ArrowLeft, Bookmark, ImagePlus, Newspaper, PenSquare, Smartphone } from "lucide-react";
 import { getFeed, getSavedPosts, getStories } from "../services/postService";
-import { getOrganizationAnimals, getPublicAnimals } from "../services/platformService";
+import { getOrganizationAnimals, getPublicAnimals, getPublicOrganization } from "../services/platformService";
 import { useApi } from "../hooks/useApi";
 import { useShell } from "../layout/ShellContext";
 import { useToast } from "../ui/Toast";
@@ -19,9 +19,14 @@ import "./PostFeed.css";
 
 const FILTERS = [{ value: "", label: "All" }, ...POST_CATEGORIES, { value: "saved", label: "Saved" }];
 
+/** The community feed. Under /organizations/:organizationId/posts it shows one team's posts
+ *  and stories only, in the same layout. */
 function PostFeed() {
   const toast = useToast();
   const { user, isOrganization, organization } = useShell();
+  const { organizationId } = useParams();
+  const team = useApi(() => (organizationId ? getPublicOrganization(organizationId) : Promise.resolve(null)), organizationId ?? "");
+  const ownFeed = !organizationId || (isOrganization && String(organization?.id) === organizationId);
   const [params] = useSearchParams();
   const focusPostId = Number(params.get("post")) || null;
   const [filter, setFilter] = useState("");
@@ -34,8 +39,22 @@ function PostFeed() {
   const [editing, setEditing] = useState<Post | null>(null);
 
   const posts = useMemo(
-    () => (feed.data ?? []).filter((post) => !filter || showingSaved || post.category === filter),
-    [feed.data, filter, showingSaved],
+    () =>
+      (feed.data ?? [])
+        .filter((post) => !organizationId || String(post.organization?.id) === organizationId)
+        .filter((post) => !filter || showingSaved || post.category === filter),
+    [feed.data, filter, showingSaved, organizationId],
+  );
+  const storyGroups = useMemo(
+    () =>
+      (stories.data ?? [])
+        .map((group) => ({ ...group, stories: group.stories.filter((story) => !organizationId || String(story.organization.id) === organizationId) }))
+        .filter((group) => group.stories.length),
+    [stories.data, organizationId],
+  );
+  const homes = useMemo(
+    () => (adoptable.data ?? []).filter((animal) => !organizationId || String(animal.organization?.id) === organizationId),
+    [adoptable.data, organizationId],
   );
 
   // A shared link (?post=ID) scrolls to that post with its comments open.
@@ -55,18 +74,31 @@ function PostFeed() {
   return (
     <div className="page feed-page">
       <div className="feed-main">
-        <div className="feed-head">
-          <div>
-            <h1>Community</h1>
-            <p className="muted">Updates from rescue teams about the animals in their care.</p>
+        {organizationId ? (
+          <div className="feed-head">
+            <Link to={`/organizations/${organizationId}`} className="back-link"><ArrowLeft size={16} /> {team.data?.name ?? "Rescue team"}</Link>
+            <div className="feed-team">
+              <Avatar name={team.data?.name} src={team.data?.image} size={44} square />
+              <div>
+                <h1>{team.data?.name ?? "Posts"}</h1>
+                <p className="muted">Every update this team has shared about the animals in their care.</p>
+              </div>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="feed-head">
+            <div>
+              <h1>Community</h1>
+              <p className="muted">Updates from rescue teams about the animals in their care.</p>
+            </div>
+          </div>
+        )}
 
         {stories.data ? (
-          <Stories groups={stories.data} onAdd={isOrganization ? () => setComposer("story") : undefined} />
+          <Stories groups={storyGroups} onAdd={isOrganization && ownFeed ? () => setComposer("story") : undefined} />
         ) : null}
 
-        {isOrganization ? (
+        {isOrganization && ownFeed ? (
           <div className="card feed-compose">
             <Avatar name={organization?.name} src={organization?.image} size={40} square />
             <button type="button" className="feed-compose-input" onClick={() => setComposer("post")}>
@@ -106,7 +138,13 @@ function PostFeed() {
           <EmptyState
             icon={showingSaved ? <Bookmark size={22} /> : <Newspaper size={22} />}
             title={showingSaved ? "Nothing saved yet" : "No posts here yet"}
-            message={showingSaved ? "Tap the bookmark on a post to keep it here." : "Rescue teams share medical updates, adoption news and more."}
+            message={
+              showingSaved
+                ? "Tap the bookmark on a post to keep it here."
+                : organizationId
+                  ? `${team.data?.name ?? "This team"} hasn't shared anything in this category yet.`
+                  : "Rescue teams share medical updates, adoption news and more."
+            }
           />
         )}
       </div>
@@ -129,9 +167,9 @@ function PostFeed() {
             <Link to="/animals/browse?status=adoptable" className="link small">See all</Link>
           </div>
           {adoptable.data ? (
-            adoptable.data.length ? (
+            homes.length ? (
               <ul className="feed-rail-list">
-                {adoptable.data.slice(0, 4).map((animal) => (
+                {homes.slice(0, 4).map((animal) => (
                   <li key={animal.id}>
                     <Link to={`/animals/${animal.id}`} className="feed-rail-item">
                       <span className="feed-rail-photo">{animal.image ? <img src={animal.image} alt="" /> : null}</span>

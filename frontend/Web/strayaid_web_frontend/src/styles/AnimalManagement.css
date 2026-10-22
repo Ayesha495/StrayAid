@@ -437,3 +437,4 @@
 .am-tile.tint-purple .am-tile-value { color: var(--tone-purple-ink); }
 .am-tile::after { background: var(--green-700); }
 .am-tile.is-active .am-tile-label { color: var(--green-800); }
+.am-card-links { display: flex; flex-wrap: wrap; gap: 6px 16px; }

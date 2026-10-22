@@ -4,6 +4,8 @@ import { motion } from "motion/react";
 import {
   ArrowLeft,
   BadgeCheck,
+  ChevronRight,
+  FileText,
   Bell,
   BellRing,
   CalendarHeart,
@@ -29,6 +31,7 @@ import { getAnimal, getAnimalPosts, updateAnimal } from "../services/platformSer
 import { followAnimal, getFollowStatus, sponsorAnimal } from "../services/socialService";
 import { getCaseUpdates, getPublicCase } from "../services/caseService";
 import { startConversation } from "../services/chatService";
+import { getApplications } from "../services/fundingService";
 import { useApi } from "../hooks/useApi";
 import { useShell } from "../layout/ShellContext";
 import { useToast } from "../ui/Toast";
@@ -41,6 +44,7 @@ import UpdateGrid from "../components/UpdateGrid";
 import AdoptForm from "../components/support/AdoptForm";
 import PledgeForm from "../components/support/PledgeForm";
 import { displayNameOf, formatDate } from "../utils/format";
+import { formatRelativeTime } from "../utils/time";
 import { errorMessage } from "../utils/errors";
 import { statusLabel } from "../utils/statusStyles";
 import "./AnimalDetail.css";
@@ -129,6 +133,9 @@ function AnimalDetail() {
   const caseId = animal.data?.case_id ?? animal.data?.case;
   const rescue = useApi(() => (caseId ? getPublicCase(caseId) : Promise.resolve(null)), String(caseId ?? ""));
   const history = useApi(() => (caseId ? getCaseUpdates(caseId) : Promise.resolve([])), String(caseId ?? ""));
+  // The animal's own team sees who has applied to adopt it.
+  const isMine = Boolean(myOrganization && animal.data?.organization?.id === myOrganization.id);
+  const applications = useApi(() => (isMine ? getApplications() : Promise.resolve([])), `${animalId}:${isMine}`);
   const [photo, setPhoto] = useState(0);
   const [dialog, setDialog] = useState<"adopt" | "sponsor" | null>(null);
   const [busy, setBusy] = useState(false);
@@ -160,6 +167,9 @@ function AnimalDetail() {
   // Status changes after the first report ("reported" is shown as the first step already).
   const storySteps = (history.data ?? []).filter((update) => update.status && update.status !== "reported").slice().reverse();
   const postCount = posts.data?.length ?? 0;
+  const applicants = (applications.data ?? []).filter((item) => item.animal.id === data.id && item.status !== "withdrawn");
+  const waiting = applicants.filter((item) => item.status === "pending").length;
+  const applicationsLink = `/applications?animal=${data.id}`;
 
   const requireLogin = () => navigate("/login", { state: { from: location.pathname } });
 
@@ -200,7 +210,14 @@ function AnimalDetail() {
   };
 
   const primary = ownAnimal ? (
-    <Link to="/animals" className="btn btn-secondary btn-lg btn-block"><Pencil size={18} /> Manage in Animals</Link>
+    <div className="animal-own-actions">
+      {applicants.length ? (
+        <Link to={applicationsLink} className="btn btn-primary btn-lg btn-block">
+          <FileText size={18} /> {waiting ? `Review ${waiting} application${waiting === 1 ? "" : "s"}` : `See ${applicants.length} application${applicants.length === 1 ? "" : "s"}`}
+        </Link>
+      ) : null}
+      <Link to="/animals" className="btn btn-secondary btn-lg btn-block"><Pencil size={18} /> Manage in Animals</Link>
+    </div>
   ) : !canSupport ? null : adoptable ? (
     extras.my_application ? (
       <div className="alert alert-success">
@@ -259,6 +276,7 @@ function AnimalDetail() {
             label={`Sections of ${data.name}'s profile`}
             sections={[
               { id: "about", label: "About" },
+              ...(ownAnimal ? [{ id: "applications", label: `Applications${applicants.length ? ` (${applicants.length})` : ""}` }] : []),
               { id: "updates", label: `Updates${postCount ? ` (${postCount})` : ""}` },
               { id: "health", label: "Health" },
               { id: "story", label: "Rescue story" },
@@ -280,6 +298,44 @@ function AnimalDetail() {
               {data.application_count ? <Fact tone="green" icon={<Users size={18} />} label="Applications" value={data.application_count} /> : null}
             </div>
           </motion.section>
+
+          {ownAnimal ? (
+            <motion.section id="applications" className="profile-section card animal-applications" {...reveal}>
+              <div className="profile-section-head">
+                <h2>Adoption applications</h2>
+                {applicants.length ? <Link to={applicationsLink} className="link small">Open in Applications</Link> : null}
+              </div>
+              {applications.loading && !applications.data ? (
+                <Skeleton height={120} />
+              ) : applicants.length ? (
+                <ul className="animal-app-list">
+                  {applicants.map((application) => (
+                    <li key={application.id}>
+                      <Link to={`${applicationsLink}&application=${application.id}`} className="animal-app-row">
+                        <Avatar name={application.full_name} size={36} />
+                        <span className="animal-app-text">
+                          <span className="strong truncate">{application.full_name}</span>
+                          <span className="small muted truncate">
+                            {[application.city, application.home_type === "house" ? "House" : application.home_type === "apartment" ? "Apartment" : "", `applied ${formatRelativeTime(application.created_at)}`].filter(Boolean).join(" · ")}
+                          </span>
+                        </span>
+                        <StatusChip kind="review" value={application.status} />
+                        <ChevronRight size={16} className="animal-app-chevron" aria-hidden="true" />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="muted">
+                  {adoptable
+                    ? `No one has applied to adopt ${data.name} yet. Applications show up here as soon as they arrive.`
+                    : adopted
+                      ? `${data.name} has been adopted.`
+                      : `${data.name} isn't open for adoption yet. Mark ${data.name} as adoptable in Animals to start receiving applications.`}
+                </p>
+              )}
+            </motion.section>
+          ) : null}
 
           <motion.section id="updates" className="profile-section" {...reveal}>
             <div className="profile-section-head">
