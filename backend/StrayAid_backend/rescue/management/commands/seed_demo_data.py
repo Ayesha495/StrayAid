@@ -2,6 +2,7 @@
 
 Run:   python manage.py seed_demo_data
 Fresh: python manage.py seed_demo_data --reset   (deletes every @strayaid.local demo account first)
+Ducky paws Rescue only: python manage.py seed_demo_data --only-ducky-paws
 
 Safe to re-run: records are matched by stable keys and photos are only attached once.
 Timestamps are relative to "now", so stories stay inside their 24-hour window; re-run before a demo.
@@ -14,6 +15,7 @@ from pathlib import Path
 from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 
 from accounts.models import User
@@ -516,6 +518,335 @@ STORIES = [
 ]
 
 
+# ---------- Ducky paws Rescue (Kahuta) ----------
+# A team registered through the app rather than by this script, so it's looked up by name and
+# skipped if it doesn't exist. Everything sits inside its 4 km service area around its base, so the
+# team sees the reports. Photos are real ones from images/ (not the AI-generated Stitch set).
+# Follow-up posts use a closer crop of the same photo or no photo, so every picture really shows
+# the animal it's about.
+DUCKY_PAWS_NAME = "Ducky paws Rescue"
+REAL_IMAGES = Path(__file__).resolve().parents[5] / "images"
+
+DUCKY_PAWS_ANIMALS = [
+    {
+        "name": "Rocky",
+        "species": "Dog",
+        "breed": "Bully mix",
+        "gender": "Male",
+        "age": 2,
+        "color": "White",
+        "status": Animal.STATUS_RESCUED,
+        "area": "Kahuta Bazaar",
+        "latitude": 33.59250,
+        "longitude": 73.48900,
+        "reporter": "hamza.iqbal",
+        "severity": "high",
+        "image": "reports/4377.Rocky.jpg",
+        "crop": (0.18, 0.05, 0.85, 0.75),
+        "days_in_care": 3,
+        "funding_goal": 25000,
+        "description": "Found limping behind the vegetable market in Kahuta with a deep cut on his front leg.",
+        "medical_info": "Leg wound cleaned and stitched. On painkillers and antibiotics; X-ray clear.",
+        "posts": [
+            ("Rocky is safe", "A shopkeeper in Kahuta Bazaar called us about a limping dog. Rocky let us lift him into the van without a fuss. He's with us now.", Post.CATEGORY_MEDICAL, "full", 70),
+            ("X-ray results", "Good news from the vet: no fracture. The cut on Rocky's leg needed six stitches and he's on antibiotics for a week.", Post.CATEGORY_MEDICAL, None, 46),
+            ("First walk", "First slow walk around the yard today. He keeps the leg up on corners but he's wagging the whole time.", Post.CATEGORY_MEDICAL, "crop", 20),
+            ("Help with Rocky's treatment", "Stitches, X-ray and two weeks of medicine come to about Rs 25,000. Any amount helps, and every receipt is shown on his page.", Post.CATEGORY_SPONSORSHIP, None, 5),
+        ],
+    },
+    {
+        "name": "Mano",
+        "species": "Cat",
+        "breed": "Domestic Shorthair",
+        "gender": "Male",
+        "age": 4,
+        "color": "Grey tabby",
+        "status": Animal.STATUS_RECOVERING,
+        "area": "Narh Road",
+        "latitude": 33.60710,
+        "longitude": 73.49320,
+        "reporter": "zainab.qureshi",
+        "severity": "high",
+        "image": "reports/Poppy-crate-2-e1652292038213.jpg",
+        "crop": (0.12, 0.08, 0.88, 0.80),
+        "days_in_care": 12,
+        "funding_goal": 15000,
+        "description": "Older tom cat with an infected wound over his eye, found sheltering under a parked truck on Narh Road.",
+        "medical_info": "Eye wound treated, infection clearing. Dewormed; first vaccination due next week.",
+        "posts": [
+            ("Mano came in today", "This tough old boy had an infected wound right above his eye. He's been cleaned up, fed and is sleeping in a warm crate.", Post.CATEGORY_MEDICAL, "full", 12 * 24),
+            ("Eye check", "The vet is happy with how Mano's eye is healing. The swelling is down and he can open it fully again.", Post.CATEGORY_MEDICAL, None, 8 * 24),
+            ("Eating well", "Mano finished his whole bowl twice today and now asks for more by sitting on the food shelf.", Post.CATEGORY_MEDICAL, "crop", 3 * 24),
+            ("A foster for Mano?", "Mano would heal faster somewhere quiet. If you live near Kahuta and can foster a calm cat for three weeks, message us.", Post.CATEGORY_FOSTER, None, 20),
+        ],
+    },
+    {
+        "name": "Chai",
+        "species": "Dog",
+        "breed": "Desi mix",
+        "gender": "Female",
+        "age": 1,
+        "color": "Tan",
+        "status": Animal.STATUS_ADOPTABLE,
+        "area": "Panjar",
+        "latitude": 33.57880,
+        "longitude": 73.48180,
+        "reporter": "ali.raza",
+        "severity": "medium",
+        "image": "animals/dog-hero.jpg",
+        "crop": (0.45, 0.0, 1.0, 1.0),
+        "days_in_care": 26,
+        "funding_goal": 10000,
+        "description": "Playful pup found alone by the Panjar water tank. Loves people, still learning about cats.",
+        "medical_info": "Healthy, fully vaccinated and spayed.",
+        "posts": [
+            ("Chai was found in Panjar", "A family in Panjar spotted this pup alone by the water tank for two days. She's thin but bright and very friendly.", Post.CATEGORY_MEDICAL, "full", 26 * 24),
+            ("Vaccinations done", "Chai has had all her shots and was spayed this week. She bounced back the next morning.", Post.CATEGORY_MEDICAL, None, 14 * 24),
+            ("Chai is ready for a home", "Chai is ready to be adopted! She's house-trained, sits on command and would love a family with a yard.", Post.CATEGORY_ADOPTION, "crop", 2 * 24),
+        ],
+    },
+    {
+        "name": "Kali",
+        "species": "Cat",
+        "breed": "Domestic Shorthair",
+        "gender": "Female",
+        "age": 3,
+        "color": "Black",
+        "status": Animal.STATUS_ADOPTABLE,
+        "area": "Kahuta Hill Road",
+        "latitude": 33.60030,
+        "longitude": 73.50490,
+        "reporter": "hina.malik",
+        "severity": "low",
+        "image": "reports/_130505861_mediaitem130505860.jpg",
+        "crop": (0.25, 0.0, 0.95, 0.95),
+        "days_in_care": 31,
+        "funding_goal": 8000,
+        "description": "Gentle black cat rescued from a storm drain on Hill Road. Shy at first, then a lap cat.",
+        "medical_info": "Healthy, vaccinated and spayed. Small scar on her nose has healed.",
+        "posts": [
+            ("Kali is out of the drain", "After two hours and a lot of patience, Kali is out of the storm drain on Hill Road. Wet, scared and completely fine.", Post.CATEGORY_MEDICAL, "full", 31 * 24),
+            ("Kali's first purr", "It took ten days, but Kali finally purred on a volunteer's lap today. Shy cats are worth the wait.", Post.CATEGORY_MEDICAL, None, 20 * 24),
+            ("Kali needs a quiet home", "Kali is ready to be adopted. She'd do best as the only pet in a calm home. Her nose scar has healed nicely.", Post.CATEGORY_ADOPTION, "crop", 4 * 24),
+            ("Still waiting", "Black cats wait the longest for homes. Kali has been ready for a month. Please share her page!", Post.CATEGORY_ADOPTION, None, 10),
+        ],
+    },
+    {
+        "name": "Bholu",
+        "species": "Dog",
+        "breed": "Bully mix",
+        "gender": "Male",
+        "age": 5,
+        "color": "Dark brown",
+        "status": Animal.STATUS_ADOPTED,
+        "area": "Kahuta Bus Stand",
+        "latitude": 33.58690,
+        "longitude": 73.49250,
+        "reporter": "usman.tariq",
+        "severity": "medium",
+        "image": "animals/awsmaine_peachesDOG_0325-scaled-e1742240776863-1024x1024.jpg",
+        "crop": (0.1, 0.0, 0.9, 0.8),
+        "days_in_care": 48,
+        "funding_goal": 12000,
+        "description": "Big softie who lived around the Kahuta bus stand with a skin condition. Now adopted.",
+        "medical_info": "Skin condition cleared. Vaccinated and neutered.",
+        "posts": [
+            ("Meet Bholu", "Bholu has lived around the Kahuta bus stand for years. His skin was in a bad way, so the drivers asked us to help.", Post.CATEGORY_MEDICAL, "full", 48 * 24),
+            ("Skin is clearing", "Three weeks of medicated baths and Bholu's coat is growing back shiny. He loves bath time now. Mostly.", Post.CATEGORY_MEDICAL, None, 30 * 24),
+            ("Bholu is ready", "Bholu is healthy, neutered and ready for a family. He's calm, great with kids and snores loudly.", Post.CATEGORY_ADOPTION, "crop", 15 * 24),
+            ("Bholu went home!", "Bholu went home today with a family in Rawalpindi who visited him three times before deciding. Thank you to everyone who shared his story.", Post.CATEGORY_ADOPTION, "full", 3 * 24),
+        ],
+    },
+]
+
+DUCKY_PAWS_COMMENTS = ["Poor baby, thank you for helping!", "Sharing this now 🙏", "So glad he's safe", "What a sweetheart"]
+
+# A Kahuta reporter to demo the reporter side with: reports at every stage, an adoption
+# application, a sponsorship, follows, chats and notifications, all with Ducky paws Rescue.
+KAHUTA_REPORTER = {
+    "key": "maryam.siddiqui",
+    "first_name": "Maryam",
+    "last_name": "Siddiqui",
+    "area": "Main Bazaar, Kahuta",
+    "phone": "+92 301 5550142",
+    "alert_latitude": 33.5950,
+    "alert_longitude": 73.4870,
+    "joined_days": 140,
+}
+
+# Reports around Ducky paws Rescue's base, inside its 4 km service area so the team sees them.
+# "reporters" are usernames; the first one opened the case, the rest reported the same spot.
+DUCKY_PAWS_CASES = [
+    {
+        "title": "Injured Kitten — Hospital Road",
+        "species": "cat",
+        "area": "Hospital Road",
+        "severity": "critical",
+        "status": "reported",
+        "assigned": False,
+        "latitude": 33.59610,
+        "longitude": 73.48510,
+        "image": "reports/images 3.jpg",
+        "reporters": ["maryam.siddiqui"],
+        "description": "Tiny kitten with a badly hurt ear and eye, crying under a parked rickshaw outside the hospital gate.",
+        "minutes_ago": 25,
+    },
+    {
+        "title": "Starving Dog — Lehtrar Road",
+        "species": "dog",
+        "area": "Lehtrar Road",
+        "severity": "high",
+        "status": "reported",
+        "assigned": False,
+        "latitude": 33.60520,
+        "longitude": 73.49750,
+        "image": "reports/images (2).jpg",
+        "reporters": ["hina.malik"],
+        "description": "Very thin dog walking along Lehtrar Road near the petrol pump. Ribs showing, won't come close.",
+        "minutes_ago": 70,
+    },
+    {
+        "title": "Mother Dog with Puppies — Narh Mor",
+        "species": "dog",
+        "area": "Narh Mor",
+        "severity": "medium",
+        "status": "reported",
+        "assigned": False,
+        "latitude": 33.58240,
+        "longitude": 73.47930,
+        "image": "reports/Banner_stray-dog-with-puppies_credit_AlRahmeh.jpg",
+        "reporters": ["bilal.hussain", "maryam.siddiqui"],
+        "description": "Mother dog with three small puppies living in an empty plot at Narh Mor. She looks weak and the pups need shelter.",
+        "minutes_ago": 3 * 60,
+    },
+    {
+        "title": "Two Dogs — Bus Stand",
+        "species": "dog",
+        "area": "Bus Stand",
+        "severity": "medium",
+        "status": "assigned",
+        "assigned": True,
+        "latitude": 33.60120,
+        "longitude": 73.47210,
+        "image": "reports/images (1).jpg",
+        "reporters": ["maryam.siddiqui"],
+        "description": "Two dogs lying by the wall at the bus stand all day. One has a wound on its back leg.",
+        "minutes_ago": 5 * 60,
+    },
+    {
+        "title": "Street Cats — Main Bazaar",
+        "species": "cat",
+        "area": "Main Bazaar",
+        "severity": "low",
+        "status": "in_progress",
+        "assigned": True,
+        "latitude": 33.58800,
+        "longitude": 73.50100,
+        "image": "reports/gang-cats-Alaksa.webp",
+        "reporters": ["usman.tariq"],
+        "description": "A group of cats near the butcher shops. One Siamese is limping and the white one has a runny eye.",
+        "minutes_ago": 26 * 60,
+    },
+]
+
+# Organization notes on the open Ducky paws cases (added to CASE_NOTES below).
+DUCKY_PAWS_CASE_NOTES = {
+    "Two Dogs — Bus Stand": ["We've got this one. A volunteer will check on them after the evening feeding round."],
+    "Street Cats — Main Bazaar": [
+        "Traps are set near the butcher shops. The shopkeepers are helping us keep the cats in one spot.",
+        "Caught the limping Siamese. It's a thorn in the paw, already out. Going back for the white one tomorrow.",
+    ],
+}
+CASE_NOTES.update(DUCKY_PAWS_CASE_NOTES)
+
+# People who also reported a Ducky paws animal's case (the reporter-side history for Maryam).
+DUCKY_PAWS_EXTRA_REPORTS = {"Rocky": "maryam.siddiqui", "Kali": "maryam.siddiqui"}
+
+# (applicant, animal, status, hours ago applied, hours ago decided)
+DUCKY_PAWS_APPLICATIONS = [
+    ("maryam.siddiqui", "Chai", "pending", 30, None),
+    ("bilal.hussain", "Chai", "pending", 20, None),
+    ("hina.malik", "Kali", "pending", 9, None),
+    ("usman.tariq", "Bholu", "approved", 12 * 24, 3 * 24 + 2),
+]
+
+# (sponsor, animal, PKR, monthly, status, hours ago)
+DUCKY_PAWS_PLEDGES = [
+    ("maryam.siddiqui", "Rocky", 1000, True, "confirmed", 40),
+    ("hamza.iqbal", "Rocky", 2000, False, "confirmed", 50),
+    ("ali.raza", "Mano", 1500, False, "confirmed", 6 * 24),
+    ("zainab.qureshi", "Mano", 1500, True, "pending", 4),
+    ("fatima.khan", "Kali", 500, False, "confirmed", 10 * 24),
+]
+
+# Chats with Ducky paws, oldest message first: (who, minutes ago, text, photo).
+# "org_read" is how many minutes ago the team last opened the chat (None = never read the last
+# member message, so it shows as unread for the team).
+DUCKY_PAWS_CHATS = [
+    {
+        "member": "maryam.siddiqui", "case": "Two Dogs — Bus Stand", "member_read": 200, "org_read": None,
+        "messages": [
+            ("org", 4 * 60 + 40, "Hi Maryam, thank you for reporting the two dogs at the bus stand. We've accepted the case.", None),
+            ("member", 4 * 60 + 30, "Thank you! The brown one has a wound on its back leg. They're both friendly with the tea stall owner.", None),
+            ("org", 3 * 60 + 20, "That helps a lot. Could you ask the tea stall owner to keep some food out so they stay nearby? We'll come after the evening round.", None),
+            ("member", 15, "He's put food out and they're still there. The brown one is licking the wound a lot.", "reports/images (1).jpg"),
+        ],
+    },
+    {
+        "member": "maryam.siddiqui", "animal": "Chai", "member_read": 3 * 60, "org_read": 20 * 60,
+        "messages": [
+            ("member", 29 * 60, "Hi! I've applied to adopt Chai. We have a small yard. Is she okay with kids?", None),
+            ("org", 20 * 60, "Hi Maryam! Chai loves kids, she gets excited and jumpy at first but settles quickly. We'll call you to set up a visit.", None),
+            ("org", 2 * 60, "Would Saturday at 11am work for a visit to meet Chai at our shelter?", None),
+        ],
+    },
+    {
+        "member": "hamza.iqbal", "animal": "Rocky", "member_read": 30, "org_read": 25,
+        "messages": [
+            ("member", 3 * 24 * 60, "I'm the one who called about Rocky at the bazaar. Is he going to be okay?", None),
+            ("org", 3 * 24 * 60 - 45, "He is! The cut needed stitches but there's no fracture. Thank you for calling us so quickly.", None),
+            ("member", 26 * 60, "I've sent Rs 2,000 for his treatment. Please give him a hug from me.", None),
+            ("org", 25, "Received and confirmed, thank you Hamza! He took his first walk around the yard yesterday.", None),
+        ],
+    },
+    {
+        "member": "usman.tariq", "case": "Street Cats — Main Bazaar", "member_read": 10, "org_read": None,
+        "messages": [
+            ("member", 25 * 60, "The cats are near the butcher shops most mornings. The Siamese is the one limping.", None),
+            ("org", 22 * 60, "Thanks Usman. We've set traps there and the shopkeepers are helping.", None),
+            ("org", 3 * 60, "We caught the Siamese. It was a thorn in the paw, already out!", None),
+            ("member", 8, "Brilliant! The white one is still there this morning, near the second shop.", None),
+        ],
+    },
+    {
+        "member": "hina.malik", "animal": "Kali", "member_read": 7 * 60, "org_read": 6 * 60,
+        "messages": [
+            ("member", 9 * 60, "I applied for Kali. I live alone in a quiet flat, so I think she'd be happy. Does she need a special diet?", None),
+            ("org", 6 * 60, "Hi Hina! No special diet, just regular cat food and fresh water. A quiet home sounds perfect for her.", None),
+        ],
+    },
+]
+
+
+def real_photo(relative, crop=None):
+    """A photo from images/, optionally cropped to (left, top, right, bottom) fractions."""
+    path = REAL_IMAGES / relative
+    if crop is None:
+        return ContentFile(path.read_bytes(), name=path.name)
+    from io import BytesIO
+
+    from PIL import Image
+
+    with Image.open(path) as image:
+        image = image.convert("RGB")
+        width, height = image.size
+        left, top, right, bottom = crop
+        image = image.crop((int(left * width), int(top * height), int(right * width), int(bottom * height)))
+        buffer = BytesIO()
+        image.save(buffer, format="JPEG", quality=88)
+    return ContentFile(buffer.getvalue(), name=f"{path.stem}-closeup.jpg")
+
+
 class Command(BaseCommand):
     help = "Create fake but consistent StrayAid demo data for Islamabad and Rawalpindi."
 
@@ -525,9 +856,18 @@ class Command(BaseCommand):
             action="store_true",
             help=f"Delete all {DEMO_DOMAIN} demo accounts (and everything they own) before seeding.",
         )
+        parser.add_argument(
+            "--only-ducky-paws",
+            action="store_true",
+            help=f"Only add the animals and posts for {DUCKY_PAWS_NAME} (needs the demo reporters to exist).",
+        )
 
     @transaction.atomic
     def handle(self, *args, **options):
+        if options["only_ducky_paws"]:
+            self.seed_ducky_paws()
+            return
+
         if options["reset"]:
             deleted, _ = User.objects.filter(email__endswith=DEMO_DOMAIN).exclude(is_superuser=True).delete()
             self.stdout.write(self.style.WARNING(f"Reset: removed {deleted} demo records."))
@@ -545,6 +885,8 @@ class Command(BaseCommand):
         self.seed_chats(organizations, reporters)
         # Last: seeding changes statuses, which fires notifications of its own.
         self.seed_notifications(organizations, reporters)
+        # After the notifications rebuild, which would otherwise wipe the ones it adds.
+        self.seed_ducky_paws()
 
         self.stdout.write(self.style.SUCCESS("Demo data ready."))
         self.stdout.write(f"Password for every demo account: {DEMO_PASSWORD}")
@@ -647,11 +989,13 @@ class Command(BaseCommand):
             refresh_case_score(case)
             backdate(case, minutes=data["minutes_ago"])
 
-    def seed_case_history(self):
-        """Rebuild every demo case's "Case Updates": one entry per status step it has been
-        through, spread between the report and now, plus organization notes on open cases."""
+    def seed_case_history(self, cases=None):
+        """Rebuild every demo case's "Case Updates" (or just `cases`): one entry per status step it
+        has been through, spread between the report and now, plus organization notes on open cases."""
         now = timezone.now()
-        for case in Case.objects.filter(reported_by__email__endswith=DEMO_DOMAIN).select_related("organization"):
+        if cases is None:
+            cases = Case.objects.filter(reported_by__email__endswith=DEMO_DOMAIN)
+        for case in cases.select_related("organization"):
             case.updates.all().delete()
             steps = STATUS_PATH[: STATUS_PATH.index(case.status) + 1] if case.status in STATUS_PATH else ["reported"]
             notes = CASE_NOTES.get(case.title, []) if case.organization_id else []
@@ -1043,3 +1387,347 @@ class Command(BaseCommand):
             story.save(update_fields=["animal", "headline"])
             # Stories stay fresh: every run moves them back inside the 24-hour window.
             backdate(story, hours=hours_ago)
+
+    def seed_ducky_paws(self):
+        """Animals at every stage, each with a few posts, for Ducky paws Rescue (see DUCKY_PAWS_ANIMALS)."""
+        organization = Organization.objects.filter(name__iexact=DUCKY_PAWS_NAME).first()
+        if organization is None:
+            self.stdout.write(f"Skipped {DUCKY_PAWS_NAME}: no organization with that name.")
+            return
+        emails = [f"{username}{DEMO_DOMAIN}" for username, _, _ in REPORTERS]
+        people = {user.email.split("@")[0]: user for user in User.objects.filter(email__in=emails)}
+        if not people:
+            self.stdout.write(f"Skipped {DUCKY_PAWS_NAME}: run the full seed first to create the demo reporters.")
+            return
+        likers = list(people.values())
+        maryam = self.seed_kahuta_reporter()
+        people[KAHUTA_REPORTER["key"]] = maryam
+
+        for data in DUCKY_PAWS_ANIMALS:
+            reporter = people.get(data["reporter"]) or likers[0]
+            hours_in_care = data["days_in_care"] * 24
+            case, _ = Case.objects.update_or_create(
+                title=f"{data['species']} — {data['area']}",
+                reported_by=reporter,
+                defaults={
+                    "description": data["description"],
+                    "species": data["species"].lower(),
+                    "area": data["area"],
+                    "severity": data["severity"],
+                    "status": CASE_STATUS_FOR_ANIMAL[data["status"]],
+                    "organization": organization,
+                    "assigned_to": organization.user,
+                    "latitude": data["latitude"],
+                    "longitude": data["longitude"],
+                    "resolved_at": timezone.now() - timedelta(days=3) if data["status"] == Animal.STATUS_ADOPTED else None,
+                },
+            )
+            report, _ = Report.objects.get_or_create(
+                case=case,
+                user=reporter,
+                defaults={
+                    "description": data["description"],
+                    "latitude": data["latitude"],
+                    "longitude": data["longitude"],
+                    "severity": data["severity"],
+                },
+            )
+            if not report.image:
+                report.image.save(Path(data["image"]).name, real_photo(data["image"]), save=True)
+                score_report(report)
+            refresh_case_score(case)
+            backdate(case, hours=hours_in_care + 3)
+            backdate(report, hours=hours_in_care + 3)
+
+            animal, _ = Animal.objects.update_or_create(
+                case=case,
+                defaults={
+                    "organization": organization,
+                    "name": data["name"],
+                    "species": data["species"],
+                    "breed": data["breed"],
+                    "gender": data["gender"],
+                    "age": data["age"],
+                    "color": data["color"],
+                    "status": data["status"],
+                    "description": data["description"],
+                    "medical_info": data["medical_info"],
+                    "health": health_for(data),
+                    "vaccinated": "vaccinat" in data["medical_info"].lower(),
+                    "donation_info": f"Support {data['name']}'s care through {organization.name}.",
+                    "sponsor_goal": 6,
+                    "funding_goal_pkr": data["funding_goal"],
+                },
+            )
+            if not animal.image:
+                animal.image.save(Path(data["image"]).name, real_photo(data["image"]), save=True)
+            backdate(animal, hours=hours_in_care)
+
+            kept = []
+            for index, (title, content, category, photo_kind, hours_ago) in enumerate(data["posts"]):
+                post, _ = Post.objects.update_or_create(
+                    animal=animal,
+                    organization=organization,
+                    title=f"{data['name']}: {title}",
+                    defaults={"content": content, "category": category},
+                )
+                if photo_kind and not post.image:
+                    crop = data["crop"] if photo_kind == "crop" else None
+                    post.image.save(Path(data["image"]).name, real_photo(data["image"], crop), save=True)
+                backdate(post, hours=hours_ago)
+                kept.append(post.id)
+                # A few likes and a comment, so the feed doesn't look empty.
+                for user in likers[: 2 + (len(content) + index) % 5]:
+                    PostLike.objects.get_or_create(post=post, user=user)
+                if index == 0:
+                    comment, _ = PostComment.objects.get_or_create(
+                        post=post,
+                        user=likers[(len(data["name"]) + 1) % len(likers)],
+                        body=DUCKY_PAWS_COMMENTS[len(data["name"]) % len(DUCKY_PAWS_COMMENTS)],
+                        parent=None,
+                    )
+                    backdate(comment, hours=max(hours_ago - 1, 0))
+            # Posts dropped from the list above are removed on the next run.
+            Post.objects.filter(animal=animal, organization=organization).exclude(id__in=kept).delete()
+
+        cases = self.seed_ducky_paws_cases(organization, people)
+        self.seed_case_history(Case.objects.filter(Q(organization=organization) | Q(id__in=[case.id for case in cases])))
+        self.seed_ducky_paws_people(organization, people, maryam)
+
+        self.stdout.write(
+            f"{DUCKY_PAWS_NAME}: {len(DUCKY_PAWS_ANIMALS)} animals with their posts, {len(DUCKY_PAWS_CASES)} reports nearby, "
+            f"{len(DUCKY_PAWS_CHATS)} chats."
+        )
+        self.stdout.write(f"Kahuta reporter: {KAHUTA_REPORTER['key']}{DEMO_DOMAIN} / {DEMO_PASSWORD}")
+
+    def seed_kahuta_reporter(self):
+        data = KAHUTA_REPORTER
+        person, _ = User.objects.get_or_create(
+            email=f"{data['key']}{DEMO_DOMAIN}",
+            defaults={"username": data["key"].replace(".", "_"), "first_name": data["first_name"], "last_name": data["last_name"]},
+        )
+        person.set_password(DEMO_PASSWORD)
+        for field in ("area", "phone", "alert_latitude", "alert_longitude"):
+            setattr(person, field, data[field])
+        person.field_ready = True
+        person.radius_alerts = True
+        person.date_joined = timezone.now() - timedelta(days=data["joined_days"])
+        person.save()
+        return person
+
+    def seed_ducky_paws_cases(self, organization, people):
+        cases = []
+        for data in DUCKY_PAWS_CASES:
+            case, _ = Case.objects.update_or_create(
+                title=data["title"],
+                reported_by=people[data["reporters"][0]],
+                defaults={
+                    "description": data["description"],
+                    "species": data["species"],
+                    "area": data["area"],
+                    "severity": data["severity"],
+                    "status": data["status"],
+                    "organization": organization if data["assigned"] else None,
+                    "assigned_to": organization.user if data["assigned"] else None,
+                    "latitude": data["latitude"],
+                    "longitude": data["longitude"],
+                },
+            )
+            for index, username in enumerate(data["reporters"]):
+                # Follow-up reports sit a few feet from the first one (inside the 15 ft merge radius).
+                report, _ = Report.objects.get_or_create(
+                    case=case,
+                    user=people[username],
+                    defaults={
+                        "description": data["description"],
+                        "latitude": data["latitude"] + index * 0.00001,
+                        "longitude": data["longitude"],
+                        "severity": data["severity"],
+                    },
+                )
+                if not report.image:
+                    report.image.save(Path(data["image"]).name, real_photo(data["image"]), save=True)
+                    score_report(report)
+                backdate(report, minutes=data["minutes_ago"] - index * 40)
+            refresh_case_score(case)
+            backdate(case, minutes=data["minutes_ago"])
+            cases.append(case)
+
+        # Maryam also reported two of the animals the team now cares for.
+        for name, username in DUCKY_PAWS_EXTRA_REPORTS.items():
+            animal = Animal.objects.filter(name=name, organization=organization).select_related("case").first()
+            if animal and animal.case:
+                case = animal.case
+                report, _ = Report.objects.get_or_create(
+                    case=case,
+                    user=people[username],
+                    defaults={
+                        "description": case.description,
+                        "latitude": case.latitude + 0.00001,
+                        "longitude": case.longitude,
+                        "severity": case.severity,
+                    },
+                )
+                first = case.reports.exclude(pk=report.pk).order_by("created_at").first()
+                if first:
+                    type(report).objects.filter(pk=report.pk).update(created_at=first.created_at + timedelta(minutes=35))
+                if not report.image and first and first.image:
+                    report.image.save(Path(first.image.name).name, ContentFile(first.image.read()), save=True)
+                refresh_case_score(case)
+        return cases
+
+    def seed_ducky_paws_people(self, organization, people, maryam):
+        animals = {animal.name: animal for animal in Animal.objects.filter(organization=organization)}
+        now = timezone.now()
+
+        for username, name, status, applied_hours, decided_hours in DUCKY_PAWS_APPLICATIONS:
+            person, animal = people[username], animals.get(name)
+            if animal is None:
+                continue
+            application, _ = AdoptionApplication.objects.update_or_create(
+                animal=animal,
+                applicant=person,
+                defaults={
+                    "full_name": person.get_full_name() or person.username,
+                    "phone": KAHUTA_REPORTER["phone"] if person == maryam else f"+92 300 77{len(username):02d}{len(name):03d}",
+                    "home_type": "house" if len(username) % 2 else "apartment",
+                    "has_other_pets": False,
+                    "city": "Kahuta" if person == maryam else "Rawalpindi",
+                    "ownership": "own",
+                    "landlord_allows_pets": None,
+                    "household_size": 2 + len(username) % 4,
+                    "has_children": person == maryam,
+                    "hours_alone": 3,
+                    "experience": "some",
+                    "reason": f"We've followed {name}'s posts from {organization.name} and have a calm home with time to "
+                    f"care for a {animal.species.lower()}. We'd love to give {name} a forever family.",
+                    "care_plan": "Family members look after pets when we travel.",
+                    "agrees_home_visit": True,
+                    "agrees_return_policy": True,
+                    "status": status,
+                    "decided_at": now - timedelta(hours=decided_hours) if decided_hours else None,
+                },
+            )
+            backdate(application, hours=applied_hours)
+
+        for username, name, amount, monthly, status, hours in DUCKY_PAWS_PLEDGES:
+            animal = animals.get(name)
+            if animal is None:
+                continue
+            pledge, _ = Sponsorship.objects.update_or_create(
+                animal=animal,
+                sponsor=people[username],
+                defaults={"amount_pkr": amount, "monthly": monthly, "status": status},
+            )
+            backdate(pledge, hours=hours)
+
+        # Maryam follows the team, the animal she helped report and her open case.
+        OrganizationFollow.objects.get_or_create(user=maryam, organization=organization)
+        if "Rocky" in animals:
+            AnimalFollow.objects.get_or_create(user=maryam, animal=animals["Rocky"])
+        bus_stand = Case.objects.filter(title="Two Dogs — Bus Stand", reported_by=maryam).first()
+        if bus_stand:
+            CaseFollow.objects.get_or_create(user=maryam, case=bus_stand)
+        chai_post = Post.objects.filter(animal=animals.get("Chai"), category=Post.CATEGORY_ADOPTION).first()
+        if chai_post:
+            SavedPost.objects.get_or_create(post=chai_post, user=maryam)
+        rocky_post = Post.objects.filter(animal=animals.get("Rocky")).order_by("created_at").first()
+        if rocky_post:
+            comment, _ = PostComment.objects.get_or_create(
+                post=rocky_post, user=maryam, parent=None, body="I saw him at the bazaar that morning. So glad he's with you now 💚"
+            )
+            backdate(comment, hours=60)
+
+        self.seed_ducky_paws_chats(organization, people)
+        self.seed_ducky_paws_notifications(organization, people, maryam)
+
+    def seed_ducky_paws_chats(self, organization, people):
+        now = timezone.now()
+        for data in DUCKY_PAWS_CHATS:
+            member = people[data["member"]]
+            case = Case.objects.filter(title=data["case"], organization=organization).first() if data.get("case") else None
+            animal = Animal.objects.filter(name=data["animal"], organization=organization).first() if data.get("animal") else None
+            conversation, _ = Conversation.objects.get_or_create(member=member, organization=organization, case=case, animal=animal)
+
+            kept = []
+            for who, minutes_ago, body, image in data["messages"]:
+                sender = member if who == "member" else organization.user
+                message, _ = Message.objects.update_or_create(
+                    conversation=conversation, sender=sender, body=body, defaults={"created_at": now - timedelta(minutes=minutes_ago)}
+                )
+                if image and not message.image:
+                    message.image.save(Path(image).name, real_photo(image), save=True)
+                kept.append(message.id)
+            conversation.messages.exclude(id__in=kept).delete()
+
+            ordered = conversation.messages.order_by("created_at")
+            conversation.created_at = ordered.first().created_at
+            conversation.last_message_at = ordered.last().created_at
+            conversation.member_read_at = now - timedelta(minutes=data["member_read"])
+            if data["org_read"] is None:
+                # The team read everything up to its own last reply, so the member's newest message is unread.
+                org_last = conversation.messages.filter(sender=organization.user).order_by("-created_at").first()
+                conversation.organization_read_at = org_last.created_at if org_last else None
+            else:
+                conversation.organization_read_at = now - timedelta(minutes=data["org_read"])
+            conversation.save()
+
+    def seed_ducky_paws_notifications(self, organization, people, maryam):
+        """Rebuilt each run (tagged with a "seed:ducky" group key) so nothing piles up on the
+        team's own account, which the demo reset never touches."""
+        now = timezone.now()
+        team = organization.user
+        Notification.objects.filter(user__in=[team, *people.values()], group_key__startswith="seed:ducky").delete()
+
+        def add(user, kind, title, body, data, minutes_ago, read=None, key=""):
+            read = minutes_ago > 120 if read is None else read
+            Notification.objects.create(
+                user=user, kind=kind, title=title, body=body, data=data, group_key=f"seed:ducky:{key or kind}",
+                created_at=now - timedelta(minutes=minutes_ago), read_at=now if read else None,
+            )
+
+        # The team: new reports in its area, applications, a receipt to check, unread chats.
+        for data in DUCKY_PAWS_CASES:
+            case = Case.objects.get(title=data["title"], reported_by=people[data["reporters"][0]])
+            if data["status"] != "reported":
+                continue
+            if data["severity"] == "critical":
+                add(team, "alert", "Critical report nearby", f"Critical: **{data['title'].split(' — ')[0]}** reported on {data['area']}, near your base.",
+                    {"type": "critical_case", "case_id": case.id}, data["minutes_ago"] - 1, read=False, key=f"case:{case.id}")
+            else:
+                add(team, "rescue", "New report nearby", f"**{data['title'].split(' — ')[0]}** reported on {data['area']}, inside your service area.",
+                    {"type": "case", "case_id": case.id}, data["minutes_ago"] - 1, key=f"case:{case.id}")
+        for application in AdoptionApplication.objects.filter(animal__organization=organization, status="pending"):
+            minutes = (now - application.created_at).total_seconds() / 60
+            add(team, "adoption", "Adoption", f"**{application.full_name}** wants to adopt **{application.animal.name}**.",
+                {"type": "adoption_application", "application_id": application.id, "animal_id": application.animal_id},
+                minutes, key=f"application:{application.id}")
+        for pledge in Sponsorship.objects.filter(animal__organization=organization, status="pending"):
+            minutes = (now - pledge.created_at).total_seconds() / 60
+            add(team, "sponsorship", "Sponsorship",
+                f"**{pledge.sponsor.get_full_name()}** pledged PKR {pledge.amount_pkr:,} for **{pledge.animal.name}**. Check the receipt.",
+                {"type": "sponsorship", "sponsorship_id": pledge.id, "animal_id": pledge.animal_id}, minutes, key=f"pledge:{pledge.id}")
+
+        # Maryam: her reports moving along, her pledge, a new post, and her unread chat.
+        bus_stand = Case.objects.get(title="Two Dogs — Bus Stand", reported_by=maryam)
+        add(maryam, "rescue", "Rescue Update", f"Your report at the bus stand was accepted by **{organization.name}**.",
+            {"type": "case_status", "case_id": bus_stand.id, "status": "assigned"}, 4 * 60 + 40, key=f"case:{bus_stand.id}")
+        rocky = Animal.objects.filter(name="Rocky", organization=organization).first()
+        if rocky:
+            add(maryam, "rescue", "Rescue Update", f"Good news: the dog you reported has been rescued by **{organization.name}**. Meet **Rocky**!",
+                {"type": "case_status", "case_id": rocky.case_id, "status": "rescued"}, 3 * 24 * 60 - 30, key=f"case:{rocky.case_id}")
+            pledge = Sponsorship.objects.filter(sponsor=maryam, animal=rocky).first()
+            if pledge:
+                add(maryam, "sponsorship", "Sponsorship", f"**{organization.name}** confirmed your PKR {pledge.amount_pkr:,} monthly pledge for **Rocky**. Thank you! 💚",
+                    {"type": "sponsorship", "sponsorship_id": pledge.id, "animal_id": rocky.id}, 30 * 60, key=f"pledge:{pledge.id}")
+        chai_post = Post.objects.filter(animal__name="Chai", animal__organization=organization, category=Post.CATEGORY_ADOPTION).first()
+        if chai_post:
+            add(maryam, "community", "Community", f"New post from **{organization.name}**: Chai is ready for a home.",
+                {"type": "new_post", "post_id": chai_post.id, "animal_id": chai_post.animal_id}, 2 * 24 * 60, key=f"post:{chai_post.id}")
+
+        for conversation in Conversation.objects.filter(organization=organization).select_related("member"):
+            for viewer, label in ((conversation.member, organization.name), (team, conversation.member.get_full_name())):
+                if conversation.unread_for(viewer):
+                    minutes = (now - conversation.last_message_at).total_seconds() / 60
+                    add(viewer, "chat", "Chat", f"New message from **{label}**.",
+                        {"type": "chat_message", "conversation_id": conversation.id}, minutes, read=False, key=f"chat:{conversation.id}")
