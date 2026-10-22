@@ -168,7 +168,7 @@ function OrganizationPublicProfile() {
             <div className="org-meta">
               {org.city || org.address ? <span><MapPin size={15} /> {org.city || org.address}</span> : null}
               {stats.data ? <span><Users size={15} /> {stats.data.stats.followers} {stats.data.stats.followers === 1 ? "follower" : "followers"}</span> : null}
-              <span className={`chip ${accepting ? "chip-emerald chip-dot" : "chip-outline"}`}>{accepting ? "Accepting new cases" : "Not taking new cases"}</span>
+              <span className={`chip ${accepting ? "chip-emerald chip-dot" : "chip-slate"}`}>{accepting ? "Accepting new cases" : "Not taking new cases"}</span>
             </div>
           </div>
           <div className="org-actions">

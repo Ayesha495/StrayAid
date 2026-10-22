@@ -235,17 +235,34 @@
 .story-prev { left: 8px; }
 .story-next { right: 8px; }
 
-/* Posts */
+/* Posts: laid out like the mobile feed card (components/home/PostCard.tsx on mobile). */
 .post {
-  overflow: visible;
+  overflow: hidden;
   scroll-margin-top: calc(var(--topbar-height) + var(--space-4));
 }
 
 .post-head {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-4) var(--space-4) var(--space-3);
+  gap: 10px;
+  padding: 14px;
+}
+
+.post-avatar { position: relative; flex-shrink: 0; }
+.post-avatar .avatar { border: 1px solid #f1f5f9; }
+
+.post-verified {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border: 1px solid #fff;
+  border-radius: 50%;
+  background: var(--green-700);
+  color: #fff;
 }
 
 .post-head-text {
@@ -255,48 +272,68 @@
   min-width: 0;
 }
 
-.post-body { padding: 0 var(--space-4) var(--space-3); }
+.post-org { overflow: hidden; color: var(--navy-900); font-size: 14px; font-weight: 700; line-height: 18px; text-overflow: ellipsis; white-space: nowrap; }
+.post-org:hover { color: var(--green-700); }
+.post-meta { margin-top: 2px; color: var(--navy-500); font-size: 12px; line-height: 15px; white-space: pre; }
+
+.post-animal-chip {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+  max-width: 140px;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--green-50);
+  color: var(--green-700);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 16px;
+}
+
+.post-animal-chip:hover { background: var(--green-100); }
+
+.post-body { padding: 0 14px 12px; }
 .post-title { font-size: var(--text-lg); }
-.post-text { margin-top: 4px; white-space: pre-line; }
+.post-text { margin-top: 4px; color: #334155; line-height: 1.6; white-space: pre-line; }
+
+.post-media { position: relative; background: #f1f5f9; }
+.post-media-link { display: block; width: 100%; padding: 0; border: 0; background: none; cursor: pointer; }
 
 .post-image {
+  display: block;
   width: 100%;
+  aspect-ratio: 4 / 3;
   max-height: 520px;
-  background: var(--navy-100);
+  background: #f1f5f9;
   object-fit: cover;
 }
 
-.post-animal {
-  display: flex;
+/* The animal's status on the photo: a dark glass pill with a green dot. */
+.post-status {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: inline-flex;
   align-items: center;
-  gap: var(--space-3);
-  width: calc(100% - var(--space-8));
-  margin: var(--space-3) var(--space-4) 0;
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--navy-50);
-  text-align: left;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: rgba(36, 52, 71, 0.7);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 14px;
 }
 
-.post-animal:hover { border-color: var(--color-border-strong); }
-
-.post-animal-photo {
-  flex-shrink: 0;
-  width: 36px;
-  height: 36px;
-  overflow: hidden;
-  border-radius: var(--radius-sm);
-  background: var(--navy-100);
-}
-
-.post-animal-photo img { width: 100%; height: 100%; object-fit: cover; }
-.post-animal-text { display: flex; flex: 1; flex-direction: column; min-width: 0; line-height: 1.3; }
+.post-status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--emerald-500); }
 
 .post-actions {
   display: flex;
+  align-items: center;
   gap: var(--space-1);
-  padding: var(--space-2) var(--space-3);
+  padding: 6px 8px;
+  border-top: 1px solid #f8fafc;
 }
 
 .post-actions button {
@@ -304,18 +341,19 @@
   align-items: center;
   gap: 6px;
   height: 36px;
-  padding: 0 var(--space-3);
+  padding: 0 10px;
   border: 0;
-  border-radius: var(--radius-md);
+  border-radius: 10px;
   background: none;
-  color: var(--color-ink-muted);
+  color: var(--navy-900);
+  font-size: 12px;
   font-weight: 600;
 }
 
-.post-actions button:hover { background: var(--navy-50); color: var(--color-ink); }
+.post-actions button:hover { background: #f8fafc; }
 .post-actions button.is-on { color: var(--coral-600); }
-.post-actions .post-save { margin-left: auto; }
-.post-actions .post-save.is-on { color: var(--color-primary); }
+.post-actions .post-share { margin-left: auto; }
+.post-actions .post-save.is-on { color: var(--green-700); }
 
 /* Comments */
 .comments {
@@ -388,4 +426,47 @@
   .feed-compose { justify-content: space-between; }
   .post-action-label { display: none; }
   .post-image { max-height: 380px; }
+}
+
+/* ---------- Oct 22 2026 redesign ---------- */
+.feed-head h1 { font-size: 24px; font-weight: 600; letter-spacing: -0.02em; }
+.feed-head p { margin-top: 4px; font-size: 14px; }
+.feed-main { gap: 20px; }
+.feed-rail { gap: 32px; }
+.feed-rail .card-header { padding-bottom: 10px; }
+.feed-rail-list { padding: 6px 0 0; }
+.feed-rail-item { margin: 0 -8px; padding: 8px; transition: background-color 0.15s var(--ease-out); }
+.feed-rail-photo { border-radius: 6px; }
+.feed-compose-input { border: 0; border-radius: 6px; box-shadow: inset 0 0 0 1px var(--line); transition: box-shadow 0.15s var(--ease-out); }
+.feed-compose-input:hover { box-shadow: inset 0 0 0 1px var(--line-strong); }
+
+/* Stories: a ring of brand green with a white gap; grey once seen. Round, always. */
+.stories { gap: 14px; margin: 0 -4px; padding: 4px; }
+.story-bubble { width: 72px; border-radius: 8px; }
+.story-bubble:focus-visible { outline: none; }
+.story-bubble:focus-visible .story-ring { outline: 2px solid var(--green-700); outline-offset: 2px; }
+
+.story-ring {
+  width: 64px;
+  height: 64px;
+  padding: 2px;
+  border: 2px solid var(--green-700);
+  border-radius: 50%;
+  background: #fff;
+  overflow: hidden;
+  transition: transform 0.16s var(--ease-out);
+}
+
+.story-ring img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.story-bubble:active .story-ring { transform: scale(0.95); }
+.story-ring.is-seen { border-color: var(--navy-100); }
+.story-ring.is-add { border: 1px dashed var(--line-strong); background: var(--navy-50); color: var(--navy-700); }
+.story-label { color: var(--navy-700); font-weight: 500; }
+.story-bubble:has(.is-seen) .story-label { color: var(--navy-500); }
+.story-viewer { animation: fade-in 0.2s var(--ease-out); }
+.story-frame { border-radius: 10px; animation: pop-in 0.22s var(--ease-out); }
+
+@media (prefers-reduced-motion: reduce) {
+  .story-viewer, .story-frame { animation: none; }
+  .story-ring { transition: none; }
 }

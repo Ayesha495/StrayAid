@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { CircleMarker, MapContainer, Popup, TileLayer } from "react-leaflet";
+import { CircleMarker, MapContainer, Popup } from "react-leaflet";
+import { MapTiles, basePathOptions } from "../components/map/mapLook";
 import { BadgeCheck, Building2, MapPin, PawPrint, Phone, Search } from "lucide-react";
 import { getDirectory } from "../services/socialService";
 import { getPublicAnimals } from "../services/platformService";
@@ -29,7 +30,7 @@ function OrgCard({ item, animals }: { item: DirectoryOrganization; animals: Anim
           {item.is_verified ? <BadgeCheck size={16} className="org-verified" aria-label="Verified" /> : null}
         </Link>
         <div className="org-card-chips">
-          <span className={`chip ${item.is_available ? "chip-green chip-dot" : "chip-outline"}`}>{item.is_available ? "Taking cases" : "Not taking cases"}</span>
+          <span className={`chip ${item.is_available ? "chip-green chip-dot" : "chip-slate"}`}>{item.is_available ? "Taking cases" : "Not taking cases"}</span>
           <span className="chip chip-amber"><PawPrint size={11} /> {inCare} in care</span>
         </div>
         {item.address || item.city ? <p className="org-card-line"><MapPin size={14} /> <span className="truncate">{item.address || item.city}</span></p> : null}
@@ -116,14 +117,13 @@ function Organizations() {
             scrollWheelZoom={false}
             style={{ height: "100%" }}
           >
-            <TileLayer attribution="Tiles &copy; Esri" url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}" maxZoom={16} />
-            <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}" maxZoom={16} />
+            <MapTiles />
             {mapped.map((item) => (
               <CircleMarker
                 key={item.id}
                 center={[item.latitude ?? 0, item.longitude ?? 0]}
                 radius={9}
-                pathOptions={{ color: "#fff", weight: 2, fillColor: item.is_available ? "#1e6b56" : "#8590a0", fillOpacity: 1 }}
+                pathOptions={basePathOptions(item.is_available)}
               >
                 <Popup><Link to={`/organizations/${item.id}`}>{item.name}</Link><br />{item.is_available ? "Taking cases" : "Not taking cases"}</Popup>
               </CircleMarker>

@@ -1,15 +1,13 @@
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState, type ComponentType } from "react";
-import { motion } from "motion/react";
 import {
   LayoutDashboard, ClipboardList, PawPrint, Newspaper, LogOut, FileText, Wallet, MessageSquare,
-  Building2, Heart, HandHeart, Settings, ArrowUpRight,
+  Building2, Heart, HandHeart, Settings, ArrowRight,
 } from "lucide-react";
 import { clearSession, useCurrentUser } from "../services/authSevice";
 import { getOrganizationProfile } from "../services/platformService";
 import { LogoMark } from "../ui/Logo";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { TextRoll } from "@/components/ui/skiper-ui/skiper58";
 import MenuToggleIcon from "./MenuToggleIcon";
 
 type AppSidebarProps = {
@@ -98,7 +96,7 @@ function AppSidebar({ isCollapsed, isMobile, onToggle }: AppSidebarProps) {
     <aside className={`dashboard-sidebar${isCollapsed ? " is-collapsed" : ""}`} aria-label="Main menu">
       <div className="sb-head">
         <Link to={isOrganization ? "/dashboard" : "/feed"} className="sb-brand" onClick={handleLinkClick}>
-          <LogoMark size={30} />
+          <LogoMark size={24} />
           <span>StrayAid</span>
         </Link>
         {isMobile ? (
@@ -119,10 +117,15 @@ function AppSidebar({ isCollapsed, isMobile, onToggle }: AppSidebarProps) {
                   const active = isActive(pathname, item);
                   return (
                     <li key={item.to}>
-                      <NavLink to={item.to} end={item.end} className="sb-link" onClick={handleLinkClick}>
-                        {active ? <motion.span layoutId="sb-active" className="sb-active" transition={{ type: "spring", stiffness: 420, damping: 36 }} /> : null}
-                        <span className="sb-icon"><Icon size={18} /></span>
-                        <TextRoll className="sb-label" lineHeight={1.3}>{item.label}</TextRoll>
+                      <NavLink
+                        to={item.to}
+                        end={item.end}
+                        className={`sb-link${active ? " is-active" : ""}`}
+                        aria-current={active ? "page" : undefined}
+                        onClick={handleLinkClick}
+                      >
+                        <Icon size={16} aria-hidden="true" />
+                        <span className="sb-label">{item.label}</span>
                       </NavLink>
                     </li>
                   );
@@ -135,7 +138,8 @@ function AppSidebar({ isCollapsed, isMobile, onToggle }: AppSidebarProps) {
         {isOrganization ? null : (
           <Link to="/organization/register" className="sb-promo" onClick={handleLinkClick}>
             <strong>Run a rescue team?</strong>
-            <span>Register it to receive cases near you. <ArrowUpRight size={14} aria-hidden="true" /></span>
+            <span>Register it to receive cases near you.</span>
+            <span className="sb-promo-cta">Register your team <ArrowRight size={13} aria-hidden="true" /></span>
           </Link>
         )}
       </ScrollArea>
@@ -154,7 +158,7 @@ function AppSidebar({ isCollapsed, isMobile, onToggle }: AppSidebarProps) {
           </span>
         </Link>
         <button className="sb-logout" type="button" onClick={handleLogout} aria-label="Log out" title="Log out">
-          <LogOut size={17} />
+          <LogOut size={16} />
         </button>
       </div>
     </aside>

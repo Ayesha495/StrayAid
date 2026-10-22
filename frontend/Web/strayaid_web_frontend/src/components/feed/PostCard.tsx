@@ -1,16 +1,23 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { BadgeCheck, Bookmark, Heart, MessageCircle, MoreHorizontal, Share2 } from "lucide-react";
+import { Bookmark, Check, Heart, MessageCircle, MoreHorizontal, PawPrint, Share2 } from "lucide-react";
 import { deletePost, setPostLiked, setPostSaved, sharePost } from "../../services/postService";
 import { useShell } from "../../layout/ShellContext";
 import { useToast } from "../../ui/Toast";
 import Avatar from "../../ui/Avatar";
-import StatusChip from "../../ui/StatusChip";
 import Comments from "./Comments";
 import { formatRelativeTime } from "../../utils/time";
 import { errorMessage } from "../../utils/errors";
 import type { Post } from "../../types/platform";
 import { POST_CATEGORY_LABEL } from "../../data/categories";
+
+// The animal's status on the photo, worded like the mobile feed.
+const ANIMAL_STATUS_LABELS: Record<string, string> = {
+  rescued: "Rescued",
+  recovering: "Under Treatment",
+  adoptable: "Ready for Adoption",
+  adopted: "Adopted",
+};
 
 type PostCardProps = {
   post: Post;
@@ -87,19 +94,28 @@ function PostCard({ post, initiallyOpen = false, onEdit, onDeleted }: PostCardPr
   return (
     <article className="card post" id={`post-${post.id}`}>
       <header className="post-head">
-        <Link to={`/organizations/${post.organization.id}`}>
-          <Avatar name={post.organization.name} src={post.organization.image} size={40} square />
+        <Link to={`/organizations/${post.organization.id}`} className="post-avatar">
+          <Avatar name={post.organization.name} src={post.organization.image} size={40} />
+          {post.organization.is_verified ? (
+            <span className="post-verified" aria-label="Verified organization"><Check size={10} strokeWidth={3} /></span>
+          ) : null}
         </Link>
         <div className="post-head-text">
-          <Link to={`/organizations/${post.organization.id}`} className="strong row" style={{ gap: 4 }}>
+          <Link to={`/organizations/${post.organization.id}`} className="post-org">
             {post.organization.name}
-            {post.organization.is_verified ? <BadgeCheck size={15} color="var(--green-700)" aria-label="Verified" /> : null}
           </Link>
-          <span className="small muted">
-            {formatRelativeTime(post.created_at)}
-            {post.category ? ` · ${POST_CATEGORY_LABEL[post.category] ?? post.category}` : ""}
+          <span className="post-meta">
+            {[post.organization.city, formatRelativeTime(post.created_at), post.category ? POST_CATEGORY_LABEL[post.category] ?? post.category : null]
+              .filter(Boolean)
+              .join("  •  ")}
           </span>
         </div>
+        {post.animal ? (
+          <Link to={`/animals/${post.animal.id}`} className="post-animal-chip" aria-label={`About ${post.animal.name}, open profile`}>
+            <PawPrint size={13} aria-hidden="true" />
+            <span className="truncate">{post.animal.name}</span>
+          </Link>
+        ) : null}
         {own ? (
           <div className="panel-anchor">
             <button type="button" className="sa-icon-btn" aria-label="Post options" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>
@@ -120,17 +136,19 @@ function PostCard({ post, initiallyOpen = false, onEdit, onDeleted }: PostCardPr
         {post.content && post.content !== post.title ? <p className="post-text">{post.content}</p> : null}
       </div>
 
-      {post.image ? <img src={post.image} alt={post.title} className="post-image" loading="lazy" /> : null}
-
-      {post.animal ? (
-        <button type="button" className="post-animal" onClick={() => navigate(`/animals/${post.animal.id}`)}>
-          <span className="post-animal-photo">{post.animal.image ? <img src={post.animal.image} alt="" /> : null}</span>
-          <span className="post-animal-text">
-            <span className="strong small">{post.animal.name}</span>
-            <span className="small muted">{[post.animal.species, post.animal.breed].filter(Boolean).join(" · ")}</span>
-          </span>
-          <StatusChip kind="animal" value={post.animal.status} />
-        </button>
+      {post.image ? (
+        <div className="post-media">
+          {post.animal ? (
+            <button type="button" className="post-media-link" onClick={() => navigate(`/animals/${post.animal.id}`)} aria-label={`Open ${post.animal.name}'s profile`}>
+              <img src={post.image} alt={post.title} className="post-image" loading="lazy" />
+            </button>
+          ) : (
+            <img src={post.image} alt={post.title} className="post-image" loading="lazy" />
+          )}
+          {post.animal && ANIMAL_STATUS_LABELS[post.animal.status] ? (
+            <span className="post-status"><span className="post-status-dot" />{ANIMAL_STATUS_LABELS[post.animal.status]}</span>
+          ) : null}
+        </div>
       ) : null}
 
       <div className="post-actions">
@@ -140,7 +158,7 @@ function PostCard({ post, initiallyOpen = false, onEdit, onDeleted }: PostCardPr
         <button type="button" aria-expanded={showComments} onClick={() => setShowComments(!showComments)}>
           <MessageCircle size={17} /> {commentCount || ""} <span className="post-action-label">Comment</span>
         </button>
-        <button type="button" onClick={share}>
+        <button type="button" className="post-share" onClick={share}>
           <Share2 size={17} /> <span className="post-action-label">Share</span>
         </button>
         <button type="button" className={`post-save${saved ? " is-on" : ""}`} aria-pressed={saved} aria-label={saved ? "Saved" : "Save"} onClick={save}>

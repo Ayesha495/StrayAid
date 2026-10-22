@@ -1,10 +1,8 @@
 import { useEffect } from "react";
-import { MapContainer, Marker, TileLayer, useMapEvents } from "react-leaflet";
-import L, { type LatLngExpression, type LeafletMouseEvent } from "leaflet";
+import { MapContainer, Marker, useMapEvents } from "react-leaflet";
+import { type LatLngExpression, type LeafletMouseEvent } from "leaflet";
 import { CircleCheck, MapPin } from "lucide-react";
-import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
-import markerIcon from "leaflet/dist/images/marker-icon.png";
-import markerShadow from "leaflet/dist/images/marker-shadow.png";
+import { MapTiles, placePin } from "./map/mapLook";
 
 type LocationPickerProps = {
   latitude: number;
@@ -16,14 +14,6 @@ type LocationPickerProps = {
 };
 
 const DEFAULT_CENTER: LatLngExpression = [30.3753, 69.3451];
-
-const defaultIcon = L.icon({
-  iconRetinaUrl: markerIcon2x,
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-});
 
 function MapClickHandler({ onPick }: { onPick: (lat: number, lng: number) => void }) {
   useMapEvents({
@@ -109,13 +99,10 @@ function LocationPicker({
 
       <div className="location-map-shell">
         <MapContainer center={center} zoom={hasCoordinates ? 13 : 6} scrollWheelZoom className="location-map">
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
+          <MapTiles />
           <RecenterMap center={center} zoom={hasCoordinates ? 13 : 6} />
           <MapClickHandler onPick={updateLocation} />
-          {hasCoordinates ? <Marker position={[latitude, longitude]} icon={defaultIcon} /> : null}
+          {hasCoordinates ? <Marker position={[latitude, longitude]} icon={placePin} /> : null}
         </MapContainer>
       </div>
 

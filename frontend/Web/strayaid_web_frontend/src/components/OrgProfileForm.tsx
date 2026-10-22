@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Circle, CircleMarker, MapContainer, TileLayer, useMap, useMapEvents } from "react-leaflet";
+import { Circle, CircleMarker, MapContainer, useMap, useMapEvents } from "react-leaflet";
+import { MapTiles, areaPathOptions, basePathOptions } from "./map/mapLook";
 import { Crosshair, ImagePlus } from "lucide-react";
 import { createOrganizationProfile, updateOrganizationProfile } from "../services/platformService";
 import { errorMessage } from "../utils/errors";
@@ -49,18 +50,13 @@ function LocationField({ latitude, longitude, radius, onChange }: { latitude: nu
       </div>
       <div className="org-location-map">
         <MapContainer center={center} zoom={11} scrollWheelZoom={false} style={{ height: "100%" }}>
-          <TileLayer
-            attribution="Tiles &copy; Esri"
-            url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}"
-            maxZoom={16}
-          />
-          <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}" maxZoom={16} />
+          <MapTiles />
           <ClickToPlace onPick={(lat, lng) => onChange(Number(lat.toFixed(6)), Number(lng.toFixed(6)))} />
           {placed ? (
             <>
               <Recenter center={center} />
-              <Circle center={center} radius={radius * 1000} pathOptions={{ color: "#1e6b56", weight: 1.5, fillOpacity: 0.06 }} />
-              <CircleMarker center={center} radius={8} pathOptions={{ color: "#fff", weight: 2, fillColor: "#1e6b56", fillOpacity: 1 }} />
+              <Circle center={center} radius={radius * 1000} pathOptions={areaPathOptions} />
+              <CircleMarker center={center} radius={8} pathOptions={basePathOptions()} />
             </>
           ) : null}
         </MapContainer>

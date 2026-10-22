@@ -6,7 +6,7 @@ import { addCaseNote, getCaseUpdates, getPublicCase } from "../services/caseServ
 import { startConversation } from "../services/chatService";
 import type { Case, Organization, Report } from "../types/platform";
 import type { CaseUpdate, PublicCase } from "../types/api";
-import { statusBadgeClass } from "../utils/status";
+import { chipStyle } from "../utils/statusStyles";
 import { NEXT_STATUS_ACTION, nextStatuses } from "../utils/cases";
 import { errorMessage } from "../utils/errors";
 import { formatDateTime, initialsOf } from "../utils/format";
@@ -17,8 +17,6 @@ import CaseProgress from "../components/CaseProgress";
 import ServiceAreaMap from "../components/ServiceAreaMap";
 import "../styles/Portal.css";
 import "./CaseDetail.css";
-
-const SEVERITY_TONE: Record<string, string> = { low: "chip-navy", medium: "chip-amber", high: "chip-coral", critical: "chip-solid-coral" };
 
 /** What the next step means, so the team knows what pressing the button tells everyone. */
 const NEXT_HINT: Record<string, string> = {
@@ -133,10 +131,10 @@ function CaseDetail() {
           <p className="cd-ref">{caseItem.reference || `#${caseItem.id}`} · reported {formatRelativeTime(caseItem.created_at)}</p>
           <h1>{title}</h1>
           <div className="cd-chips">
-            <span className={statusBadgeClass(caseItem.status)}>{caseItem.status_label || caseItem.status.replace("_", " ")}</span>
+            <span className={`chip ${chipStyle("case", caseItem.status).className}`}>{caseItem.status_label || caseItem.status.replace("_", " ")}</span>
             <ScoreBadge score={caseItem.confidence_score} />
-            {severity ? <span className={`chip ${SEVERITY_TONE[severity] ?? "chip-navy"}`}>{severity} severity</span> : null}
-            {caseItem.area ? <span className="chip chip-outline"><MapPin size={11} /> {caseItem.area}</span> : null}
+            {severity ? <span className={`chip ${chipStyle("severity", severity).className}`}>{chipStyle("severity", severity).label} severity</span> : null}
+            {caseItem.area ? <span className="chip chip-slate"><MapPin size={11} /> {caseItem.area}</span> : null}
           </div>
         </div>
       </header>

@@ -378,16 +378,16 @@
 .lp-way-cta:hover { text-decoration: underline; }
 
 /* ---------- Stories: the testimonial card on a raised panel ---------- */
-.stories {
+.lp-stories {
   border: 1px solid var(--line);
   border-radius: 22px;
   background: #fff;
   box-shadow: var(--elev-2);
 }
 
-.stories h3 { color: var(--navy-900); font-family: var(--font-display); letter-spacing: -0.02em; }
-.stories p { color: var(--navy-700) !important; font-size: 17px !important; line-height: 1.6; }
-.stories button { border-radius: 12px !important; box-shadow: var(--elev-1); }
+.lp-stories h3 { color: var(--navy-900); font-family: var(--font-display); letter-spacing: -0.02em; }
+.lp-stories p { color: var(--navy-700) !important; font-size: 17px !important; line-height: 1.6; }
+.lp-stories button { border-radius: 12px !important; box-shadow: var(--elev-1); }
 
 /* ---------- Closing band: full width, solid colour ---------- */
 .lp-final {

@@ -2,17 +2,17 @@
   display: grid;
   flex-shrink: 0;
   place-items: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 9px;
-  background: var(--navy-100);
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  background: var(--navy-50);
   color: var(--navy-700);
 }
 
 /* coral = urgent, amber = rescue under way / money, purple = adoption, blue = conversation and community. */
-.notification-icon.kind-alert { background: #fde2dc; color: var(--coral-700); }
-.notification-icon.kind-rescue { background: #fff4e5; color: #b45309; }
-.notification-icon.kind-adoption { background: #ede9fe; color: #6d28d9; }
-.notification-icon.kind-sponsorship { background: var(--amber-100); color: var(--amber-800); }
+.notification-icon.kind-alert { background: var(--coral-50); color: var(--coral-700); }
+.notification-icon.kind-rescue { background: var(--amber-50); color: #a2610b; }
+.notification-icon.kind-adoption { background: #f1ecfd; color: #6a46c4; }
+.notification-icon.kind-sponsorship { background: var(--amber-50); color: var(--amber-800); }
 .notification-icon.kind-chat,
-.notification-icon.kind-community { background: #dbeafe; color: #1d4ed8; }
+.notification-icon.kind-community { background: var(--blue-50); color: var(--blue-700); }

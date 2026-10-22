@@ -81,3 +81,40 @@
 }
 
 .notif-time { flex-shrink: 0; white-space: nowrap; }
+
+/* ---------- Oct 22 2026 redesign ---------- */
+.notif-layout { gap: 40px; grid-template-columns: 200px minmax(0, 1fr); }
+.notif-rail { padding: 0; }
+.notif-rail-item { height: 32px; padding: 0 8px; border-radius: 6px; font-size: 14px; font-weight: 500; transition: background-color 0.15s var(--ease-out); }
+.notif-rail-item:hover { background: var(--navy-50); }
+.notif-rail-item[aria-pressed="true"] { background: var(--navy-100); color: var(--navy-900); }
+.notif-rail-icon, .notif-rail-item[class*="tone-"] .notif-rail-icon { width: auto; height: auto; background: none; color: var(--navy-500); }
+.notif-rail-item[aria-pressed="true"] .notif-rail-icon { color: var(--navy-900); }
+.notif-rail-count { font-variant-numeric: tabular-nums; }
+.notif-group { padding: 0 0 8px; border-bottom: 1px solid var(--line); color: var(--navy-500); font-size: 13px; font-weight: 500; letter-spacing: 0; text-transform: none; }
+.notif-feed > div + div .notif-group { margin-top: 28px; }
+.notif-list { padding: 0; }
+.notif-row { padding: 12px 8px; margin: 0 -8px; width: calc(100% + 16px); border-radius: 6px; transition: background-color 0.15s var(--ease-out); }
+.notif-list li + li .notif-row { box-shadow: inset 0 1px 0 var(--line); }
+.notif-row.is-unread { background: none; box-shadow: none; }
+.notif-row.is-unread .notif-text > span:last-child { font-weight: 500; }
+@media (hover: hover) and (pointer: fine) {
+  .notif-row:hover { background: var(--navy-50); }
+}
+@media (max-width: 760px) {
+  .notif-layout { gap: 20px; }
+}
+
+/* Colour pass: each type keeps its tinted icon. */
+.notif-rail-item[class*="tone-"] .notif-rail-icon { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 6px; }
+.notif-rail-item.tone-navy .notif-rail-icon { background: var(--navy-50); color: var(--navy-700); }
+.notif-rail-item.tone-green .notif-rail-icon { background: var(--green-50); color: var(--green-700); }
+.notif-rail-item.tone-amber .notif-rail-icon { background: var(--amber-50); color: #a2610b; }
+.notif-rail-item.tone-purple .notif-rail-icon { background: #f1ecfd; color: #6a46c4; }
+.notif-rail-item.tone-gold .notif-rail-icon { background: var(--amber-50); color: var(--amber-800); }
+.notif-rail-item.tone-blue .notif-rail-icon { background: var(--blue-50); color: var(--blue-700); }
+.notif-rail-item[aria-pressed="true"] { background: var(--mint); color: var(--green-800); }
+.notif-row.is-unread { background: var(--mint); }
+@media (hover: hover) and (pointer: fine) {
+  .notif-rail-item:hover, .notif-row:hover { background: var(--mint); }
+}

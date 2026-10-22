@@ -24,9 +24,9 @@ const FILTERS = [
   { key: "shelters", label: "General" },
 ];
 
-// Conversation tags use the app-wide meanings: amber = a rescue case, purple = adoption, coral = urgent.
-const TAG_TONE: Record<string, string> = { amber: "chip-amber", green: "chip-green", red: "chip-coral", coral: "chip-coral" };
-const tagClass = (tag: { label: string; tone: string }) => (/adoption/i.test(tag.label) ? "chip-purple" : TAG_TONE[tag.tone] ?? "chip-outline");
+// Conversation tags take the tone the server sends, like on mobile: amber = a rescue case, green = adoption.
+const TAG_TONE: Record<string, string> = { amber: "chip-amber", green: "chip-emerald", red: "chip-coral", coral: "chip-coral" };
+const tagClass = (tag: { label: string; tone: string }) => TAG_TONE[tag.tone] ?? "chip-slate";
 
 const dayLabel = (iso: string) => {
   const date = new Date(iso);

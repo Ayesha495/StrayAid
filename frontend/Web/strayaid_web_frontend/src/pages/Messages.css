@@ -238,3 +238,36 @@
 
 .inbox-tabs { display: flex; width: 100%; }
 .inbox-tabs .tab { flex: 1; padding: 6px 8px; font-size: var(--text-sm); }
+
+/* ---------- Oct 22 2026 redesign: the messenger fills the sheet edge to edge ---------- */
+.dashboard-content-body .messages-page { width: auto; max-width: none; margin: -28px -32px -40px; padding: 0; }
+
+.dashboard-content-body .messages {
+  height: calc(100vh - 52px - 16px);
+  border: 0;
+  border-radius: 0 0 8px 8px;
+  box-shadow: none;
+}
+
+.messages { grid-template-columns: 320px minmax(0, 1fr); border-color: var(--line); box-shadow: none; }
+.inbox { border-right-color: var(--line); }
+.inbox-head { border-bottom-color: var(--line); padding: 20px 16px 0; gap: 12px; }
+.inbox-head h1 { font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
+.inbox-tabs { gap: 16px; }
+.inbox-tabs .tab { flex: 0 0 auto; padding: 6px 0 10px; font-size: 13px; }
+.inbox-row { padding: 10px; transition: background-color 0.15s var(--ease-out); }
+.inbox-row.is-active { background: var(--navy-100); }
+.inbox-row-title { font-weight: 500; }
+.inbox-row.is-unread .inbox-row-title, .inbox-row.is-unread .inbox-row-preview { font-weight: 600; }
+.inbox-foot { border-top-color: var(--line); color: var(--navy-500); }
+.thread-pane { background: var(--navy-50); }
+.thread-head, .composer { border-color: var(--line); }
+.thread-day span { border-radius: 5px; background: #fff; color: var(--navy-500); font-weight: 500; box-shadow: inset 0 0 0 1px var(--line); }
+.bubble { border: 0; border-radius: 10px 10px 10px 4px; box-shadow: 0 0 0 1px var(--line), 0 1px 1px rgba(0, 0, 0, 0.03); }
+.bubble-row.is-mine .bubble { border-radius: 10px 10px 4px 10px; box-shadow: none; }
+.bubble-name { font-weight: 600; }
+
+@media (max-width: 900px) {
+  .dashboard-content-body .messages-page { margin: -20px -16px -28px; }
+  .dashboard-content-body .messages { height: calc(100vh - 110px); border-radius: 0; }
+}

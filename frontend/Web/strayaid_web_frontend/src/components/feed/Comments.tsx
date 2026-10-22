@@ -55,7 +55,7 @@ function Comment({ comment, isReply = false, onReply, onChanged }: CommentProps)
           <div className="row" style={{ gap: 6, flexWrap: "wrap" }}>
             <span className="strong small">{comment.author.name}</span>
             {comment.author.badge ? <span className="chip chip-green">{comment.author.badge}</span> : null}
-            {comment.is_pinned ? <span className="chip chip-navy"><Pin size={10} /> Pinned</span> : null}
+            {comment.is_pinned ? <span className="chip chip-slate"><Pin size={10} /> Pinned</span> : null}
           </div>
           <p className="small">{comment.body}</p>
         </div>

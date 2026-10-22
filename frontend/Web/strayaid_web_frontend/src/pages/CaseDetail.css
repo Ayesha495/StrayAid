@@ -203,7 +203,7 @@
 
 .cd-close:hover { text-decoration: underline; }
 
-.cd-location .service-map { height: 180px; overflow: hidden; border-radius: 8px; }
+.cd-location .service-map { height: 180px; overflow: hidden; border-radius: 12px; }
 
 .cd-directions {
   display: inline-flex;

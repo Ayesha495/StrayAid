@@ -1,131 +1,530 @@
-/* The depth layer: loads after ui.css and gives the shared building blocks weight.
-   Buttons are pressable, cards sit above the paper, inputs are sunk into it.
-   The dashboard (.overview-page) keeps its own look; its classes aren't touched here. */
+/* The shared look (Oct 22 2026 redesign). Loads after ui.css and Portal.css's base rules.
+
+   Principles, after Emil Kowalski's writing on interface craft:
+   - Structure comes from type, spacing and hairlines, not boxes. Pages sit on one white sheet,
+     so "cards" are flattened into plain sections; only things that float (menus, modals,
+     toasts) or that are objects in their own right (feed posts) get a surface.
+   - Colour carries meaning only: a small dot on a status, a coloured line on a chart.
+   - Corners are small (6px controls, 8px surfaces).
+   - Motion is quick and responds to the person: buttons press in, menus scale from where they
+     open, hover effects only on devices that can hover, nothing moves under "reduce motion". */
 
 /* ---------- Canvas ---------- */
-.ds-page,
-.dashboard-shell { background-color: var(--paper); background-image: var(--grain); }
+.ds-page { background: transparent; }
 
 /* ---------- Buttons ---------- */
 .btn {
   position: relative;
-  height: 40px;
-  padding: 0 18px;
-  border-radius: var(--r-control);
-  font-weight: 650;
-  letter-spacing: -0.005em;
-  transition: transform 0.15s var(--ease-out), box-shadow 0.15s var(--ease-out), background-color 0.15s, color 0.15s, border-color 0.15s;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 6px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0;
+  transition:
+    transform 0.16s var(--ease-out),
+    background-color 0.15s var(--ease-out),
+    border-color 0.15s var(--ease-out),
+    box-shadow 0.15s var(--ease-out),
+    color 0.15s var(--ease-out);
 }
 
-.btn:active:not(:disabled) { transform: translateY(1px); }
+.btn:active:not(:disabled) { transform: scale(0.97); }
 
 .btn-primary {
-  border-color: var(--green-800);
+  border-color: transparent;
   background: var(--green-700);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(18, 37, 29, 0.3), 0 6px 14px -6px rgba(30, 107, 86, 0.7);
+  color: #fff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 1px 2px rgba(0, 0, 0, 0.12);
 }
-.btn-primary:hover:not(:disabled) {
-  background: #22775f;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 2px 4px rgba(18, 37, 29, 0.3), 0 10px 20px -8px rgba(30, 107, 86, 0.75);
-  transform: translateY(-1px);
-}
-.btn-primary:active:not(:disabled) { background: var(--green-800); box-shadow: var(--press); }
 
 .btn-secondary {
-  border-color: var(--line-strong);
+  border-color: transparent;
   background: #fff;
-  box-shadow: var(--elev-1);
+  color: var(--navy-900);
+  box-shadow: 0 0 0 1px var(--line-strong), 0 1px 2px rgba(0, 0, 0, 0.04);
 }
-.btn-secondary:hover:not(:disabled) { background: #fff; border-color: rgba(36, 52, 71, 0.28); box-shadow: var(--elev-2); transform: translateY(-1px); }
-.btn-secondary:active:not(:disabled) { background: var(--navy-50); box-shadow: var(--press); }
 
-.btn-danger {
-  border-color: var(--coral-700);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(120, 30, 20, 0.3), 0 6px 14px -6px rgba(212, 81, 63, 0.6);
+.btn-ghost { color: var(--navy-700); }
+.btn-danger { border-color: transparent; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12); }
+.btn-danger-outline,
+.btn-coral-outline { border-color: transparent; box-shadow: 0 0 0 1px rgba(212, 81, 63, 0.45); }
+.btn-amber { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); }
+
+@media (hover: hover) and (pointer: fine) {
+  .btn-primary:hover:not(:disabled) { background: var(--green-800); }
+  .btn-secondary:hover:not(:disabled) { background: var(--navy-50); }
+  .btn-ghost:hover:not(:disabled) { background: var(--navy-50); color: var(--navy-900); }
 }
-.btn-danger-outline { box-shadow: var(--elev-1); }
 
-.btn-sm { height: 32px; padding: 0 12px; border-radius: 8px; }
-.btn-lg { height: 48px; padding: 0 24px; border-radius: 12px; }
+.btn-sm { height: 28px; padding: 0 10px; border-radius: 6px; font-size: 13px; font-weight: 500; }
+.btn-lg { height: 40px; padding: 0 18px; border-radius: 6px; font-size: 15px; }
 
-.sa-icon-btn { border-radius: var(--r-control); transition: background-color 0.15s, box-shadow 0.15s; }
-.sa-icon-btn:hover { background: #fff; box-shadow: var(--elev-1); }
+.sa-icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  transition: background-color 0.15s var(--ease-out), transform 0.1s var(--ease-out);
+}
 
-/* ---------- Inputs: sunk into the surface ---------- */
+.sa-icon-btn:active { transform: scale(0.94); }
+.sa-icon-btn[aria-expanded="true"] { background: var(--navy-100); color: var(--navy-900); }
+
+/* ---------- Inputs ---------- */
 .input,
 .select,
 .textarea {
-  border-color: transparent;
-  border-radius: var(--r-control);
-  background: #fbfaf7;
-  box-shadow: var(--well);
-  transition: box-shadow 0.15s, background-color 0.15s;
+  min-height: 36px;
+  padding: 7px 10px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 6px;
+  background: #fff;
+  font-size: 14px;
+  transition: border-color 0.15s var(--ease-out), box-shadow 0.15s var(--ease-out);
 }
-.input:hover, .select:hover, .textarea:hover { background: #fff; }
+
+.textarea { min-height: 96px; }
+
 .input:focus,
 .select:focus,
 .textarea:focus {
-  border-color: transparent;
+  border-color: var(--green-700);
+  box-shadow: 0 0 0 3px rgba(30, 107, 86, 0.14);
+}
+
+.input[aria-invalid="true"], .select[aria-invalid="true"], .textarea[aria-invalid="true"] { border-color: var(--coral-500); }
+.field-label { font-weight: 500; }
+
+/* ---------- Cards become sections ----------
+   A card is now a titled section on the sheet: a heading with a hairline under it, content
+   below, no box around it. The few real objects opt back in with .surface. */
+.card,
+.panel-card,
+.category-panel {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.panel-card { padding: 0; }
+.card-pad { padding: 0; }
+.card-header { padding: 0 0 10px; border-bottom: 1px solid var(--line); }
+.card-header h3 { font-size: 15px; font-weight: 600; }
+.card-body { padding: 14px 0 0; }
+
+a.card, .card.is-interactive { transition: opacity 0.15s var(--ease-out); }
+
+.surface,
+.card.post,
+.card.feed-compose {
+  border: 0;
+  border-radius: 8px;
   background: #fff;
-  box-shadow: inset 0 0 0 1.5px var(--green-700), 0 0 0 4px rgba(30, 107, 86, 0.14);
+  box-shadow: 0 0 0 1px var(--line), 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
-/* ---------- Cards ---------- */
-.card {
-  border: 1px solid var(--line);
-  border-radius: var(--r-card);
+/* ---------- Status chips: neutral label, colour in the dot ---------- */
+.chip {
+  --dot: var(--navy-300);
+  gap: 6px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 5px;
   background: #fff;
-  box-shadow: var(--elev-1);
+  color: var(--navy-700);
+  font-size: 12px;
+  font-weight: 500;
+  box-shadow: inset 0 0 0 1px var(--line-strong);
 }
 
-a.card, .card.is-interactive { transition: transform 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out); }
-a.card:hover, .card.is-interactive:hover { transform: translateY(-2px); box-shadow: var(--elev-2); }
-
-.card-header { border-bottom-color: var(--line); }
-
-/* ---------- Chips ---------- */
-.chip { box-shadow: inset 0 0 0 1px rgba(36, 52, 71, 0.06); }
-
-/* ---------- Segmented tabs (newer pages only; the dashboard keeps its own) ---------- */
-.ds .tabs, .page .tabs {
-  padding: 4px;
-  border-radius: 12px;
-  background: var(--paper-deep);
-  box-shadow: inset 0 1px 2px rgba(18, 37, 29, 0.08);
+.chip::before {
+  content: "";
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--dot);
 }
-.ds .tab, .page .tab { border-radius: 9px; transition: color 0.15s, background-color 0.15s, box-shadow 0.15s; }
-.ds .tab[aria-selected="true"], .page .tab[aria-selected="true"] { box-shadow: var(--elev-1); }
+
+.chip-dot::before { width: 6px; height: 6px; }
+.chip-green, .chip-solid-green { --dot: var(--green-700); }
+.chip-emerald { --dot: var(--emerald-500); }
+.chip-amber { --dot: var(--amber-500); }
+.chip-coral { --dot: var(--coral-500); }
+.chip-solid-coral, .chip-critical { --dot: var(--coral-600); color: var(--coral-700); }
+.chip-blue { --dot: var(--blue-500); }
+.chip-purple { --dot: #8b6fd6; }
+.chip-navy, .chip-slate, .chip-outline { --dot: var(--navy-300); }
+.chip-solid-green, .chip-solid-coral, .chip-green, .chip-coral, .chip-amber, .chip-blue,
+.chip-purple, .chip-emerald, .chip-navy, .chip-slate, .chip-critical { background: #fff; }
+.chip-solid-green { color: var(--navy-900); }
+
+/* ---------- Tabs: an underline, not a pill ---------- */
+.tabs,
+.ds .tabs,
+.page .tabs {
+  gap: 20px;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: inset 0 -1px 0 var(--line);
+}
+
+.tab,
+.ds .tab,
+.page .tab {
+  position: relative;
+  padding: 8px 0 10px;
+  border-radius: 0;
+  background: none;
+  color: var(--navy-500);
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.15s var(--ease-out);
+}
+
+.tab::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--navy-900);
+  opacity: 0;
+  transform: scaleX(0.6);
+  transition: opacity 0.18s var(--ease-out), transform 0.18s var(--ease-out);
+}
+
+.tab[aria-selected="true"],
+.ds .tab[aria-selected="true"],
+.page .tab[aria-selected="true"] { background: none; color: var(--navy-900); box-shadow: none; }
+
+.tab[aria-selected="true"]::after { opacity: 1; transform: none; }
+
+@media (hover: hover) and (pointer: fine) {
+  .tab:hover { color: var(--navy-900); }
+}
 
 /* ---------- Filter pills ---------- */
-.filter-pill { transition: background-color 0.15s, box-shadow 0.15s, color 0.15s; }
-.filter-pill[aria-pressed="true"] { box-shadow: var(--elev-1); }
+.filter-row { gap: 6px; }
+
+.filter-pill {
+  height: 30px;
+  padding: 0 11px;
+  border: 0;
+  border-radius: 6px;
+  background: #fff;
+  color: var(--navy-700);
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  transition: background-color 0.15s var(--ease-out), color 0.15s var(--ease-out), transform 0.1s var(--ease-out);
+}
+
+.filter-pill:active { transform: scale(0.97); }
+.filter-pill[aria-pressed="true"] { background: var(--navy-900); color: #fff; box-shadow: none; }
+
+@media (hover: hover) and (pointer: fine) {
+  .filter-pill:hover:not([aria-pressed="true"]) { background: var(--navy-50); color: var(--navy-900); }
+}
 
 /* ---------- Page header ---------- */
-.page-header { align-items: flex-end; padding-bottom: 20px; margin-bottom: 24px; border-bottom: 1px solid var(--line); }
-.page-header h1 { color: var(--navy-900); font-size: clamp(26px, 2.4vw, 32px); letter-spacing: -0.025em; }
-.page-header p { color: var(--navy-500); font-weight: 500; }
+.page-header { align-items: flex-end; margin-bottom: 28px; padding-bottom: 0; border-bottom: 0; }
+.page-header h1 { color: var(--navy-900); font-size: 24px; font-weight: 600; letter-spacing: -0.02em; }
+.page-header p { margin-top: 4px; color: var(--navy-500); font-size: 14px; font-weight: 400; }
+
+:where(.ds) h1 { font-weight: 600; letter-spacing: -0.02em; }
+:where(.ds) :where(h2, h3) { font-weight: 600; letter-spacing: -0.01em; }
+
+/* ---------- Stats: a strip of numbers split by hairlines ---------- */
+.sa-stat { gap: 4px; padding: 14px 20px; }
+.sa-stat.tint-blue, .sa-stat.tint-amber, .sa-stat.tint-green, .sa-stat.tint-coral { background: transparent; }
+.stat-chip, .tint-blue .stat-chip, .tint-amber .stat-chip, .tint-green .stat-chip, .tint-coral .stat-chip {
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  background: none;
+  color: var(--navy-500);
+}
+
+.sa-stat-label { color: var(--navy-500); font-size: 13px; font-weight: 400; }
+.stat-value { font-family: var(--font-body); font-size: 26px; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.tint-amber .progress > span { background: var(--amber-500); }
+
+/* Filter tiles: the same strip, where the current filter is underlined like a tab. */
+.filter-tiles {
+  gap: 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.filter-tile,
+.filter-tile.tint-blue, .filter-tile.tint-amber, .filter-tile.tint-green, .filter-tile.tint-coral, .filter-tile.tint-purple {
+  position: relative;
+  grid-template-columns: 1fr;
+  grid-template-areas: "label" "count";
+  gap: 4px;
+  padding: 14px 18px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  transition: background-color 0.15s var(--ease-out);
+}
+
+.filter-tile + .filter-tile { box-shadow: inset 1px 0 0 var(--line); }
+.filter-tile-icon { display: none; }
+.filter-tile-count { font-family: var(--font-body); font-size: 24px; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.filter-tile-label { color: var(--navy-500); font-size: 13px; font-weight: 400; }
+.filter-tile-label span { display: inline; color: var(--navy-300); font-size: 13px; }
+.filter-tile-label span::before { content: " · "; }
+
+.filter-tile::after {
+  content: "";
+  position: absolute;
+  right: 18px;
+  bottom: -1px;
+  left: 18px;
+  height: 2px;
+  background: var(--navy-900);
+  opacity: 0;
+  transition: opacity 0.18s var(--ease-out);
+}
+
+.filter-tile[aria-pressed="true"] { border: 0; box-shadow: none; }
+.filter-tile + .filter-tile[aria-pressed="true"] { box-shadow: inset 1px 0 0 var(--line); }
+.filter-tile[aria-pressed="true"]::after { opacity: 1; }
+.filter-tile[aria-pressed="true"] .filter-tile-label { color: var(--navy-900); }
+
+@media (hover: hover) and (pointer: fine) {
+  .filter-tile:hover { background: var(--navy-50); }
+}
+
+@media (max-width: 760px) {
+  .filter-tile:nth-child(odd) { box-shadow: none !important; }
+  .filter-tile:nth-child(n + 3) { border-top: 1px solid var(--line); }
+}
 
 /* ---------- Tables ---------- */
-.table th { background: #faf9f5; }
+.table th { background: transparent; color: var(--navy-500); font-size: 12px; font-weight: 500; }
+.table th, .table td { border-bottom-color: var(--line); }
 
-/* ---------- Overlays ---------- */
-.sa-modal-backdrop { background: rgba(12, 24, 19, 0.5); backdrop-filter: blur(3px); }
-.modal { border-radius: 18px; box-shadow: var(--elev-3), 0 0 0 1px rgba(36, 52, 71, 0.06); }
-.dropdown { border-color: var(--line); border-radius: 14px; box-shadow: var(--elev-3); }
-.toast { border-radius: 12px; box-shadow: var(--elev-3); }
-
-/* ---------- Empty and loading states ---------- */
-.state-icon { box-shadow: var(--elev-1); }
-
-/* ---------- Older team pages (not the dashboard) share the same surfaces ---------- */
-.portal-page:not(.overview-page) .panel-card,
-.portal-page:not(.overview-page) .card {
-  border: 1px solid var(--line);
-  border-radius: var(--r-card);
-  box-shadow: var(--elev-1);
+@media (hover: hover) and (pointer: fine) {
+  .table tbody tr:hover { background: var(--navy-50); }
 }
+
+/* ---------- Things that float ---------- */
+.sa-modal-backdrop { background: rgba(0, 0, 0, 0.36); animation: fade-in 0.2s var(--ease-out); }
+
+.modal {
+  border-radius: 10px;
+  box-shadow: var(--elev-3);
+  animation: pop-in 0.2s var(--ease-out);
+}
+
+.sa-modal-header h2 { font-size: 16px; font-weight: 600; }
+.sa-modal-header, .modal-footer { border-color: var(--line); }
+
+/* Menus grow out of the button that opened them. */
+.dropdown {
+  border: 0;
+  border-radius: 8px;
+  box-shadow: var(--elev-3);
+  transform-origin: top right;
+  animation: pop-in 0.16s var(--ease-out);
+}
+
+.toast {
+  border: 0;
+  border-radius: 8px;
+  box-shadow: var(--elev-3);
+  animation: toast-in 0.24s var(--ease-out);
+}
+
+.toast-urgent .toast-title, .toast-error .toast-title { color: var(--coral-700); }
+
+@keyframes pop-in { from { opacity: 0; transform: scale(0.96); } }
+@keyframes fade-in { from { opacity: 0; } }
+
+/* ---------- Small things ---------- */
+.alert { border-radius: 6px; font-size: 14px; }
+.avatar { font-family: var(--font-body); font-weight: 600; }
+.avatar-square { border-radius: 6px; }
+.progress { height: 4px; }
+.state-icon { border-radius: 8px; box-shadow: none; }
+.state h3 { font-size: 15px; font-weight: 600; }
+.skeleton { border-radius: 6px; }
+.link { font-weight: 500; }
+.back-link { font-weight: 500; font-size: 14px; }
+.section-title { font-size: 16px; font-weight: 600; }
+.bank-card { border-radius: 6px; }
+.count-dot { border-color: #fff; }
 
 @media (prefers-reduced-motion: reduce) {
-  .btn, a.card, .card.is-interactive { transition: none; }
-  .btn:hover, .btn:active, a.card:hover { transform: none !important; }
+  .btn, .filter-pill, .icon-btn, .sa-icon-btn, .primary-btn, .secondary-btn { transition: none; }
+  .btn:active, .filter-pill:active, .icon-btn:active, .primary-btn:active { transform: none !important; }
+  .modal, .modal-card, .dropdown, .toast, .sa-modal-backdrop, .modal-backdrop { animation: none; }
+  .tab::after { transition: none; }
 }
+
+/* A chip that leads with an icon does not need the dot as well. */
+.chip:has(> svg:first-child)::before { display: none; }
+
+/* ---------- Stat strip: label over number, columns split by hairlines ---------- */
+.stat-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  margin: 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.stat-strip-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 20px;
+}
+
+.stat-strip-item:first-child { padding-left: 0; }
+.stat-strip-item + .stat-strip-item { box-shadow: inset 1px 0 0 var(--line); }
+.stat-strip dt { color: var(--navy-500); font-size: 13px; }
+
+.stat-strip dd {
+  margin: 0;
+  color: var(--navy-900);
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-strip dd small { margin-left: 6px; color: var(--navy-500); font-size: 13px; font-weight: 400; letter-spacing: 0; }
+
+@media (max-width: 760px) {
+  .stat-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stat-strip-item { padding: 14px 16px; }
+  .stat-strip-item:nth-child(odd) { padding-left: 0; box-shadow: none; }
+  .stat-strip-item:nth-child(n + 3) { border-top: 1px solid var(--line); }
+}
+
+
+/* A form section ends with its buttons on the same left/right edges as its fields. */
+.card > .modal-footer { padding: 16px 0 0; border-top: 0; }
+
+.filter-tile:first-child { padding-left: 0; }
+.filter-tile:first-child::after { left: 0; }
+@media (max-width: 760px) {
+  .filter-tile:nth-child(odd) { padding-left: 0; }
+  .filter-tile:nth-child(odd)::after { left: 0; }
+}
+
+/* ======================================================================
+   Colour pass (Oct 22 2026, later): the same quiet structure, with colour doing the talking.
+   Brand green frames the app, tinted chips and coloured numbers carry status and meaning,
+   and hover/selection is a mint wash instead of grey. Still no boxed cards.
+   ====================================================================== */
+:root {
+  --mint: #eef7f2;
+  --mint-strong: #ddefe5;
+  --tone-blue-ink: #2563a8;
+  --tone-amber-ink: #a2610b;
+  --tone-green-ink: #1e6b56;
+  --tone-purple-ink: #6a46c4;
+  --tone-coral-ink: #b8442f;
+}
+
+/* Status chips: a soft tint of their colour, darker text, the dot kept. */
+.chip { box-shadow: none; }
+.chip-green, .chip-solid-green { background: var(--green-50); color: var(--green-800); }
+.chip-emerald { background: var(--emerald-50); color: var(--emerald-700); }
+.chip-amber { background: var(--amber-50); color: var(--amber-800); }
+.chip-coral { background: var(--coral-50); color: var(--coral-700); }
+.chip-solid-coral, .chip-critical { background: #fde4df; color: var(--coral-700); }
+.chip-blue { background: var(--blue-50); color: var(--blue-700); }
+.chip-purple { background: #f1ecfd; color: var(--tone-purple-ink); }
+.chip-navy, .chip-slate { background: var(--navy-50); color: var(--navy-700); }
+.chip-outline { background: #fff; box-shadow: inset 0 0 0 1px var(--line-strong); }
+
+/* Tabs and filters speak brand green. */
+.tab[aria-selected="true"], .ds .tab[aria-selected="true"], .page .tab[aria-selected="true"] { color: var(--green-800); }
+.tab::after { background: var(--green-700); }
+.filter-pill[aria-pressed="true"] { background: var(--green-700); color: #fff; }
+.filter-tile::after { background: var(--green-700); }
+.filter-tile[aria-pressed="true"] .filter-tile-label { color: var(--green-800); }
+
+/* Hover and selection: a mint wash. */
+@media (hover: hover) and (pointer: fine) {
+  .btn-secondary:hover:not(:disabled), .btn-ghost:hover:not(:disabled), .filter-pill:hover:not([aria-pressed="true"]),
+  .filter-tile:hover, .table tbody tr:hover { background: var(--mint); }
+}
+
+/* Counts take the colour of what they count. */
+.filter-tile.tint-blue .filter-tile-count, .sa-stat.tint-blue .stat-value { color: var(--tone-blue-ink); }
+.filter-tile.tint-amber .filter-tile-count, .sa-stat.tint-amber .stat-value { color: var(--tone-amber-ink); }
+.filter-tile.tint-green .filter-tile-count, .sa-stat.tint-green .stat-value { color: var(--tone-green-ink); }
+.filter-tile.tint-purple .filter-tile-count { color: var(--tone-purple-ink); }
+.filter-tile.tint-coral .filter-tile-count, .sa-stat.tint-coral .stat-value { color: var(--tone-coral-ink); }
+
+.filter-tile-icon {
+  display: inline-grid;
+  grid-area: unset;
+  width: 28px;
+  height: 28px;
+  margin-bottom: 4px;
+  border-radius: 7px;
+}
+
+.filter-tile { grid-template-areas: none; display: flex; flex-direction: column; align-items: flex-start; }
+.filter-tile .filter-tile-icon { order: -1; }
+.filter-tile-label { order: 0; }
+.filter-tile-count { order: 1; }
+.filter-tile.tint-blue .filter-tile-icon { background: var(--blue-50); color: var(--tone-blue-ink); }
+.filter-tile.tint-amber .filter-tile-icon { background: var(--amber-50); color: var(--tone-amber-ink); }
+.filter-tile.tint-green .filter-tile-icon { background: var(--green-50); color: var(--tone-green-ink); }
+.filter-tile.tint-purple .filter-tile-icon { background: #f1ecfd; color: var(--tone-purple-ink); }
+.filter-tile.tint-coral .filter-tile-icon { background: var(--coral-50); color: var(--tone-coral-ink); }
+
+.stat-chip { display: inline-grid; width: 28px; height: 28px; border-radius: 7px; }
+.tint-blue .stat-chip { background: var(--blue-50); color: var(--tone-blue-ink); }
+.tint-amber .stat-chip { background: var(--amber-50); color: var(--tone-amber-ink); }
+.tint-green .stat-chip { background: var(--green-50); color: var(--tone-green-ink); }
+.tint-coral .stat-chip { background: var(--coral-50); color: var(--tone-coral-ink); }
+
+/* Stat strip items opt into a tone: a tinted icon and a coloured number. */
+.stat-strip dt { display: flex; align-items: center; gap: 8px; }
+.stat-strip-icon { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 7px; background: var(--navy-50); color: var(--navy-700); }
+.stat-strip-item.is-blue .stat-strip-icon { background: var(--blue-50); color: var(--tone-blue-ink); }
+.stat-strip-item.is-amber .stat-strip-icon { background: var(--amber-50); color: var(--tone-amber-ink); }
+.stat-strip-item.is-green .stat-strip-icon { background: var(--green-50); color: var(--tone-green-ink); }
+.stat-strip-item.is-purple .stat-strip-icon { background: #f1ecfd; color: var(--tone-purple-ink); }
+.stat-strip-item.is-coral .stat-strip-icon { background: var(--coral-50); color: var(--tone-coral-ink); }
+.stat-strip-item.is-blue dd { color: var(--tone-blue-ink); }
+.stat-strip-item.is-amber dd { color: var(--tone-amber-ink); }
+.stat-strip-item.is-green dd { color: var(--tone-green-ink); }
+.stat-strip-item.is-purple dd { color: var(--tone-purple-ink); }
+.stat-strip-item.is-coral dd { color: var(--tone-coral-ink); }
+.stat-strip dd small { color: var(--navy-500); }
+
+/* Section headings get a short brand-green rule under their title. */
+.section-heading, .card-header, .am-section-heading, .profile-section-heading { position: relative; }
+.section-heading::after, .card > .card-header:not(.fund-tabs-head)::after, .am-section-heading::after, .profile-section-heading::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 28px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--green-700);
+}
+
+/* Links and small actions. */
+.link { color: var(--green-700); }
+.back-link:hover { color: var(--green-700); }
+.progress > span { background: var(--green-700); }

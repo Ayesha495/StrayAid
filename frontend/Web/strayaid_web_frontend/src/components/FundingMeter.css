@@ -29,18 +29,19 @@
   height: 10px;
   overflow: hidden;
   border-radius: var(--radius-pill);
-  background: var(--amber-50);
-  box-shadow: inset 0 0 0 1px var(--amber-100);
+  background: #f1f5f9;
+  box-shadow: inset 0 0 0 1px rgba(226, 232, 240, 0.5);
 }
 
 .funding-fill {
   position: absolute;
   inset: 0 auto 0 0;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--amber-500), #e9a23b);
+  background: var(--green-700);
 }
 
-.funding.is-funded .funding-fill { background: linear-gradient(90deg, var(--emerald-500), var(--green-700)); }
+/* The mobile sponsor screen's bar: Rescue Green on a slate track, emerald once funded. */
+.funding.is-funded .funding-fill { background: var(--emerald-500); }
 
 .funding-tick {
   position: absolute;
@@ -52,7 +53,7 @@
   transform: translateX(-1px);
 }
 
-.funding-tick:not(.is-reached) { background: var(--amber-100); }
+.funding-tick:not(.is-reached) { background: #e2e8f0; }
 
 .funding-meta {
   display: flex;
@@ -62,7 +63,7 @@
   font-size: var(--text-sm);
 }
 
-.funding-meta strong { color: var(--amber-800); }
+.funding-meta strong { color: var(--green-700); }
 .funding.is-funded .funding-meta strong { color: var(--emerald-700); }
 
 .funding-sm .funding-raised { font-size: var(--text-lg); }
