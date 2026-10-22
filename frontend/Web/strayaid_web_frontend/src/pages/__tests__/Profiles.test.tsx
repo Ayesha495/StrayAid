@@ -5,6 +5,7 @@ import LandingPage from "../LandinPage";
 import { ORG_USER, REPORTER_USER, renderPage } from "../../test/render";
 import { ORGANIZATION } from "../../test/fixtures";
 import * as platform from "../../services/platformService";
+import * as funding from "../../services/fundingService";
 import type { Animal } from "../../types/platform";
 
 jest.mock("../../api/axios", () => ({ __esModule: true, default: {}, PublicAPI: {} }));
@@ -38,12 +39,14 @@ jest.mock("../../services/fundingService", () => ({
     fund: { month: "October", goal_pkr: 200000, raised_pkr: 10500, percent: 5 },
     type: "rescue", is_available: true, following: false, my_pending_donation: false,
   }),
+  getApplications: jest.fn().mockResolvedValue([]),
 }));
 jest.mock("../../services/postService", () => ({ getFeed: jest.fn().mockResolvedValue([]) }));
 jest.mock("../../services/chatService", () => ({ startConversation: jest.fn() }));
 jest.mock("../../services/notificationService", () => ({ getUnreadCounts: jest.fn().mockResolvedValue({ notifications: 0, messages: 0 }) }));
 
 const p = platform as jest.Mocked<typeof platform>;
+const f = funding as jest.Mocked<typeof funding>;
 
 const animal = (overrides: Partial<Animal>): Animal => ({
   id: 15, name: "Luna", species: "Cat", breed: "Domestic Longhair", description: "Calm and affectionate.", medical_info: "Healthy.",
@@ -80,6 +83,24 @@ describe("Animal profile", () => {
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
     await waitFor(() => expect(p.updateAnimal).toHaveBeenCalledWith(15, { funding_goal_pkr: 20000 }));
     expect(screen.queryByRole("button", { name: /Apply to adopt/ })).not.toBeInTheDocument();
+  });
+
+  it("shows the animal's own team who applied, linking to their applications", async () => {
+    p.getOrganizationProfile.mockResolvedValue(ORGANIZATION);
+    p.getAnimal.mockResolvedValue(animal({}));
+    const application = (id: number, full_name: string, status: "pending" | "approved") =>
+      ({ id, full_name, status, city: "Kahuta", home_type: "house", created_at: "2026-10-20T00:00:00Z", animal: { id: 15, name: "Luna" } }) as never;
+    f.getApplications.mockResolvedValue([
+      application(1, "Maryam Siddiqui", "pending"),
+      application(2, "Hina Malik", "pending"),
+      { ...(application(3, "Someone Else", "pending") as object), animal: { id: 99, name: "Max" } } as never,
+    ]);
+    renderPage(<AnimalDetail />, { user: ORG_USER, path: "/animals/:animalId", route: "/animals/15" });
+
+    expect(await screen.findByRole("link", { name: /Maryam Siddiqui/ })).toHaveAttribute("href", "/applications?animal=15&application=1");
+    expect(screen.getByRole("link", { name: /Hina Malik/ })).toBeInTheDocument();
+    expect(screen.queryByText("Someone Else")).not.toBeInTheDocument(); // another animal's applicant
+    expect(screen.getAllByRole("link", { name: /Review 2 applications/ })[0]).toHaveAttribute("href", "/applications?animal=15");
   });
 });
 

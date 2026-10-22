@@ -470,3 +470,7 @@
   .story-viewer, .story-frame { animation: none; }
   .story-ring { transition: none; }
 }
+
+/* One team's posts (/organizations/:id/posts): back link, then the team's name beside its logo. */
+.feed-head .back-link { margin-bottom: 14px; }
+.feed-team { display: flex; align-items: center; gap: 14px; }

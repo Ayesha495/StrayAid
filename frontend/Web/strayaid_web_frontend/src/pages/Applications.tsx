@@ -197,18 +197,33 @@ function Applications() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const applications = useApi(() => getApplications());
-  const [filter, setFilter] = useState(params.get("application") ? "all" : "pending");
+  // Opened from an animal's profile: only that animal's applicants, every status.
+  const animalId = Number(params.get("animal")) || null;
+  const [filter, setFilter] = useState(params.get("application") || animalId ? "all" : "pending");
   const [decision, setDecision] = useState<"approved" | "rejected" | null>(null);
   const [comparing, setComparing] = useState<Group | null>(null);
   const [messaging, setMessaging] = useState(false);
 
-  const all = useMemo(() => applications.data ?? [], [applications.data]);
+  const all = useMemo(
+    () => (applications.data ?? []).filter((item) => !animalId || item.animal.id === animalId),
+    [applications.data, animalId],
+  );
+  const scopedAnimal = animalId ? all[0]?.animal ?? null : null;
   const visible = useMemo(() => all.filter((item) => filter === "all" || item.status === filter), [all, filter]);
   const groups = useMemo(() => groupByAnimal(visible), [visible]);
   const selectedId = Number(params.get("application")) || null;
   const selected = all.find((item) => item.id === selectedId) ?? null;
 
-  const select = (id: number | null) => setParams(id ? { application: String(id) } : {}, { replace: true });
+  const select = (id: number | null) =>
+    setParams(
+      (current) => {
+        const next = new URLSearchParams(current);
+        if (id) next.set("application", String(id));
+        else next.delete("application");
+        return next;
+      },
+      { replace: true },
+    );
 
   const decide = async () => {
     if (!selected || !decision) return;
@@ -243,9 +258,19 @@ function Applications() {
     <div className="page">
       <div className="page-header">
         <div>
-          <h1>Adoption applications</h1>
-          <p>Review people who want to adopt your animals. Compare applicants before you decide.</p>
+          <h1>{scopedAnimal ? `Applications for ${scopedAnimal.name}` : "Adoption applications"}</h1>
+          <p>
+            {scopedAnimal
+              ? `Everyone who asked to adopt ${scopedAnimal.name}. Compare them before you decide.`
+              : "Review people who want to adopt your animals. Compare applicants before you decide."}
+          </p>
         </div>
+        {animalId ? (
+          <div className="page-actions">
+            <Link to={`/animals/${animalId}`} className="btn btn-secondary">View {scopedAnimal?.name ?? "animal"}</Link>
+            <Link to="/applications" className="btn btn-secondary">All animals</Link>
+          </div>
+        ) : null}
       </div>
 
       <FilterTiles

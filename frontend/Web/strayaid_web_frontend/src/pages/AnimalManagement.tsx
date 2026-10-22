@@ -4,6 +4,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   Clock,
   ExternalLink,
+  FileText,
   HeartHandshake,
   House,
   IdCard,
@@ -359,9 +360,16 @@ function AnimalManagement() {
               footer={
                 <>
                   {animal.funding_goal_pkr ? <FundingMeter size="sm" raised={animal.raised_pkr ?? 0} goal={animal.funding_goal_pkr} caption="raised" /> : null}
-                  <Link className="am-public-link" to={`/animals/${animal.id}`}>
-                    <ExternalLink size={14} /> Public page
-                  </Link>
+                  <span className="am-card-links">
+                    <Link className="am-public-link" to={`/animals/${animal.id}`}>
+                      <ExternalLink size={14} /> Public page
+                    </Link>
+                    {animal.application_count ? (
+                      <Link className="am-public-link" to={`/applications?animal=${animal.id}`}>
+                        <FileText size={14} /> {animal.application_count} application{animal.application_count === 1 ? "" : "s"}
+                      </Link>
+                    ) : null}
+                  </span>
                 </>
               }
             />
