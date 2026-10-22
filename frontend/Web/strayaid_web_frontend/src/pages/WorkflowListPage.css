@@ -13,8 +13,8 @@
 .wf-tabs { width: fit-content; }
 .wf-tabs .tab { text-decoration: none; }
 
-.wf-list { padding: 8px 8px 4px; }
-.wf-count { margin: 6px 10px 4px; font-size: 13px; }
+.wf-list { padding: 0; }
+.wf-count { margin: 0 0 6px; padding-bottom: 8px; border-bottom: 1px solid var(--line); color: var(--navy-500); font-size: 13px; }
 .wf-list ul { margin: 0; padding: 0; list-style: none; }
 
 .wf-row {

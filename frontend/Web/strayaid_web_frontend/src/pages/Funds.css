@@ -93,3 +93,22 @@
   .fund-row-main { flex-basis: calc(100% - 48px - var(--space-3)); }
   .fund-amount { margin-left: calc(48px + var(--space-3)); margin-right: auto; }
 }
+
+/* ---------- Oct 22 2026 redesign: a stat strip and plain lists ---------- */
+.fund-stats { gap: 0; margin-bottom: 40px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.fund-stats > .sa-stat { padding: 16px 20px; }
+.fund-stats > .sa-stat:first-child { padding-left: 0; }
+.fund-stats > .sa-stat + .sa-stat { box-shadow: inset 1px 0 0 var(--line); }
+.fund-grid { gap: 48px; grid-template-columns: minmax(0, 1.618fr) minmax(0, 1fr); }
+.fund-tabs-head { padding: 0; border-bottom: 0; }
+.fund-tabs-head .tabs { width: 100%; }
+.fund-row { padding: 14px 0; border-bottom-color: var(--line); }
+.fund-goals li { padding: 16px 0; border-bottom-color: var(--line); }
+.fund-receipt { border: 0; border-radius: 6px; box-shadow: inset 0 0 0 1px var(--line); }
+.fund-amount { font-family: var(--font-body); font-weight: 600; }
+
+@media (max-width: 700px) {
+  .fund-stats > .sa-stat { padding-left: 0; }
+  .fund-stats > .sa-stat + .sa-stat { box-shadow: none; border-top: 1px solid var(--line); }
+  .fund-row { padding: 14px 0; }
+}

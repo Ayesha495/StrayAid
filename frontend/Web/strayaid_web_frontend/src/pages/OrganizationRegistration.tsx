@@ -395,11 +395,11 @@ function OrganizationRegistration() {
         </div>
         <div className="profile-header-actions">
           {orgId ? (
-            <Link className="overview-btn-outline" to={`/organizations/${orgId}`} target="_blank" rel="noreferrer">
+            <Link className="secondary-btn" to={`/organizations/${orgId}`} target="_blank" rel="noreferrer">
               <Eye size={16} /> Preview Public Hub
             </Link>
           ) : null}
-          <button type="button" className="overview-btn-filled" onClick={submitProfile} disabled={submitting}>
+          <button type="button" className="primary-btn" onClick={submitProfile} disabled={submitting}>
             <Check size={16} /> {submitting ? "Saving..." : "Save Changes"}
           </button>
         </div>
@@ -583,7 +583,7 @@ function OrganizationRegistration() {
           </span>
           <div className="profile-save-actions">
             <button type="button" className="secondary-btn" onClick={handleDiscard} disabled={!isDirty}>Discard Changes</button>
-            <button type="submit" className="overview-btn-filled" disabled={submitting}>
+            <button type="submit" className="primary-btn" disabled={submitting}>
               <UploadCloud size={16} /> {submitting ? "Saving..." : "Update Profile"}
             </button>
           </div>

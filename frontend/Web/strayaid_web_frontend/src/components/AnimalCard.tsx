@@ -1,13 +1,14 @@
 import type { ReactNode } from "react";
-import { CalendarDays, PawPrint, ScanLine } from "lucide-react";
+import { PawPrint } from "lucide-react";
 import type { Animal } from "../types/platform";
 import "../styles/AnimalCard.css";
 
-const STATUS_RIBBON_CLASS: Record<string, string> = {
-  rescued: "am-ribbon-green",
-  recovering: "am-ribbon-amber",
-  adoptable: "am-ribbon-purple",
-  adopted: "am-ribbon-green",
+// The status dot uses the workflow colours: amber while in care, purple when adoptable, green once home.
+const STATUS_TONE: Record<string, string> = {
+  rescued: "amber",
+  recovering: "amber",
+  adoptable: "purple",
+  adopted: "green",
 };
 
 const LIFECYCLE_STEPS: { value: string; label: string }[] = [
@@ -16,8 +17,8 @@ const LIFECYCLE_STEPS: { value: string; label: string }[] = [
   { value: "adopted", label: "Adopted" },
 ];
 
-function ribbonClass(status: string): string {
-  return `am-status-ribbon ${STATUS_RIBBON_CLASS[status] ?? "am-ribbon-gray"}`;
+function statusClass(status: string): string {
+  return `am-status am-status-${STATUS_TONE[status] ?? "gray"}`;
 }
 
 function formatStatusLabel(status: string): string {
@@ -44,21 +45,24 @@ function AnimalCard({ animal, onStatusChange, footer, compact = false }: AnimalC
     <article className="am-animal-card">
       <div className="am-animal-media">
         {animal.image ? (
-          <img src={animal.image} alt={animal.name} />
+          <img src={animal.image} alt={animal.name} loading="lazy" />
         ) : (
-          <div className="am-media-placeholder"><PawPrint size={32} /></div>
+          <div className="am-media-placeholder"><PawPrint size={28} /></div>
         )}
-        <span className={ribbonClass(animal.status)}>{formatStatusLabel(animal.status)}</span>
-        <span className="am-id-tag">#A-{animal.id}</span>
-        <div className="am-media-overlay">
-          <span className="am-media-overlay-stay"><CalendarDays size={12} /> Shelter Stay: {daysInCare(animal.created_at)} Days</span>
-          {animal.microchip_id ? <span className="am-microchip-tag"><ScanLine size={11} /> Microchipped</span> : null}
-        </div>
       </div>
       <div className="am-animal-body">
-        <h3>{animal.name}</h3>
-        <p className="am-animal-breed">{animal.breed || animal.species || "Breed unknown"}</p>
-        <p className="am-animal-desc">{animal.description || "No public description yet."}</p>
+        <div className="am-animal-title">
+          <h3>{animal.name}</h3>
+          <span className={statusClass(animal.status)}>{formatStatusLabel(animal.status)}</span>
+        </div>
+        <p className="am-animal-breed">
+          {[
+            animal.breed || animal.species || "Breed unknown",
+            `${daysInCare(animal.created_at)} days in care`,
+            animal.microchip_id ? "Microchipped" : null,
+          ].filter(Boolean).join(" · ")}
+        </p>
+        {compact ? null : <p className="am-animal-desc">{animal.description || "No public description yet."}</p>}
         {compact ? null : (
           <div className="am-lifecycle-row">
             {LIFECYCLE_STEPS.map((step) => {

@@ -73,7 +73,7 @@ export function AnimalCarousel({ animals }: { animals: Animal[] }) {
  */
 export function TestimonialCarousel({ items }: { items: Testimonial[] }) {
   return (
-    <div className="stories" role="region" aria-label="Stories from the StrayAid community">
+    <div className="lp-stories" role="region" aria-label="Stories from the StrayAid community">
       <TestimonialsCard
         items={items.map((item, index) => ({
           id: index,

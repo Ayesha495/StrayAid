@@ -325,3 +325,24 @@
   .animal-mobile-cta > div { display: flex; flex: 1; flex-direction: column; min-width: 0; }
   .animal-mobile-cta .btn { width: auto; height: 44px; padding: 0 16px; font-size: var(--text-md); }
 }
+
+/* ---------- Oct 22 2026 redesign ---------- */
+.animal-layout { gap: 48px; }
+.animal-hero-frame { border-radius: 8px; box-shadow: none; }
+.animal-hero-badges .chip { height: 24px; font-size: 12px; box-shadow: none; }
+.animal-hero-count { border-radius: 5px; }
+.animal-thumbs button { border-radius: 6px; transition: opacity 0.15s var(--ease-out), box-shadow 0.15s var(--ease-out); border: 0; }
+.animal-thumbs button[aria-pressed="true"] { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--navy-900); }
+.animal-card { padding: 0; gap: 18px; border-radius: 0; }
+.animal-name { font-size: 34px; font-weight: 600; letter-spacing: -0.025em; }
+.animal-subtitle { font-size: 15px; }
+.animal-org { border: 0; border-radius: 6px; box-shadow: inset 0 0 0 1px var(--line); }
+.animal-org:hover { border-color: transparent; }
+.animal-funding { padding: 16px 0; border-radius: 0; background: none; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.animal-body > .profile-section { margin-bottom: 40px; }
+.animal-fact { border-radius: 6px; }
+.animal-fact-icon { border-radius: 6px; }
+.animal-adopting { background: none; }
+@media (max-width: 960px) {
+  .animal-hero-frame { border-radius: 8px; }
+}

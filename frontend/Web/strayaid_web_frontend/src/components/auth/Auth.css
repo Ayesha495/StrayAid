@@ -248,3 +248,14 @@
   .auth-main { display: block; margin-top: -36px; padding: 0 16px 40px; }
   .auth-card { margin: 0 auto; padding: 24px 20px; }
 }
+
+/* ---------- Oct 22 2026 redesign: the form sits straight on white, no card ---------- */
+.auth { background: #fff; }
+.auth-card { max-width: 380px; padding: 0; border: 0; border-radius: 0; box-shadow: none; }
+.auth-switch { border-radius: 8px; background: var(--navy-50); box-shadow: inset 0 0 0 1px var(--line); }
+.auth-switch-item { height: 32px; border-radius: 6px; font-weight: 500; }
+.auth-switch-pill { box-shadow: 0 0 0 1px var(--line), 0 1px 2px rgba(0, 0, 0, 0.06); }
+.auth-head h1 { font-size: 24px; font-weight: 600; }
+.auth-head p { font-size: 14px; }
+.auth-steps span { height: 3px; background: var(--navy-100); box-shadow: none; }
+.auth-role { border-radius: 8px; }

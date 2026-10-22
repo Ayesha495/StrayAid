@@ -5,23 +5,23 @@ import { useCurrentUser } from "../services/authSevice";
 import { MessagesPanel, NotificationsPanel } from "../layout/TopbarPanels";
 
 const BREADCRUMBS: Array<{ prefix: string; label: string }> = [
-  { prefix: "/dashboard/workflow", label: "Rescue Workflow" },
-  { prefix: "/dashboard", label: "Operations Dashboard" },
-  { prefix: "/cases", label: "Cases & Workflow" },
-  { prefix: "/animals/browse", label: "Meet the animals" },
-  { prefix: "/animals", label: "Animal Profiles & Adoption" },
-  { prefix: "/org/feed", label: "Public Community Feed" },
-  { prefix: "/feed", label: "Public Community Feed" },
-  { prefix: "/organization/register", label: "Organization Settings" },
-  { prefix: "/applications", label: "Adoption Applications" },
-  { prefix: "/funds", label: "Funds & Receipts" },
+  { prefix: "/dashboard/workflow", label: "Rescue workflow" },
+  { prefix: "/dashboard", label: "Dashboard" },
+  { prefix: "/cases", label: "Rescue requests" },
+  { prefix: "/animals/browse", label: "Animals" },
+  { prefix: "/animals", label: "Rescued animals" },
+  { prefix: "/org/feed", label: "Community posts" },
+  { prefix: "/feed", label: "Community posts" },
+  { prefix: "/organization/register", label: "Organization profile" },
+  { prefix: "/applications", label: "Applications" },
+  { prefix: "/funds", label: "Funds" },
   { prefix: "/messages", label: "Messages" },
   { prefix: "/notifications", label: "Notifications" },
-  { prefix: "/my-reports", label: "My Reports" },
+  { prefix: "/my-reports", label: "My reports" },
   { prefix: "/following", label: "Following" },
-  { prefix: "/my-applications", label: "Adopt & Sponsor" },
-  { prefix: "/organizations", label: "Organizations" },
-  { prefix: "/case/", label: "Rescue Case" },
+  { prefix: "/my-applications", label: "Adopt & sponsor" },
+  { prefix: "/organizations", label: "Rescue teams" },
+  { prefix: "/case/", label: "Rescue case" },
   { prefix: "/settings", label: "Settings" },
 ];
 
@@ -33,7 +33,7 @@ function DashboardTopbar() {
 
   const initial = (currentUser?.username || "U").trim().charAt(0).toUpperCase();
   const isOrganization = currentUser?.role === "organization";
-  const breadcrumb = BREADCRUMBS.find((item) => location.pathname.startsWith(item.prefix))?.label ?? (isOrganization ? "Operations Dashboard" : "Community");
+  const breadcrumb = BREADCRUMBS.find((item) => location.pathname.startsWith(item.prefix))?.label ?? (isOrganization ? "Dashboard" : "Community");
 
   const handleSearchSubmit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -46,7 +46,7 @@ function DashboardTopbar() {
   return (
     <header className="dashboard-topbar">
       <div className="dashboard-breadcrumb">
-        <span className="dashboard-breadcrumb-brand">{isOrganization ? "StrayAid Operations" : "StrayAid"}</span>
+        <span className="dashboard-breadcrumb-brand">StrayAid</span>
         <span className="dashboard-breadcrumb-sep">/</span>
         <span className="dashboard-breadcrumb-current">{breadcrumb}</span>
       </div>

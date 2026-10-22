@@ -1,17 +1,6 @@
-import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
-import L from "leaflet";
+import { MapContainer, Marker, Popup } from "react-leaflet";
 import { X } from "lucide-react";
-import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
-import markerIcon from "leaflet/dist/images/marker-icon.png";
-import markerShadow from "leaflet/dist/images/marker-shadow.png";
-
-const defaultIcon = L.icon({
-  iconRetinaUrl: markerIcon2x,
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-});
+import { MapTiles, placePin } from "./map/mapLook";
 
 type CaseLocationModalProps = {
   caseId: number;
@@ -37,11 +26,8 @@ function CaseLocationModal({ caseId, description, latitude, longitude, onClose }
         <p className="modal-copy">{description}</p>
         <div className="location-map-shell case-location-map-shell">
           <MapContainer center={[latitude, longitude]} zoom={14} scrollWheelZoom={false} className="location-map">
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            <Marker position={[latitude, longitude]} icon={defaultIcon}>
+            <MapTiles />
+            <Marker position={[latitude, longitude]} icon={placePin}>
               <Popup>Case #R-{caseId}</Popup>
             </Marker>
           </MapContainer>

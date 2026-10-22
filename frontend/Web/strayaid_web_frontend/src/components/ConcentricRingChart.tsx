@@ -10,11 +10,12 @@ type ConcentricRingChartProps = {
   centerLabel: string;
 };
 
-const SIZE = 200;
+const SIZE = 176;
 const CENTER = SIZE / 2;
-const STROKE = 7;
-const RING_STEP = STROKE + 5;
+const STROKE = 8;
+const RING_STEP = STROKE + 4;
 
+/** Share of cases at each stage as nested rings, with a plain legend beside it. */
 function ConcentricRingChart({ rings, centerValue, centerLabel }: ConcentricRingChartProps) {
   return (
     <div className="ring-chart">
@@ -26,8 +27,8 @@ function ConcentricRingChart({ rings, centerValue, centerLabel }: ConcentricRing
           const dash = (clamped / 100) * circumference;
 
           return (
-            <g key={ring.label}>
-              <circle cx={CENTER} cy={CENTER} r={radius} fill="none" stroke="#eef1f5" strokeWidth={STROKE} />
+            <g key={ring.label} className="ring">
+              <circle cx={CENTER} cy={CENTER} r={radius} fill="none" className="ring-track" strokeWidth={STROKE} />
               <circle
                 cx={CENTER}
                 cy={CENTER}
@@ -38,28 +39,26 @@ function ConcentricRingChart({ rings, centerValue, centerLabel }: ConcentricRing
                 strokeLinecap="round"
                 strokeDasharray={`${dash} ${circumference - dash}`}
                 transform={`rotate(-90 ${CENTER} ${CENTER})`}
+                className="ring-value"
+                style={{ "--ring-length": `${circumference}`, "--ring-delay": `${index * 60}ms` } as React.CSSProperties}
               >
                 <title>{ring.label}: {clamped}%</title>
               </circle>
             </g>
           );
         })}
-        <text x="50%" y="47%" textAnchor="middle" className="ring-center-value">{centerValue}</text>
+        <text x="50%" y="49%" textAnchor="middle" className="ring-center-value">{centerValue}</text>
         <text x="50%" y="61%" textAnchor="middle" className="ring-center-label">{centerLabel}</text>
       </svg>
-      <div className="ring-badge-row">
+      <ul className="ring-legend">
         {rings.map((ring) => (
-          <div className="ring-badge" key={ring.label}>
-            <div
-              className="ring-badge-ring"
-              style={{ background: `conic-gradient(${ring.color} ${Math.max(0, Math.min(100, ring.value)) * 3.6}deg, #eef1f5 0deg)` }}
-            >
-              <span className="ring-badge-value">{ring.value}%</span>
-            </div>
-            <span className="ring-badge-label">{ring.label}</span>
-          </div>
+          <li key={ring.label}>
+            <span className="ring-legend-dot" style={{ background: ring.color }} />
+            <span className="ring-legend-label">{ring.label}</span>
+            <span className="ring-legend-value">{ring.value}%</span>
+          </li>
         ))}
-      </div>
+      </ul>
     </div>
   );
 }

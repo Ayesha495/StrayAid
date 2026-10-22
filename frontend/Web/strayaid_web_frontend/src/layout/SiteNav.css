@@ -97,3 +97,18 @@
   .site-menu { display: grid; }
   .site-spotlight, .site-nav-auth { display: none !important; }
 }
+
+/* ---------- Oct 22 2026 redesign: a plain white bar with a hairline ---------- */
+.site-nav-wrap { background: rgba(255, 255, 255, 0.88); box-shadow: none; backdrop-filter: blur(10px); }
+.site-nav { height: 60px; }
+.site-brand { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+.site-brand svg { border-radius: 6px; box-shadow: none; }
+.site-nav .spotlight-nav { --spotlight-color: rgba(0, 0, 0, 0.05); --ambience-color: var(--navy-900); background: transparent; box-shadow: none; }
+.site-nav .spotlight-nav a { color: var(--navy-500); font-size: 14px; font-weight: 500; }
+.site-nav .spotlight-nav a:hover, .site-nav .spotlight-nav a.text-black { color: var(--navy-900); }
+.site-login { font-size: 14px; font-weight: 500; color: var(--navy-700); }
+.site-login:hover { color: var(--navy-900); }
+.site-nav-auth .btn { height: 34px; }
+.site-menu { width: 38px; height: 38px; border-radius: 6px; box-shadow: none; }
+.site-mobile-menu > button { font-size: 15px; font-weight: 500; }
+.site-nav-wrap :focus-visible { outline: 2px solid var(--green-700); outline-offset: 2px; }

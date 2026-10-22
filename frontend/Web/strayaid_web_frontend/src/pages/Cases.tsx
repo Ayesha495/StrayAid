@@ -45,7 +45,7 @@ function Cases() {
       animals={filteredAnimals}
       organization={organization}
       heading="Cases"
-      copy={query ? `Showing results for "${query}".` : "Use this board to claim reported cases and monitor each rescue stage through to adoption readiness."}
+      copy={query ? `Showing results for "${query}".` : "Claim new reports and follow every rescue through to adoption."}
     />
   );
 }

@@ -139,3 +139,19 @@
 .app-guide h3 { font-size: var(--text-lg); }
 .app-guide ul { display: grid; gap: 8px; margin: 0; padding-left: 18px; color: var(--navy-700); font-size: var(--text-md); }
 .app-layout { margin-top: 16px; }
+
+/* ---------- Oct 22 2026 redesign ---------- */
+.app-layout { gap: 48px; margin-top: 28px; }
+.app-list { gap: 32px; }
+.app-group-head { padding: 0 0 10px; border-bottom-color: var(--line); background: none; }
+.app-group-photo { border-radius: 6px; }
+.app-row { margin: 0 -10px; width: calc(100% + 20px); padding: 12px 10px; border-left: 0; border-bottom: 0; border-radius: 6px; transition: background-color 0.15s var(--ease-out); }
+.app-rows li + li .app-row { box-shadow: inset 0 1px 0 var(--line); }
+.app-row:hover { background: var(--navy-50); }
+.app-row.is-selected { background: var(--navy-100); box-shadow: none; }
+.app-rows li:has(.is-selected) + li .app-row { box-shadow: none; }
+.app-answer { border-radius: 6px; }
+.app-actions { padding: 16px 0 0; border-top-color: var(--line); }
+.app-guide { padding: 4px 0 0; }
+.app-guide-icon { display: none; }
+.app-guide ul { color: var(--navy-700); }
