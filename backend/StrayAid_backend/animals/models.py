@@ -1,5 +1,7 @@
 from django.db import models
 
+from core.uploads import UniqueUploadPath, validate_image_size
+
 
 class Animal(models.Model):
     # Animal status also drives the linked rescue case lifecycle.
@@ -38,7 +40,7 @@ class Animal(models.Model):
     donation_info = models.TextField(blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_RESCUED)
     microchip_id = models.CharField(max_length=100, blank=True)
-    image = models.ImageField(upload_to="animals/", null=True, blank=True)
+    image = models.ImageField(upload_to=UniqueUploadPath("animals"), validators=[validate_image_size], null=True, blank=True)
     # Shown as tags on the profile (Stitch 13): "Healthy · Vaccinated · 2 years old · Female".
     HEALTH_CHOICES = [
         ("healthy", "Healthy"),
@@ -125,7 +127,7 @@ class Sponsorship(models.Model):
     sponsor = models.ForeignKey("accounts.User", on_delete=models.CASCADE, related_name="sponsorships")
     amount_pkr = models.PositiveIntegerField()
     monthly = models.BooleanField(default=False)
-    receipt = models.ImageField(upload_to="receipts/", null=True, blank=True)
+    receipt = models.ImageField(upload_to=UniqueUploadPath("receipts"), validators=[validate_image_size], null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
     created_at = models.DateTimeField(auto_now_add=True)
 

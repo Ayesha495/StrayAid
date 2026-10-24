@@ -111,7 +111,7 @@
 .panel-card { padding: 0; }
 .card-pad { padding: 0; }
 .card-header { padding: 0 0 10px; border-bottom: 1px solid var(--line); }
-.card-header h3 { font-size: 15px; font-weight: 600; }
+.card-header h2, .card-header h3 { font-size: 15px; font-weight: 600; }
 .card-body { padding: 14px 0 0; }
 
 a.card, .card.is-interactive { transition: opacity 0.15s var(--ease-out); }
@@ -280,7 +280,7 @@ a.card, .card.is-interactive { transition: opacity 0.15s var(--ease-out); }
 .filter-tile-icon { display: none; }
 .filter-tile-count { font-family: var(--font-body); font-size: 24px; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
 .filter-tile-label { color: var(--navy-500); font-size: 13px; font-weight: 400; }
-.filter-tile-label span { display: inline; color: var(--navy-300); font-size: 13px; }
+.filter-tile-label span { display: inline; color: var(--color-ink-subtle); font-size: 13px; }
 .filter-tile-label span::before { content: " · "; }
 
 .filter-tile::after {
@@ -356,7 +356,7 @@ a.card, .card.is-interactive { transition: opacity 0.15s var(--ease-out); }
 .avatar-square { border-radius: 6px; }
 .progress { height: 4px; }
 .state-icon { border-radius: 8px; box-shadow: none; }
-.state h3 { font-size: 15px; font-weight: 600; }
+.state h3, .state .state-title { font-size: 15px; font-weight: 600; }
 .skeleton { border-radius: 6px; }
 .link { font-weight: 500; }
 .back-link { font-weight: 500; font-size: 14px; }

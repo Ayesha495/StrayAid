@@ -16,7 +16,7 @@
   place-items: center;
   aspect-ratio: 4 / 3;
   background: var(--navy-100);
-  color: var(--navy-300);
+  color: var(--color-ink-subtle);
 }
 
 .animal-tile-photo img {

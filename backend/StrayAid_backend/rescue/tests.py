@@ -1,3 +1,4 @@
+import io
 import shutil
 import tempfile
 import unittest
@@ -7,6 +8,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import override_settings
+from PIL import Image
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -19,8 +21,10 @@ from .models import Case, Report
 User = get_user_model()
 
 
-def make_test_image():
-    return SimpleUploadedFile("report.jpg", b"filecontent", content_type="image/jpeg")
+def make_test_image(size=(16, 16)):
+    buffer = io.BytesIO()
+    Image.new("RGB", size, "#8B5A2B").save(buffer, format="JPEG")
+    return SimpleUploadedFile("report.jpg", buffer.getvalue(), content_type="image/jpeg")
 
 
 FAKE_DOG = {"confidence": 0.9, "label": "dog", "box": [0.1, 0.1, 0.9, 0.9]}
@@ -1074,3 +1078,42 @@ class ScoreOverTimeTests(MediaEnabledAPITestCase):
 
         self.case.refresh_from_db()
         self.assertEqual(self.case.confidence_score, 37)
+
+
+class ReportPhotoSafetyTests(MediaEnabledAPITestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = User.objects.create_user(email="r@example.com", username="r", password="x")
+        self.client.force_authenticate(user=self.user)
+        self.payload = {"description": "Hurt dog", "latitude": "33.7", "longitude": "73.0"}
+
+    def test_a_file_that_is_not_a_photo_is_refused(self):
+        fake = SimpleUploadedFile("dog.jpg", b"<?php system($_GET['c']); ?>", content_type="image/jpeg")
+        response = self.client.post("/api/cases/report/", {**self.payload, "image": fake}, format="multipart")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(Case.objects.exists())
+
+    def test_photo_check_refuses_files_that_are_not_photos(self):
+        fake = SimpleUploadedFile("dog.jpg", b"not an image", content_type="image/jpeg")
+        response = self.client.post("/api/cases/check-photo/", {"image": fake}, format="multipart")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @override_settings(MAX_UPLOAD_BYTES=200)
+    def test_oversized_photos_are_refused(self):
+        response = self.client.post("/api/cases/report/", {**self.payload, "image": make_test_image(size=(128, 128))}, format="multipart")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_saved_photos_get_random_names(self):
+        named = make_test_image()
+        named.name = "Sara Khan house G-11.jpg"
+        response = self.client.post("/api/cases/report/", {**self.payload, "image": named}, format="multipart")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+        saved = Report.objects.get().image.name
+        self.assertTrue(saved.startswith("reports/"))
+        self.assertNotIn("Sara", saved)
+
+    def test_coordinates_out_of_range_are_refused(self):
+        response = self.client.post(
+            "/api/cases/report/", {**self.payload, "latitude": "123", "image": make_test_image()}, format="multipart"
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

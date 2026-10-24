@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Building2, Camera, LogOut } from "lucide-react";
+import { Building2, Camera, LogOut, Trash2 } from "lucide-react";
 import { changePassword, getMyProfile, updateMyProfile } from "../services/accountService";
 import { clearSession, syncCurrentUser } from "../services/authSevice";
 import { useApi } from "../hooks/useApi";
@@ -9,6 +9,7 @@ import { useToast } from "../ui/Toast";
 import Avatar from "../ui/Avatar";
 import { ErrorState, LoadingRows } from "../ui/States";
 import OrgProfileForm from "../components/OrgProfileForm";
+import DeleteAccountDialog from "../components/DeleteAccountDialog";
 import { formatDate } from "../utils/format";
 import { errorMessage } from "../utils/errors";
 
@@ -22,6 +23,7 @@ function AccountSettings() {
   const [passwords, setPasswords] = useState({ current: "", next: "", confirm: "" });
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [changing, setChanging] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   if (profile.error && !profile.data) return <ErrorState message={errorMessage(profile.error)} onRetry={profile.reload} />;
   if (!profile.data) return <LoadingRows rows={3} height={80} />;
@@ -66,7 +68,7 @@ function AccountSettings() {
       <form className="card" onSubmit={save}>
         <div className="card-header">
           <div>
-            <h3>Your account</h3>
+            <h2>Your account</h2>
             <p className="small muted">{me.email} · member since {formatDate(me.member_since)}</p>
           </div>
         </div>
@@ -76,7 +78,7 @@ function AccountSettings() {
             <div className="field" style={{ flex: 1 }}>
               <span className="field-label">Profile photo</span>
               <label className="btn btn-secondary upload-btn">
-                <Camera size={16} /> {preview || me.avatar ? "Change photo" : "Upload photo"}
+                <Camera size={16} aria-hidden="true" /> {preview || me.avatar ? "Change photo" : "Upload photo"}
                 <input
                   className="sr-only"
                   type="file"
@@ -115,7 +117,7 @@ function AccountSettings() {
       </form>
 
       <form className="card" onSubmit={submitPassword}>
-        <div className="card-header"><h3>Change password</h3></div>
+        <div className="card-header"><h2>Change password</h2></div>
         <div className="card-body form-grid">
           {passwordError ? <div className="alert alert-error span-2" role="alert">{passwordError}</div> : null}
           <label className="field span-2">
@@ -139,9 +141,30 @@ function AccountSettings() {
       <div className="card card-pad row" style={{ justifyContent: "space-between", flexWrap: "wrap" }}>
         <span><strong>Log out</strong><span className="small muted" style={{ display: "block" }}>Sign out of StrayAid on this browser.</span></span>
         <button type="button" className="btn btn-danger-outline" onClick={() => { clearSession(); navigate("/login"); }}>
-          <LogOut size={16} /> Log out
+          <LogOut size={16} aria-hidden="true" /> Log out
         </button>
       </div>
+
+      <div className="card card-pad row" style={{ justifyContent: "space-between", flexWrap: "wrap" }}>
+        <span>
+          <strong>Delete account</strong>
+          <span className="small muted" style={{ display: "block" }}>Permanently remove your account and personal details.</span>
+        </span>
+        <button type="button" className="btn btn-danger-outline" onClick={() => setDeleting(true)}>
+          <Trash2 size={16} aria-hidden="true" /> Delete account…
+        </button>
+      </div>
+
+      {deleting ? (
+        <DeleteAccountDialog
+          onClose={() => setDeleting(false)}
+          onDeleted={() => {
+            clearSession();
+            toast({ title: "Your account has been deleted" });
+            navigate("/", { replace: true });
+          }}
+        />
+      ) : null}
     </div>
   );
 }

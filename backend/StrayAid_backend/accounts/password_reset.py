@@ -9,9 +9,11 @@ from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.utils import timezone
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+
+from core.throttles import PasswordResetRateThrottle
 
 from .models import PasswordResetCode
 
@@ -42,6 +44,7 @@ def _latest_open_code(user):
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
+@throttle_classes([PasswordResetRateThrottle])
 def request_password_reset(request):
     email = (request.data.get("email") or "").strip()
     if not email:
@@ -72,6 +75,7 @@ def request_password_reset(request):
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
+@throttle_classes([PasswordResetRateThrottle])
 def confirm_password_reset(request):
     email = (request.data.get("email") or "").strip()
     code = (request.data.get("code") or "").strip()

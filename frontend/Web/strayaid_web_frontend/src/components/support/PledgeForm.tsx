@@ -27,12 +27,14 @@ function PledgeForm({ title, intro, bank, allowMonthly = false, onSubmit, onClos
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [ownTransfer, setOwnTransfer] = useState(false);
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError(null);
     if (!amount || amount < 100) return setError("The smallest amount is Rs 100.");
     if (!receipt) return setError("Attach a photo or screenshot of your transfer receipt.");
+    if (!ownTransfer) return setError("Confirm the transfer is yours before sending the receipt.");
     const data = new FormData();
     data.append("amount_pkr", String(amount));
     if (allowMonthly) data.append("monthly", String(monthly));
@@ -76,7 +78,7 @@ function PledgeForm({ title, intro, bank, allowMonthly = false, onSubmit, onClos
             <div className="small">{bank.bank}</div>
             <div className="row" style={{ justifyContent: "space-between" }}>
               <span className="mono">{bank.account_number}</span>
-              <button type="button" className="btn btn-ghost btn-sm" onClick={copy}><Copy size={14} /> {copied ? "Copied" : "Copy"}</button>
+              <button type="button" className="btn btn-ghost btn-sm" onClick={copy}><Copy size={14} aria-hidden="true" /> {copied ? "Copied" : "Copy"}</button>
             </div>
           </div>
         ) : (
@@ -111,8 +113,17 @@ function PledgeForm({ title, intro, bank, allowMonthly = false, onSubmit, onClos
         <label className="field">
           <span className="field-label">3. Transfer receipt</span>
           <input className="input" type="file" accept="image/*" onChange={(event) => setReceipt(event.target.files?.[0] ?? null)} />
-          <span className="field-hint row"><Receipt size={13} /> A screenshot from your banking app is fine.</span>
+          <span className="field-hint row"><Receipt size={13} aria-hidden="true" /> A screenshot from your banking app is fine.</span>
         </label>
+
+        <label className="check">
+          <input type="checkbox" checked={ownTransfer} onChange={(event) => setOwnTransfer(event.target.checked)} />
+          I made this transfer myself, and this receipt is genuine.
+        </label>
+        <p className="small muted">
+          StrayAid never receives or holds your money: it goes straight to the rescue team, and refunds are up to them. See the{" "}
+          <a href="/legal/donations" target="_blank" rel="noreferrer">Donations &amp; Refunds policy</a>.
+        </p>
       </form>
     </Modal>
   );

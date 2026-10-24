@@ -237,8 +237,8 @@ function AnimalManagement() {
                 <span className="am-field-label">Animal Name <span className="am-required">*</span></span>
                 <input value={animalForm.name} onChange={(e) => setAnimalForm({ ...animalForm, name: e.target.value })} required />
               </label>
-              <label className="am-field">
-                <span className="am-field-label">Breed</span>
+              <div className="am-field">
+                <span className="am-field-label" aria-hidden="true">Breed</span>
                 <Combobox
                   bare
                   label="Breed"
@@ -247,7 +247,7 @@ function AnimalManagement() {
                   placeholder="Search or type a breed"
                   onChange={(breed) => setAnimalForm({ ...animalForm, breed })}
                 />
-              </label>
+              </div>
               <label className="am-field">
                 <span className="am-field-label">Species</span>
                 <select value={animalForm.species} onChange={(e) => setAnimalForm({ ...animalForm, species: e.target.value })}>

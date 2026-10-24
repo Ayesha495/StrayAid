@@ -2,10 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { TestimonialsCard } from "@/components/ui/testimonials-card";
 import StatusChip from "../../ui/StatusChip";
 import type { Animal } from "../../types/platform";
-import type { Testimonial } from "../../data/testimonials";
 
 function useCarouselButtons(api: ReturnType<typeof useEmblaCarousel>[1]) {
   const [canPrev, setCanPrev] = useState(false);
@@ -62,29 +60,6 @@ export function AnimalCarousel({ animals }: { animals: Animal[] }) {
         <button type="button" className="carousel-btn" onClick={() => api?.scrollPrev()} disabled={!canPrev} aria-label="Previous animals"><ChevronLeft size={22} /></button>
         <button type="button" className="carousel-btn" onClick={() => api?.scrollNext()} disabled={!canNext} aria-label="Next animals"><ChevronRight size={22} /></button>
       </div>
-    </div>
-  );
-}
-
-/**
- * Stories, shown with VengeanceUI's testimonial card: a photo of the animal the story is
- * about beside the quote, with previous / next buttons. No auto-rotation, so nobody has to
- * chase moving text (WCAG 2.2.2).
- */
-export function TestimonialCarousel({ items }: { items: Testimonial[] }) {
-  return (
-    <div className="lp-stories" role="region" aria-label="Stories from the StrayAid community">
-      <TestimonialsCard
-        items={items.map((item, index) => ({
-          id: index,
-          title: item.name,
-          description: `“${item.quote}” — ${item.role}`,
-          image: item.image,
-        }))}
-        width={980}
-        showCounter
-        showNavigation
-      />
     </div>
   );
 }

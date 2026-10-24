@@ -8,6 +8,7 @@ export interface RegisterData {
     username:string;
     password: string;
     re_password: string;
+    accept_terms: boolean;
 }
 
 export interface CurrentUser {

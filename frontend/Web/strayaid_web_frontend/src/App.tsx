@@ -1,6 +1,6 @@
 import { BrowserRouter, Navigate, Routes, Route } from "react-router-dom";
 import { MotionConfig } from "motion/react";
-import LandingPage from "./pages/LandinPage";
+import LandingPage from "./pages/LandingPage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -28,6 +28,7 @@ import Following from "./pages/Following";
 import MyApplications from "./pages/MyApplications";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import LegalPage from "./pages/LegalPage";
 import DsScope from "./layout/DsScope";
 import { AdaptiveLayout, ShellLayout } from "./layout/PublicLayout";
 import { ShellProvider } from "./layout/ShellContext";
@@ -56,6 +57,7 @@ function App() {
               <Route path="/organizations/:organizationId" element={<OrganizationPublicProfile />} />
               <Route path="/organizations/:organizationId/posts" element={<PostFeed />} />
               <Route path="/case/:caseId" element={<PublicCase />} />
+              <Route path="/legal/:doc" element={<LegalPage />} />
             </Route>
 
             {/* Signed in, any role */}
@@ -91,6 +93,9 @@ function App() {
             </Route>
 
             <Route path="/org/feed" element={<Navigate to="/feed" replace />} />
+            <Route path="/privacy" element={<Navigate to="/legal/privacy" replace />} />
+            <Route path="/terms" element={<Navigate to="/legal/terms" replace />} />
+            <Route path="/delete-account" element={<Navigate to="/legal/delete-account" replace />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </ShellProvider>

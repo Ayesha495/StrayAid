@@ -90,7 +90,7 @@
 .profile-optional {
   text-transform: none;
   font-weight: 500;
-  color: #9aa5b4;
+  color: var(--color-ink-subtle);
 }
 
 .profile-field input,
@@ -111,7 +111,7 @@
 
 .profile-field-hint {
   font-size: 12px;
-  color: #9aa5b4;
+  color: var(--color-ink-subtle);
 }
 
 .profile-badge-upload {
@@ -218,7 +218,7 @@
 }
 
 .profile-input-icon svg {
-  color: #9aa5b4;
+  color: var(--color-ink-subtle);
   flex-shrink: 0;
 }
 
@@ -238,7 +238,7 @@
 
 .profile-input-suffix span {
   font-size: 12px;
-  color: #9aa5b4;
+  color: var(--color-ink-subtle);
   white-space: nowrap;
 }
 

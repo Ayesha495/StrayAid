@@ -90,8 +90,10 @@ export const loginWithGoogle = async () => {
         }
 
         try {
+          // The button says that continuing with Google accepts the terms (shown in GoogleButton).
           const response = await API.post<TokenResponse>("/auth/google/", {
             access_token: googleResponse.access_token,
+            accept_terms: true,
           });
           resolve(response.data);
         } catch (error) {

@@ -221,7 +221,7 @@
 
 .journey-card-text { display: flex; flex-direction: column; justify-content: center; gap: 14px; padding: clamp(28px, 4vw, 48px); }
 .journey-card-number { color: var(--green-700); font-family: var(--font-display); font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums; }
-.journey-card-number span { color: var(--navy-300); }
+.journey-card-number span { color: var(--color-ink-subtle); }
 .journey-card h3 { font-size: clamp(28px, 3vw, 40px); font-weight: 800; letter-spacing: -0.025em; }
 .journey-card-lead { max-width: 42ch; color: var(--navy-900); font-size: 18px; }
 .journey-card-detail { max-width: 42ch; color: var(--color-ink-muted); font-size: 15px; }
@@ -377,18 +377,6 @@
 .lp-way-cta.is-light { color: #fff; }
 .lp-way-cta:hover { text-decoration: underline; }
 
-/* ---------- Stories: the testimonial card on a raised panel ---------- */
-.lp-stories {
-  border: 1px solid var(--line);
-  border-radius: 22px;
-  background: #fff;
-  box-shadow: var(--elev-2);
-}
-
-.lp-stories h3 { color: var(--navy-900); font-family: var(--font-display); letter-spacing: -0.02em; }
-.lp-stories p { color: var(--navy-700) !important; font-size: 17px !important; line-height: 1.6; }
-.lp-stories button { border-radius: 12px !important; box-shadow: var(--elev-1); }
-
 /* ---------- Closing band: full width, solid colour ---------- */
 .lp-final {
   margin-top: var(--lp-section);
@@ -418,48 +406,6 @@
 .lp-btn-outline-light { border: 1px solid rgba(255, 255, 255, 0.75); background: transparent; color: #fff; }
 .lp-btn-outline-light:hover { background: rgba(255, 255, 255, 0.12); }
 
-/* ---------- Footer ---------- */
-.lp-footer {
-  padding: 56px var(--lp-gutter) 28px;
-  background: var(--green-900);
-  color: var(--green-100);
-  font-size: 15px;
-}
-
-.lp-footer-inner {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
-  gap: 32px;
-  max-width: var(--lp-max);
-  margin: 0 auto;
-}
-
-.lp-footer .lp-brand { color: #fff; }
-.lp-footer-brand p { max-width: 34ch; margin-top: 12px; }
-
-.lp-footer h2 {
-  margin-bottom: 12px;
-  color: #fff;
-  font-family: var(--font-body);
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: 0;
-}
-
-.lp-footer nav { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
-.lp-footer nav a { color: var(--green-100); }
-.lp-footer a:hover { color: #fff; text-decoration: underline; }
-
-.lp-copy {
-  max-width: var(--lp-max);
-  margin: 40px auto 0;
-  padding-top: 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
-  font-size: 14px;
-}
-
-.lp-copy a { text-decoration: underline; }
-
 /* Keyboard focus is always clearly visible on this page. */
 .lp :focus-visible { outline: 3px solid var(--amber-500); outline-offset: 3px; }
 
@@ -467,8 +413,6 @@
 @media (max-width: 1024px) {
   .lp-why { grid-template-columns: minmax(0, 1fr); }
   .lp-why-photo { max-width: 560px; }
-  .lp-footer-inner { grid-template-columns: 1fr 1fr; }
-  .lp-footer-brand { grid-column: 1 / -1; }
 }
 
 @media (max-width: 860px) {
@@ -498,7 +442,6 @@
   .lp-hero-actions .btn { flex: 1 1 100%; justify-content: center; }
   .lp-numbers dd { font-size: 22px; }
   .lp-ctas .btn { flex: 1 1 100%; justify-content: center; }
-  .lp-footer-inner { grid-template-columns: minmax(0, 1fr); }
   .lp-numbers { margin-top: 0; padding: 16px; }
 }
 

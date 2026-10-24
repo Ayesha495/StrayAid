@@ -9,6 +9,7 @@ function NotFound() {
   return (
     <div className="page" style={{ paddingTop: 80 }}>
       <EmptyState
+        headingLevel={1}
         icon={<Compass size={22} />}
         title="Page not found"
         message="This page doesn't exist or has moved."

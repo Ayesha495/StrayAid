@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Circle, CircleMarker, MapContainer, useMap, useMapEvents } from "react-leaflet";
-import { MapTiles, areaPathOptions, basePathOptions } from "./map/mapLook";
+import MapTiles from "./map/MapTiles";
+import { areaPathOptions, basePathOptions } from "./map/mapStyle";
 import { Crosshair, ImagePlus } from "lucide-react";
 import { createOrganizationProfile, updateOrganizationProfile } from "../services/platformService";
 import { errorMessage } from "../utils/errors";

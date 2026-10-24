@@ -35,3 +35,21 @@ if (!("IntersectionObserver" in window)) {
   Object.assign(window, { IntersectionObserver: TestIntersectionObserver });
   Object.assign(global, { IntersectionObserver: TestIntersectionObserver });
 }
+
+// jsdom has no matchMedia (motion and responsive hooks ask for it). Nothing matches.
+if (!window.matchMedia) {
+  window.matchMedia = (query: string) =>
+    ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+    }) as MediaQueryList;
+}
+
+import { toHaveNoViolations } from "jest-axe";
+expect.extend(toHaveNoViolations);

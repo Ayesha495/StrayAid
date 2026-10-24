@@ -1,6 +1,7 @@
 import { MapContainer, Marker, Popup } from "react-leaflet";
 import { X } from "lucide-react";
-import { MapTiles, placePin } from "./map/mapLook";
+import MapTiles from "./map/MapTiles";
+import { placePin } from "./map/mapStyle";
 
 type CaseLocationModalProps = {
   caseId: number;
@@ -12,12 +13,12 @@ type CaseLocationModalProps = {
 
 function CaseLocationModal({ caseId, description, latitude, longitude, onClose }: CaseLocationModalProps) {
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-card case-location-modal" onClick={(event) => event.stopPropagation()}>
+    <div className="modal-backdrop" role="presentation" onClick={(event) => event.target === event.currentTarget && onClose()}>
+      <div className="modal-card case-location-modal" role="dialog" aria-modal="true" aria-labelledby="case-location-title">
         <div className="modal-header">
           <div>
             <p className="modal-eyebrow">Case #R-{caseId}</p>
-            <h2>Case Location</h2>
+            <h2 id="case-location-title">Case Location</h2>
           </div>
           <button type="button" className="icon-btn" onClick={onClose} aria-label="Close map">
             <X size={18} />

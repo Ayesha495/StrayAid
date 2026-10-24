@@ -206,3 +206,111 @@ class AnimalUpdateNotificationTests(MediaEnabledAPITestCase):
         Post.objects.create(animal=animal, organization=self.organization, title="Walk", content="First walk!")
         self.assertEqual(self.notes(self.reporter)[0].data["type"], "new_post")
         self.assertEqual(self.notes(self.org_user), [])
+
+
+class FollowAndPushTokenTests(APITestCase):
+    def setUp(self):
+        from animals.models import Animal
+
+        self.user = User.objects.create_user(email="u@example.com", username="u", password="x")
+        org_user = User.objects.create_user(email="o@example.com", username="o", password="x", role="organization")
+        self.organization = Organization.objects.create(user=org_user, name="Paws & Care Rescue")
+        case = Case.objects.create(description="Dog", latitude=33.7, longitude=73.0, reported_by=org_user)
+        self.animal = Animal.objects.create(case=case, organization=self.organization, name="Luna")
+        self.client.force_authenticate(user=self.user)
+
+    def test_push_token_is_stored_once(self):
+        from .models import PushToken
+
+        for _ in range(2):
+            response = self.client.post("/api/notifications/register-token/", {"token": "ExponentPushToken[a]"}, format="json")
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(PushToken.objects.filter(user=self.user).count(), 1)
+
+    def test_push_token_is_required(self):
+        response = self.client.post("/api/notifications/register-token/", {}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_follow_and_unfollow_an_animal(self):
+        url = f"/api/notifications/follow/animal/{self.animal.id}/"
+        self.assertEqual(self.client.post(url).data["detail"], "Now following.")
+        self.assertEqual(self.client.post(url).data["detail"], "Already following.")
+        status_url = f"/api/notifications/follow-status/?animal_id={self.animal.id}"
+        self.assertTrue(self.client.get(status_url).data["following_animal"])
+        self.assertFalse(self.client.delete(url).data["following"])
+        self.assertFalse(self.client.get(status_url).data["following_animal"])
+
+    def test_follow_and_unfollow_an_organization(self):
+        url = f"/api/notifications/follow/organization/{self.organization.id}/"
+        self.assertTrue(self.client.post(url).data["following"])
+        follows = self.client.get("/api/notifications/my-follows/").data
+        self.assertEqual(follows["followed_organizations"], [self.organization.id])
+        status_url = f"/api/notifications/follow-status/?organization_id={self.organization.id}"
+        self.assertTrue(self.client.get(status_url).data["following_organization"])
+        self.client.delete(url)
+        self.assertEqual(self.client.get("/api/notifications/my-follows/").data["followed_organizations"], [])
+
+    def test_following_something_that_does_not_exist_is_a_404(self):
+        self.assertEqual(self.client.post("/api/notifications/follow/animal/9999/").status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(self.client.post("/api/notifications/follow/organization/9999/").status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_follow_status_without_ids_is_empty(self):
+        self.assertEqual(self.client.get("/api/notifications/follow-status/").data, {})
+
+    def test_follows_need_an_account(self):
+        self.client.force_authenticate(user=None)
+        self.assertEqual(self.client.post(f"/api/notifications/follow/animal/{self.animal.id}/").status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(self.client.get("/api/notifications/my-follows/").status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class ExpoPushTests(APITestCase):
+    def test_messages_are_sent_to_expo_in_one_request(self):
+        import json
+        from unittest.mock import MagicMock, patch
+
+        from .services import EXPO_PUSH_URL, send_push_notifications
+
+        reply = MagicMock()
+        reply.__enter__.return_value.read.return_value = b'{"data": []}'
+        with patch("notifications.services.urllib.request.urlopen", return_value=reply) as urlopen:
+            send_push_notifications(["ExponentPushToken[a]", "ExponentPushToken[b]"], "Title", "Body", {"type": "x"})
+        request = urlopen.call_args[0][0]
+        self.assertEqual(request.full_url, EXPO_PUSH_URL)
+        sent = json.loads(request.data)
+        self.assertEqual([message["to"] for message in sent], ["ExponentPushToken[a]", "ExponentPushToken[b]"])
+        self.assertEqual(sent[0]["data"], {"type": "x"})
+
+    def test_no_tokens_means_no_request(self):
+        from unittest.mock import patch
+
+        from .services import send_push_notifications
+
+        with patch("notifications.services.urllib.request.urlopen") as urlopen:
+            send_push_notifications([], "Title", "Body")
+        urlopen.assert_not_called()
+
+    def test_expo_being_down_does_not_break_the_request(self):
+        from unittest.mock import patch
+
+        from .services import send_push_notifications
+
+        with patch("notifications.services.urllib.request.urlopen", side_effect=OSError("down")):
+            send_push_notifications(["ExponentPushToken[a]"], "Title", "Body")
+
+    def test_bold_markers_are_stripped_from_the_push_but_kept_in_the_inbox(self):
+        from unittest.mock import patch
+
+        user = User.objects.create_user(email="u@example.com", username="u", password="x")
+        with patch("notifications.services.send_push_notifications") as send:
+            notify_users([user.id], "Community", "New post from **Hope**.", {"type": "new_post"})
+        self.assertEqual(send.call_args[0][2], "New post from Hope.")
+        self.assertEqual(Notification.objects.get().body, "New post from **Hope**.")
+
+    def test_unread_chat_notifications_are_grouped(self):
+        from unittest.mock import patch
+
+        user = User.objects.create_user(email="u@example.com", username="u", password="x")
+        with patch("notifications.services.send_push_notifications"):
+            notify_users([user.id], "Chat", "First", {"type": "chat_message"}, group_key="chat-1")
+            notify_users([user.id], "Chat", "Second", {"type": "chat_message"}, group_key="chat-1")
+        self.assertEqual(Notification.objects.get().body, "Second")

@@ -1,8 +1,12 @@
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+
+from animals.models import Animal
+from organizations.models import Organization
 
 from .models import AnimalFollow, Notification, OrganizationFollow, PushToken
 from .serializers import NotificationSerializer, PushTokenSerializer
@@ -23,9 +27,8 @@ def register_push_token(request):
 def toggle_animal_follow(request, animal_id):
     """Follow (POST) or unfollow (DELETE) an animal."""
     if request.method == "POST":
-        follow, created = AnimalFollow.objects.get_or_create(
-            user=request.user, animal_id=animal_id
-        )
+        animal = get_object_or_404(Animal, pk=animal_id)
+        follow, created = AnimalFollow.objects.get_or_create(user=request.user, animal=animal)
         return Response(
             {"detail": "Now following." if created else "Already following.", "following": True},
             status=status.HTTP_200_OK,
@@ -39,9 +42,8 @@ def toggle_animal_follow(request, animal_id):
 def toggle_organization_follow(request, organization_id):
     """Follow (POST) or unfollow (DELETE) an organization."""
     if request.method == "POST":
-        follow, created = OrganizationFollow.objects.get_or_create(
-            user=request.user, organization_id=organization_id
-        )
+        organization = get_object_or_404(Organization, pk=organization_id)
+        follow, created = OrganizationFollow.objects.get_or_create(user=request.user, organization=organization)
         return Response(
             {"detail": "Now following." if created else "Already following.", "following": True},
             status=status.HTTP_200_OK,

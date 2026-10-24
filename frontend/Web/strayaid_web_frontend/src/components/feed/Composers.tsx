@@ -89,7 +89,7 @@ export function PostComposer({ animals, post, onClose, onSaved }: { animals: Ani
         ) : null}
         <div className="filter-row" role="radiogroup" aria-label="Category">
           {POST_CATEGORIES.map((item) => (
-            <button key={item.value} type="button" role="radio" aria-checked={category === item.value} aria-pressed={category === item.value} className="filter-pill" onClick={() => setCategory(item.value)}>
+            <button key={item.value} type="button" role="radio" aria-checked={category === item.value} className="filter-pill" onClick={() => setCategory(item.value)}>
               {item.label}
             </button>
           ))}

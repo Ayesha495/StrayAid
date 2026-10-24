@@ -11,11 +11,11 @@
   }
 }
 
-h1, h2, h3 { font-family: "Inter", system-ui, sans-serif; }
+h1, h2, h3 { font-family: "Inter Variable", "Inter", system-ui, sans-serif; }
 
 :root {
   /* The design system's fonts everywhere, so old and new screens read as one app. */
-  font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: "Inter Variable", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   line-height: 1.5;
   font-weight: 400;
   font-synthesis: none;

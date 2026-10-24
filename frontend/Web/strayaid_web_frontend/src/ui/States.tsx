@@ -3,16 +3,18 @@ import { AlertTriangle, Inbox } from "lucide-react";
 
 type StateProps = {
   title: string;
+  headingLevel?: 1 | 2 | 3;
   message?: ReactNode;
   icon?: ReactNode;
   action?: ReactNode;
 };
 
-export function EmptyState({ title, message, icon, action }: StateProps) {
+export function EmptyState({ title, message, icon, action, headingLevel = 3 }: StateProps) {
+  const Heading = `h${headingLevel}` as const;
   return (
     <div className="state">
-      <span className="state-icon">{icon ?? <Inbox size={22} />}</span>
-      <h3>{title}</h3>
+      <span className="state-icon" aria-hidden="true">{icon ?? <Inbox size={22} />}</span>
+      <Heading className="state-title">{title}</Heading>
       {message ? <p>{message}</p> : null}
       {action}
     </div>
@@ -22,7 +24,7 @@ export function EmptyState({ title, message, icon, action }: StateProps) {
 export function ErrorState({ title = "Something went wrong", message, onRetry }: Partial<StateProps> & { onRetry?: () => void }) {
   return (
     <div className="state state-error" role="alert">
-      <span className="state-icon"><AlertTriangle size={22} /></span>
+      <span className="state-icon" aria-hidden="true"><AlertTriangle size={22} /></span>
       <h3>{title}</h3>
       <p>{message ?? "We couldn't load this. Check your connection and try again."}</p>
       {onRetry ? <button type="button" className="btn btn-secondary btn-sm" onClick={onRetry}>Try again</button> : null}

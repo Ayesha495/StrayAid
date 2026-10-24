@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { motion } from "motion/react";
 import {
@@ -86,10 +86,17 @@ function GoalEditor({ goal, onSave }: { goal: number; onSave: (value: number) =>
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(String(goal || ""));
   const [saving, setSaving] = useState(false);
+  const input = useRef<HTMLInputElement>(null);
+
+  // Opening the editor moves the cursor into it, for keyboard and screen reader users alike.
+  useEffect(() => {
+    if (editing) input.current?.focus();
+  }, [editing]);
+
   if (!editing) {
     return (
       <button type="button" className="btn btn-ghost btn-sm goal-edit" onClick={() => setEditing(true)}>
-        <Pencil size={14} /> {goal ? "Edit care goal" : "Set a care goal"}
+        <Pencil size={14} aria-hidden="true" /> {goal ? "Edit care goal" : "Set a care goal"}
       </button>
     );
   }
@@ -108,7 +115,7 @@ function GoalEditor({ goal, onSave }: { goal: number; onSave: (value: number) =>
       }}
     >
       <label className="sr-only" htmlFor="goal-input">Care funding goal in rupees</label>
-      <input id="goal-input" className="input" type="number" min={0} step={500} value={value} onChange={(event) => setValue(event.target.value)} placeholder="Rs" autoFocus />
+      <input id="goal-input" className="input" type="number" min={0} step={500} value={value} onChange={(event) => setValue(event.target.value)} placeholder="Rs" ref={input} />
       <button type="submit" className="btn btn-primary btn-sm" disabled={saving}>Save</button>
       <button type="button" className="btn btn-ghost btn-sm" onClick={() => setEditing(false)}>Cancel</button>
     </form>

@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { CircleMarker, MapContainer, Popup } from "react-leaflet";
-import { MapTiles, basePathOptions } from "../components/map/mapLook";
+import MapTiles from "../components/map/MapTiles";
+import { basePathOptions } from "../components/map/mapStyle";
 import { BadgeCheck, Building2, MapPin, PawPrint, Phone, Search } from "lucide-react";
 import { getDirectory } from "../services/socialService";
 import { getPublicAnimals } from "../services/platformService";

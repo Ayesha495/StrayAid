@@ -110,7 +110,7 @@ function AnimalDirectory() {
       <div className="directory-toolbar">
         <div className="tabs" role="group" aria-label="Species">
           {SPECIES.map((item) => (
-            <button key={item.key} type="button" className="tab" aria-selected={species === item.key} aria-pressed={species === item.key} onClick={() => setParam("species", item.key)}>
+            <button key={item.key} type="button" className="tab" aria-pressed={species === item.key} onClick={() => setParam("species", item.key)}>
               {item.label}
             </button>
           ))}

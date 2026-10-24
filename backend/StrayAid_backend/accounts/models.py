@@ -1,6 +1,8 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+from core.uploads import UniqueUploadPath, validate_image_size
+
 class User(AbstractUser):
     # Email is the primary login identifier across web and mobile clients.
     email = models.EmailField(unique= True)
@@ -12,7 +14,7 @@ class User(AbstractUser):
 
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='public')
     # Optional profile photo, set at sign-up (Stitch screen 6) or later in settings.
-    avatar = models.ImageField(upload_to="avatars/", null=True, blank=True)
+    avatar = models.ImageField(upload_to=UniqueUploadPath("avatars"), validators=[validate_image_size], null=True, blank=True)
     # Profile (Stitch profile screen): where they're based and an emergency contact number.
     area = models.CharField(max_length=100, blank=True)
     phone = models.CharField(max_length=30, blank=True)
@@ -22,6 +24,9 @@ class User(AbstractUser):
     radius_alerts = models.BooleanField(default=False)
     alert_latitude = models.FloatField(null=True, blank=True)
     alert_longitude = models.FloatField(null=True, blank=True)
+
+    # When they ticked "I agree to the Terms of Service and Privacy Policy" at sign-up.
+    accepted_terms_at = models.DateTimeField(null=True, blank=True)
 
     ALERT_RADIUS_KM = 5
 

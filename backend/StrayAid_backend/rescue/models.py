@@ -1,6 +1,9 @@
 from django.db import models
 from django.utils import timezone
+
 from accounts.models import User
+from core.uploads import UniqueUploadPath, validate_image_size
+
 
 class CaseQuerySet(models.QuerySet):
     def open_cases(self):
@@ -76,7 +79,7 @@ class Report(models.Model):
     # Multiple public reports can roll up into the same case.
     case = models.ForeignKey(Case, on_delete= models.CASCADE, related_name = "reports")
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    image = models.ImageField(upload_to="reports/")
+    image = models.ImageField(upload_to=UniqueUploadPath("reports"), validators=[validate_image_size])
     description =models.TextField()
     latitude = models.FloatField()
     longitude = models.FloatField()

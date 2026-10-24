@@ -82,7 +82,7 @@
 .am-optional {
   text-transform: none;
   font-weight: 500;
-  color: #9aa5b4;
+  color: var(--color-ink-subtle);
 }
 
 .am-field input,
@@ -111,7 +111,7 @@
 
 .am-field-hint {
   font-size: 12px;
-  color: #9aa5b4;
+  color: var(--color-ink-subtle);
 }
 
 .am-input-icon {
@@ -130,7 +130,7 @@
 }
 
 .am-input-icon svg {
-  color: #9aa5b4;
+  color: var(--color-ink-subtle);
   flex-shrink: 0;
 }
 
@@ -164,7 +164,7 @@
 }
 
 .am-upload-zone svg {
-  color: #9aa5b4;
+  color: var(--color-ink-subtle);
 }
 
 .am-upload-zone .am-field-hint {
@@ -224,7 +224,7 @@
 }
 
 .am-chip svg {
-  color: #9aa5b4;
+  color: var(--color-ink-subtle);
 }
 
 .am-chip.is-active {
@@ -375,7 +375,7 @@
 .am-tile-icon { display: none; }
 .am-tile-value { font-size: 24px; font-weight: 600; line-height: 1.1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
 .am-tile-label { color: var(--navy-500); font-size: 13px; font-weight: 400; }
-.am-tile-label span { color: var(--navy-300); }
+.am-tile-label span { color: var(--color-ink-subtle); }
 .am-tile-label span::before { content: "· "; }
 
 .am-tile::after {
