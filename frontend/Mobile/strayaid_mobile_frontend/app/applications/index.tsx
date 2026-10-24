@@ -300,9 +300,9 @@ export default function MyApplicationsScreen() {
       </ScrollView>
 
       <Modal visible={!!open} transparent animationType="fade" onRequestClose={() => setOpen(null)}>
-        <Pressable style={styles.backdrop} onPress={() => setOpen(null)}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Close" style={styles.backdrop} onPress={() => setOpen(null)}>
           {open && (
-            <Pressable style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 16) + 8 }]} onPress={() => null}>
+            <Pressable accessible={false} style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 16) + 8 }]} onPress={() => null}>
               <View style={styles.handle} />
               <View style={styles.sheetHead}>
                 <View style={[styles.thumb, styles.sheetThumb]}>
@@ -493,7 +493,7 @@ const styles = StyleSheet.create({
   cardBody: { flex: 1, minWidth: 0 },
   cardTop: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
   name: { flexShrink: 1, fontFamily: fonts.displayBold, fontSize: 16, lineHeight: 24, color: NAVY },
-  date: { fontFamily: fonts.bodyMedium, fontSize: 11, lineHeight: 16, color: "#94A3B8" },
+  date: { fontFamily: fonts.bodyMedium, fontSize: 11, lineHeight: 16, color: "#64748B" },
   org: { marginTop: 2, fontFamily: fonts.bodyMedium, fontSize: 12, lineHeight: 16, color: MUTED },
   cardBottom: { marginTop: 8, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   pill: {
@@ -580,7 +580,7 @@ const styles = StyleSheet.create({
   },
   answers: { marginTop: 16, padding: 14, gap: 10, borderRadius: 16, backgroundColor: "#F8FAF9", borderWidth: 1, borderColor: "#EEF2F0" },
   answer: { flexDirection: "row", gap: 12 },
-  answerLabel: { width: 82, fontFamily: fonts.bodySemiBold, fontSize: 12, lineHeight: 18, color: "#94A3B8" },
+  answerLabel: { width: 82, fontFamily: fonts.bodySemiBold, fontSize: 12, lineHeight: 18, color: "#64748B" },
   answerValue: { flex: 1, fontFamily: fonts.bodyMedium, fontSize: 13, lineHeight: 18, color: "#334155" },
   sheetActions: { flexDirection: "row", gap: 10, marginTop: 16 },
   primary: {

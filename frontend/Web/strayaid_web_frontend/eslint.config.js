@@ -7,9 +7,9 @@ import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  // src/components/ui holds third-party components copied in by the shadcn CLI
+  // src/components/vendor holds third-party components copied in by the shadcn CLI
   // (VengeanceUI, Skiper UI); they follow their authors' style, not ours.
-  globalIgnores(['dist', 'coverage', 'src/components/ui']),
+  globalIgnores(['dist', 'coverage', 'src/components/vendor']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [

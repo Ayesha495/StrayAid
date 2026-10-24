@@ -16,8 +16,8 @@ import { timeAgo } from "../../../utils/format";
 // case. Reporters appear by first name only.
 
 const SEVERITY: Record<Severity, { label: string; color: string; background: string }> = {
-  low: { label: "Low", color: "#1E8A66", background: "#E8F7F2" },
-  medium: { label: "Medium", color: "#B7791F", background: "#FEF7ED" },
+  low: { label: "Low", color: "#1A7558", background: "#E8F7F2" },
+  medium: { label: "Medium", color: "#8A5A12", background: "#FEF7ED" },
   high: { label: "High", color: colors.critical, background: "#FDEEEC" },
   critical: { label: "Critical", color: "#B42318", background: "#FDECEC" },
 };
@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: colors.surface },
   centered: { flex: 1, alignItems: "center", justifyContent: "center", padding: 24 },
   list: { padding: 20, gap: 16 },
-  intro: { fontFamily: fonts.body, fontSize: 12, lineHeight: 18, color: "#747474" },
+  intro: { fontFamily: fonts.body, fontSize: 12, lineHeight: 18, color: "#707070" },
   empty: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.inkMuted, textAlign: "center", marginTop: 24 },
   card: {
     borderRadius: 16,
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
   body: { padding: 12, gap: 6 },
   row: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
   reporter: { flex: 1, fontFamily: fonts.bodyBold, fontSize: 12, lineHeight: 16, color: "#243447" },
-  time: { fontFamily: fonts.bodyMedium, color: "#94A3B8" },
+  time: { fontFamily: fonts.bodyMedium, color: "#64748B" },
   severity: {
     overflow: "hidden",
     paddingHorizontal: 8,

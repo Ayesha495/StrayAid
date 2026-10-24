@@ -61,8 +61,8 @@ export default function TransferSheet({ visible, title, body, bank, thanks, onSe
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={close}>
-      <Pressable style={styles.backdrop} onPress={close}>
-        <Pressable style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 16) + 8 }]} onPress={() => null}>
+      <Pressable accessibilityRole="button" accessibilityLabel="Close" style={styles.backdrop} onPress={close}>
+        <Pressable accessible={false} style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 16) + 8 }]} onPress={() => null}>
           <View style={styles.handle} />
           {sent ? (
             <View style={styles.sent}>
@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
   body: { fontFamily: fonts.body, fontSize: 14, lineHeight: 21, color: "#4B5563" },
   bank: { padding: 14, gap: 8, borderRadius: 16, backgroundColor: "#F8FAF9", borderWidth: 1, borderColor: "#E8ECE9" },
   bankRow: { gap: 2 },
-  bankLabel: { fontFamily: fonts.bodySemiBold, fontSize: 11, letterSpacing: 0.4, textTransform: "uppercase", color: "#94A3B8" },
+  bankLabel: { fontFamily: fonts.bodySemiBold, fontSize: 11, letterSpacing: 0.4, textTransform: "uppercase", color: "#64748B" },
   bankValue: { fontFamily: fonts.bodySemiBold, fontSize: 15, color: "#111827" },
   bankNumber: { fontFamily: fonts.displayBold, fontSize: 17, letterSpacing: 1 },
   receipt: {

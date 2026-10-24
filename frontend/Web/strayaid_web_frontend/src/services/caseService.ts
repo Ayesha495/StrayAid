@@ -1,6 +1,6 @@
 import API, { PublicAPI } from "../api/axios";
 import type { CaseUpdate, PublicCase, PublicReport } from "../types/api";
-import { getStoredUser } from "./authSevice";
+import { getStoredUser } from "./authService";
 
 // Signed in, the case says whether you reported or follow it.
 const reader = () => (getStoredUser() ? API : PublicAPI);

@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
-import { authErrorMessage, confirmPasswordReset, requestPasswordReset } from "../services/authSevice";
+import { authErrorMessage, confirmPasswordReset, requestPasswordReset } from "../services/authService";
 import AuthLayout from "../components/auth/AuthLayout";
 import PasswordInput from "../components/auth/PasswordInput";
 

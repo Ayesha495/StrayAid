@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { GoogleButton, PrimaryButton } from "../../../components/auth/AuthButtons";
+import { GoogleButton, GoogleTermsNote, PrimaryButton } from "../../../components/auth/AuthButtons";
 import AuthField from "../../../components/auth/AuthField";
 import AuthHeader, { leaveAuth } from "../../../components/auth/AuthHeader";
 import { loginUser } from "../../../services/authService";
@@ -165,6 +165,7 @@ export default function LoginPage() {
           <View style={[styles.actions, (error || notice) && styles.actionsAfterBanner]}>
             <PrimaryButton label="Sign In" onPress={signIn} loading={signingIn} disabled={googleBusy} />
             <GoogleButton onPress={continueWithGoogle} loading={googleBusy} disabled={!googleRequest || signingIn} />
+            <GoogleTermsNote />
           </View>
 
           <View style={styles.footer}>

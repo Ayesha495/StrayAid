@@ -1,5 +1,5 @@
 import API, { PublicAPI } from "../api/axios";
-import { getStoredUser } from "./authSevice";
+import { getStoredUser } from "./authService";
 import type { Animal, Case, DashboardData, Organization, Post } from "../types/platform";
 import { normalizeAnimal, normalizeCase, normalizeDashboard, normalizeOrganization, normalizePost } from "../utils/media";
 

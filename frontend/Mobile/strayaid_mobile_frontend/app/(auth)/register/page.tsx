@@ -10,7 +10,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { PrimaryButton } from "../../../components/auth/AuthButtons";
 import AuthField from "../../../components/auth/AuthField";
 import AuthHeader, { leaveAuth } from "../../../components/auth/AuthHeader";
-import { loginUser, registerUser, SignUpError } from "../../../services/authService";
+import { loginUser, registerUser, SignUpError, TERMS_REQUIRED } from "../../../services/authService";
 import { colors, fonts } from "../../../theme/tokens";
 
 // Stitch screen 6: Sign Up. Creating the account also signs the person in, and they return
@@ -31,6 +31,7 @@ export default function RegisterPage() {
   const [errors, setErrors] = useState<Partial<Record<Field, string>>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const emailRef = useRef<TextInput>(null);
   const passwordRef = useRef<TextInput>(null);
   const rePasswordRef = useRef<TextInput>(null);
@@ -83,10 +84,14 @@ export default function RegisterPage() {
 
   const createAccount = async () => {
     if (submitting || !validate()) return;
+    if (!acceptedTerms) {
+      setFormError(TERMS_REQUIRED);
+      return;
+    }
     setFormError(null);
     setSubmitting(true);
     try {
-      await registerUser({ fullName, email, password, rePassword, avatar: photo });
+      await registerUser({ fullName, email, password, rePassword, acceptTerms: acceptedTerms, avatar: photo });
     } catch (err) {
       if (err instanceof SignUpError) {
         const { fullName: nameError, email: emailError, password: passwordError, avatar } = err.fields;
@@ -230,18 +235,33 @@ export default function RegisterPage() {
               <Text style={styles.formErrorText}>{formError}</Text>
             </View>
           )}
-          <PrimaryButton label="Create account" onPress={createAccount} loading={submitting} compact />
-          <Text style={styles.terms}>
-            By creating an account, you agree to our{" "}
-            <Text style={styles.termsLink} accessibilityRole="link" onPress={() => router.push({ pathname: "/legal/[doc]", params: { doc: "terms" } })}>
-              Terms of Service
-            </Text>{" "}
-            and{" "}
-            <Text style={styles.termsLink} accessibilityRole="link" onPress={() => router.push({ pathname: "/legal/[doc]", params: { doc: "privacy" } })}>
-              Privacy Policy
+          <View style={styles.termsRow}>
+            <Pressable
+              accessibilityRole="checkbox"
+              accessibilityLabel="I agree to the Terms of Service and Privacy Policy"
+              accessibilityState={{ checked: acceptedTerms }}
+              hitSlop={10}
+              onPress={() => {
+                setAcceptedTerms((value) => !value);
+                if (formError === TERMS_REQUIRED) setFormError(null);
+              }}
+              style={[styles.checkbox, acceptedTerms && styles.checkboxOn]}
+            >
+              {acceptedTerms && <MaterialIcons name="check" size={16} color={colors.onPrimary} />}
+            </Pressable>
+            <Text style={styles.terms}>
+              I agree to the{" "}
+              <Text style={styles.termsLink} accessibilityRole="link" onPress={() => router.push({ pathname: "/legal/[doc]", params: { doc: "terms" } })}>
+                Terms of Service
+              </Text>{" "}
+              and{" "}
+              <Text style={styles.termsLink} accessibilityRole="link" onPress={() => router.push({ pathname: "/legal/[doc]", params: { doc: "privacy" } })}>
+                Privacy Policy
+              </Text>
+              .
             </Text>
-            .
-          </Text>
+          </View>
+          <PrimaryButton label="Create account" onPress={createAccount} loading={submitting} compact />
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -312,14 +332,18 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: colors.criticalSoft,
   },
-  formErrorText: { flex: 1, fontFamily: fonts.bodyMedium, fontSize: 13, lineHeight: 18, color: "#B4483A" },
-  terms: {
-    fontFamily: fonts.body,
-    fontSize: 11,
-    lineHeight: 16,
-    color: colors.inkMuted,
-    textAlign: "center",
-    paddingHorizontal: 8,
+  formErrorText: { flex: 1, fontFamily: fonts.bodyMedium, fontSize: 13, lineHeight: 18, color: colors.criticalInk },
+  termsRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  termsLink: { textDecorationLine: "underline" },
+  checkboxOn: { backgroundColor: colors.primary },
+  terms: { flex: 1, fontFamily: fonts.body, fontSize: 13, lineHeight: 19, color: colors.inkMuted },
+  termsLink: { color: colors.primary, textDecorationLine: "underline" },
 });

@@ -6,7 +6,7 @@ import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Tex
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import PostCard from "../../../components/home/PostCard";
-import { usePostActions } from "../../../components/home/usePostActions";
+import { usePostActions } from "../../../hooks/usePostActions";
 import { useSession } from "../../../hooks/useSession";
 import { optionalAuthFetch } from "../../../services/apiClient";
 import { FeedPost } from "../../../services/homeService";

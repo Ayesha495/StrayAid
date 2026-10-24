@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { useScroll } from "motion/react";
-import { StickyCard_001 } from "@/components/ui/skiper-ui/skiper16";
+import { StickyCard_001 } from "@/components/vendor/skiper-ui/skiper16";
 
 const CHAPTERS = [
   {

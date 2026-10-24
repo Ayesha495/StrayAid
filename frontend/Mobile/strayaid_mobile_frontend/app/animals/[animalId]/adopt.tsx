@@ -731,8 +731,8 @@ export default function AdoptionApplicationScreen() {
       )}
 
       <Modal visible={picker !== null} transparent animationType="fade" onRequestClose={() => setPicker(null)}>
-        <Pressable style={styles.pickerBackdrop} onPress={() => setPicker(null)}>
-          <Pressable style={styles.pickerCard} onPress={() => null}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Close" style={styles.pickerBackdrop} onPress={() => setPicker(null)}>
+          <Pressable accessible={false} style={styles.pickerCard} onPress={() => null}>
             <Text style={styles.pickerTitle}>Animals up for adoption</Text>
             {picker && picker.length === 0 ? (
               <ActivityIndicator color={colors.primary} style={styles.pickerLoading} />
@@ -810,7 +810,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   stepDone: { borderWidth: 0, backgroundColor: colors.primary },
-  stepNumber: { fontFamily: fonts.bodySemiBold, fontSize: 12, color: "#94A3B8" },
+  stepNumber: { fontFamily: fonts.bodySemiBold, fontSize: 12, color: "#64748B" },
   stepNumberActive: { fontFamily: fonts.bodyBold, color: colors.onPrimary },
   heading: { marginTop: 16, marginBottom: 16 },
   stepTitle: { fontFamily: fonts.displayBold, fontSize: 18, lineHeight: 26, letterSpacing: -0.4, color: "#0F172A" },
@@ -846,7 +846,7 @@ const styles = StyleSheet.create({
   textAreaSmall: { height: 88, paddingTop: 14, lineHeight: 21 },
   fieldError: { flex: 1, fontFamily: fonts.bodyMedium, fontSize: 12, lineHeight: 16, color: "#B4483A" },
   counterRow: { flexDirection: "row", alignItems: "flex-start", gap: 8 },
-  charCount: { marginLeft: "auto", fontFamily: fonts.body, fontSize: 11, color: "#94A3B8" },
+  charCount: { marginLeft: "auto", fontFamily: fonts.body, fontSize: 11, color: "#64748B" },
   choiceRow: { flexDirection: "row", gap: 10 },
   choiceRowSolid: { gap: 12 },
   choice: {
