@@ -94,6 +94,27 @@ class SeedDemoDataTests(TempMediaTestCase):
         self.assertNotIn("A-strong-demo-pass-2026", output)
         self.assertNotIn("demo12345", output)
 
+    def test_live_server_seed_uses_only_the_teams_own_images(self, _detector):
+        from django.conf import settings
+
+        from rescue.management.commands.seed_demo_data import Command
+
+        command = Command()
+        command.own_photos_only = True
+        own = {path.read_bytes() for path in (settings.DEMO_IMAGES_DIR / "stitch").iterdir()}
+        for downloaded in ("organizations/images (3).jpg", "reports/gang-cats-Alaksa.webp"):
+            self.assertIn(command.real_photo(downloaded, crop=(0, 0, 0.5, 0.5)).read(), own)
+
+    def test_local_seed_still_uses_the_real_demo_photos(self, _detector):
+        from django.conf import settings
+
+        from rescue.management.commands.seed_demo_data import Command
+
+        command = Command()
+        command.own_photos_only = False
+        photo = command.real_photo("reports/gang-cats-Alaksa.webp")
+        self.assertEqual(photo.read(), (settings.DEMO_IMAGES_DIR / "reports" / "gang-cats-Alaksa.webp").read_bytes())
+
     @override_settings(DEBUG=True)
     def test_local_seed_never_makes_a_superuser_with_a_known_password(self, _detector):
         run("seed_demo_data")

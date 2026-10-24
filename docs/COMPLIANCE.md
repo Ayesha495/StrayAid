@@ -24,7 +24,7 @@ React site, "Mobile" the Expo app, "Backend" the Django API.
 | 15 | Fake reviews | The four placeholder landing testimonials were removed. |
 | 16 | Unsupported claims | Removed "in under a minute", "finds the closest team", "is alerted", "verified banking information". The landing numbers only show once there are real rescues. |
 | 17 | Real business details | Footer and every policy say who runs StrayAid (the project team, a BSSE final-year project, not a registered charity or company) and the area served. **Open:** set `VITE_CONTACT_EMAIL` / `EXPO_PUBLIC_CONTACT_EMAIL` to a real team address before launch. |
-| 18 | Image copyright | Landing photos are from Pexels (free licence) and credited. **Open:** see risk 1. |
+| 18 | Image copyright | Landing photos are from Pexels (free licence) and credited. Downloaded demo photos never reach a live server (see risk 1). |
 | 19 | Local laws | See below. |
 | 20 | Other risks | See below. |
 
@@ -65,10 +65,11 @@ React site, "Mobile" the Expo app, "Backend" the Django API.
 
 ## Risks to act on
 
-1. **Demo photos are not ours.** `images/` (used by `seed_demo_data`) includes a Shutterstock
-   preview, a BBC image, a VIER PFOTEN photo and other downloaded pictures. Don't seed the
-   public site with them. Before seeding a live server, replace them with Pexels/Unsplash
-   photos or your own.
+1. **Demo photos are not ours.** `images/` includes a Shutterstock preview, a BBC image, a
+   VIER PFOTEN photo and other downloaded pictures. They are used only when seeding a local
+   computer; `seed_demo_data --production` swaps every one of them for the team's own Stitch
+   images (tested). Replace them with Pexels or your own photos if the demo ever needs them
+   publicly.
 2. **Old secrets are still in git history.** The previous Django secret key and local
    database password were committed in `settings.py`. Neither is used any more (production
    gets a new key from the environment), but change the local Postgres password if it is

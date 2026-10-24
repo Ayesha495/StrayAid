@@ -850,25 +850,6 @@ DUCKY_PAWS_CHATS = [
 ]
 
 
-def real_photo(relative, crop=None):
-    """A photo from images/, optionally cropped to (left, top, right, bottom) fractions."""
-    path = REAL_IMAGES / relative
-    if crop is None:
-        return ContentFile(path.read_bytes(), name=path.name)
-    from io import BytesIO
-
-    from PIL import Image
-
-    with Image.open(path) as image:
-        image = image.convert("RGB")
-        width, height = image.size
-        left, top, right, bottom = crop
-        image = image.crop((int(left * width), int(top * height), int(right * width), int(bottom * height)))
-        buffer = BytesIO()
-        image.save(buffer, format="JPEG", quality=88)
-    return ContentFile(buffer.getvalue(), name=f"{path.stem}-closeup.jpg")
-
-
 class Command(BaseCommand):
     help = "Create fake but consistent StrayAid demo data for Islamabad and Rawalpindi."
 
@@ -896,7 +877,32 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         self.password = self.demo_password(options["production"])
+        self.own_photos_only = not settings.DEBUG
         self.seed(options)
+
+    def real_photo(self, relative, crop=None):
+        """A photo from images/, optionally cropped to (left, top, right, bottom) fractions.
+        On a live server the downloaded photos, which aren't ours to publish, are swapped for
+        one of the team's own Stitch images."""
+        path = REAL_IMAGES / relative
+        if self.own_photos_only:
+            own = sorted(image for image in STITCH_IMAGES.iterdir() if "logo" not in image.name)
+            path = own[sum(relative.encode()) % len(own)]
+            crop = None
+        if crop is None:
+            return ContentFile(path.read_bytes(), name=path.name)
+        from io import BytesIO
+
+        from PIL import Image
+
+        with Image.open(path) as image:
+            image = image.convert("RGB")
+            width, height = image.size
+            left, top, right, bottom = crop
+            image = image.crop((int(left * width), int(top * height), int(right * width), int(bottom * height)))
+            buffer = BytesIO()
+            image.save(buffer, format="JPEG", quality=88)
+        return ContentFile(buffer.getvalue(), name=f"{path.stem}-closeup.jpg")
 
     def demo_password(self, production):
         if settings.DEBUG:
@@ -1486,7 +1492,7 @@ class Command(BaseCommand):
                 },
             )
             if not report.image:
-                report.image.save(Path(data["image"]).name, real_photo(data["image"]), save=True)
+                report.image.save(Path(data["image"]).name, self.real_photo(data["image"]), save=True)
                 score_report(report)
             refresh_case_score(case)
             backdate(case, hours=hours_in_care + 3)
@@ -1513,7 +1519,7 @@ class Command(BaseCommand):
                 },
             )
             if not animal.image:
-                animal.image.save(Path(data["image"]).name, real_photo(data["image"]), save=True)
+                animal.image.save(Path(data["image"]).name, self.real_photo(data["image"]), save=True)
             backdate(animal, hours=hours_in_care)
 
             kept = []
@@ -1526,7 +1532,7 @@ class Command(BaseCommand):
                 )
                 if photo_kind and not post.image:
                     crop = data["crop"] if photo_kind == "crop" else None
-                    post.image.save(Path(data["image"]).name, real_photo(data["image"], crop), save=True)
+                    post.image.save(Path(data["image"]).name, self.real_photo(data["image"], crop), save=True)
                 backdate(post, hours=hours_ago)
                 kept.append(post.id)
                 # A few likes and a comment, so the feed doesn't look empty.
@@ -1600,7 +1606,7 @@ class Command(BaseCommand):
                     },
                 )
                 if not report.image:
-                    report.image.save(Path(data["image"]).name, real_photo(data["image"]), save=True)
+                    report.image.save(Path(data["image"]).name, self.real_photo(data["image"]), save=True)
                     score_report(report)
                 backdate(report, minutes=data["minutes_ago"] - index * 40)
             refresh_case_score(case)
@@ -1710,7 +1716,7 @@ class Command(BaseCommand):
                     conversation=conversation, sender=sender, body=body, defaults={"created_at": now - timedelta(minutes=minutes_ago)}
                 )
                 if image and not message.image:
-                    message.image.save(Path(image).name, real_photo(image), save=True)
+                    message.image.save(Path(image).name, self.real_photo(image), save=True)
                 kept.append(message.id)
             conversation.messages.exclude(id__in=kept).delete()
 
@@ -1792,7 +1798,7 @@ class Command(BaseCommand):
                 organization=organization,
                 category=category,
                 caption=caption,
-                defaults={"image": real_photo(image, crop)},
+                defaults={"image": self.real_photo(image, crop)},
             )
             story.animal = Animal.objects.filter(name=animal_name, organization=organization).first() if animal_name else None
             story.headline = headline
