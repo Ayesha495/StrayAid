@@ -40,7 +40,7 @@ import { timeAgo } from "../../../utils/format";
 // Stitch screen 10: Rescue case details.
 
 const NAVY = "#243447";
-const GRAY = "#747474";
+const GRAY = "#707070";
 const BORDER = "#E8ECE9";
 const SURFACE = "#F8FAF9";
 
@@ -53,7 +53,7 @@ const MILESTONES: { status: CaseStatus; label: string }[] = [
 ];
 
 const STATUS_PILL: Record<CaseStatus, { label: string; color: string; background: string; border: string }> = {
-  reported: { label: "Reported", color: "#B7791F", background: "#FEF7ED", border: "rgba(244,176,96,0.35)" },
+  reported: { label: "Reported", color: "#8A5A12", background: "#FEF7ED", border: "rgba(244,176,96,0.35)" },
   assigned: { label: "Assigned", color: colors.primary, background: colors.mint, border: "rgba(30,107,86,0.2)" },
   in_progress: { label: "In Progress", color: colors.primary, background: colors.mint, border: "rgba(30,107,86,0.2)" },
   rescued: { label: "Rescued", color: colors.primary, background: colors.mint, border: "rgba(30,107,86,0.2)" },
@@ -62,8 +62,8 @@ const STATUS_PILL: Record<CaseStatus, { label: string; color: string; background
 };
 
 const SEVERITY_CHIP: Record<Severity, { label: string; color: string; background: string }> = {
-  low: { label: "Low severity", color: "#1E8A66", background: "#E8F7F2" },
-  medium: { label: "Medium severity", color: "#B7791F", background: "#FEF7ED" },
+  low: { label: "Low severity", color: "#1A7558", background: "#E8F7F2" },
+  medium: { label: "Medium severity", color: "#8A5A12", background: "#FEF7ED" },
   high: { label: "High severity", color: colors.critical, background: "#FDEEEC" },
   critical: { label: "Critical severity", color: "#B42318", background: "#FDECEC" },
 };
@@ -350,7 +350,7 @@ export default function CaseDetailsScreen() {
             {item.possibly_invalid && (
               <Pressable accessibilityRole="button" onPress={openConfidence} style={styles.aiPill}>
                 <View style={[styles.dot, { backgroundColor: colors.warning }]} />
-                <Text style={[styles.aiPillText, { color: "#B7791F" }]}>Needs verification</Text>
+                <Text style={[styles.aiPillText, { color: "#8A5A12" }]}>Needs verification</Text>
               </Pressable>
             )}
             {photos.length > 0 && (
@@ -711,7 +711,7 @@ const styles = StyleSheet.create({
   linkDivider: { borderTopWidth: 1, borderTopColor: BORDER },
   linkPressed: { backgroundColor: "#F8FAFC" },
   linkLabel: { fontFamily: fonts.bodySemiBold, fontSize: 12, lineHeight: 16, color: NAVY },
-  linkHint: { fontFamily: fonts.bodyMedium, fontSize: 11, color: "#94A3B8" },
+  linkHint: { fontFamily: fonts.bodyMedium, fontSize: 11, color: "#64748B" },
   newBadge: {
     overflow: "hidden",
     marginLeft: -4,

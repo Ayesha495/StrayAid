@@ -5,15 +5,15 @@ import { getPublicAnimals } from "../services/platformService";
 import { getCommunityStats } from "../services/caseService";
 import { getDirectory } from "../services/socialService";
 import { useApi } from "../hooks/useApi";
-import { getDefaultAuthenticatedRoute, useCurrentUser } from "../services/authSevice";
+import { getDefaultAuthenticatedRoute, useCurrentUser } from "../services/authService";
 import SiteNav from "../layout/SiteNav";
 import SiteFooter from "../layout/SiteFooter";
 import { Reveal } from "./landing/motion";
 import Journey from "./landing/Journey";
 import { AnimalCarousel } from "./landing/Carousels";
-import { ProgressiveBlur } from "@/components/ui/skiper-ui/skiper41";
-import { HoverExpand_001 } from "@/components/ui/skiper-ui/skiper52";
-import { AnimatedNumber } from "@/components/ui/animated-number";
+import { ProgressiveBlur } from "@/components/vendor/skiper-ui/skiper41";
+import { HoverExpand_001 } from "@/components/vendor/skiper-ui/skiper52";
+import { AnimatedNumber } from "@/components/vendor/animated-number";
 import "./landing/landing.css";
 
 const WAYS = [

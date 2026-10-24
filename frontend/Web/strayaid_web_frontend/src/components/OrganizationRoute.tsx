@@ -1,5 +1,5 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
-import { useCurrentUser } from "../services/authSevice";
+import { useCurrentUser } from "../services/authService";
 import { FullPageLoading } from "./ProtectedRoute";
 
 /** Only organization accounts get past this; everyone else goes to the feed. */

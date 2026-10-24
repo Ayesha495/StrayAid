@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Building2, Camera, LogOut, Trash2 } from "lucide-react";
 import { changePassword, getMyProfile, updateMyProfile } from "../services/accountService";
-import { clearSession, syncCurrentUser } from "../services/authSevice";
+import { clearSession, syncCurrentUser } from "../services/authService";
 import { useApi } from "../hooks/useApi";
 import { useShell } from "../layout/ShellContext";
 import { useToast } from "../ui/Toast";

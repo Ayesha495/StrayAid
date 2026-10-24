@@ -23,8 +23,8 @@ type Params = {
 };
 
 const SEVERITY_CHIP: Record<Severity, { label: string; color: string; background: string }> = {
-  low: { label: "Low severity", color: "#1E8A66", background: "#E8F7F2" },
-  medium: { label: "Medium severity", color: "#B7791F", background: "#FEF6EB" },
+  low: { label: "Low severity", color: "#1A7558", background: "#E8F7F2" },
+  medium: { label: "Medium severity", color: "#8A5A12", background: "#FEF6EB" },
   high: { label: "High severity", color: colors.critical, background: "#FEF0EE" },
   critical: { label: "Critical severity", color: "#B42318", background: "#FDECEC" },
 };

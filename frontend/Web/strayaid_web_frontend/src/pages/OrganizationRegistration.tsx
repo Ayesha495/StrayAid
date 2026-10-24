@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { BadgeCheck, Check, Eye, Landmark, Mail, MapPinned, Phone, ShieldAlert, SquareUserRound, Upload, UploadCloud } from "lucide-react";
 import AuthenticatedShell from "../components/AuthenticatedShell";
 import LocationPicker from "../components/LocationPicker";
-import { syncCurrentUser, useCurrentUser } from "../services/authSevice";
+import { syncCurrentUser, useCurrentUser } from "../services/authService";
 import { createOrganizationProfile, getOrganizationProfile, updateOrganizationProfile } from "../services/platformService";
 import "../styles/Portal.css";
 import "../styles/Registration.css";

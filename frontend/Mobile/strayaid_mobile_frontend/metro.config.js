@@ -10,7 +10,7 @@ const http = require("http");
 // Set STRAYAID_BACKEND_URL to forward somewhere else (e.g. a Docker container).
 
 const BACKEND_URL = new URL(process.env.STRAYAID_BACKEND_URL || "http://127.0.0.1:8000");
-const BACKEND_PREFIXES = ["/api/", "/auth/", "/media/", "/accounts/", "/admin/", "/static/"];
+const BACKEND_PREFIXES = ["/api/", "/auth/", "/media/", "/admin/", "/static/"];
 
 function isBackendPath(url = "") {
   return BACKEND_PREFIXES.some((prefix) => url.startsWith(prefix));

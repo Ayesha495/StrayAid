@@ -1,12 +1,14 @@
 import { LoginData, SignUpData, TokenResponse } from "../types/auth";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from "expo-router";
+import { authFetch } from "./apiClient";
 import { API_BASE } from "./apiConfig";
 import { appendFile } from "../utils/formFile";
 import { clearToken, saveRefreshToken, saveToken } from "../utils/tokenStorage";
 import { registerForPushNotifications, sendPushTokenToBackend } from "./notificationService";
 
 const NETWORK_ERROR = "Can't reach StrayAid right now. Check your connection and try again.";
+export const TERMS_REQUIRED = "Accept the Terms of Service and Privacy Policy to continue.";
 
 // fetch + JSON that turns a dropped connection into a readable message.
 const postJson = async (path: string, body: object) => {
@@ -56,12 +58,14 @@ export class SignUpError extends Error {
 const firstMessage = (value: unknown) => (Array.isArray(value) ? String(value[0]) : value ? String(value) : undefined);
 
 export const registerUser = async (data: SignUpData) => {
+    if (!data.acceptTerms) throw new SignUpError(TERMS_REQUIRED);
     // Multipart so the optional profile photo travels with the account details.
     const form = new FormData();
     form.append('full_name', data.fullName.trim());
     form.append('email', data.email.trim());
     form.append('password', data.password);
     form.append('re_password', data.rePassword);
+    form.append('accept_terms', 'true');
     if (data.avatar) {
         await appendFile(form, 'avatar', data.avatar);
     }
@@ -115,13 +119,9 @@ export const confirmPasswordReset = async (email: string, code: string, newPassw
 };
 
 export const loginWithGoogleAccessToken = async (accessToken: string): Promise<TokenResponse> => {
-    // The backend finishes Google verification and returns our normal JWT payload.
-    const res = await fetch(`${API_BASE}/auth/google/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ access_token: accessToken }),
-    });
-    const result = await res.json();
+    // The backend finishes Google verification and returns our normal JWT payload. The screens
+    // show that continuing with Google accepts the terms (GoogleTermsNote).
+    const { res, result } = await postJson('/auth/google/', { access_token: accessToken, accept_terms: true });
     if (res.ok) {
         await persistSession(result);
         return result;
@@ -129,11 +129,25 @@ export const loginWithGoogleAccessToken = async (accessToken: string): Promise<T
     throw new Error(result.detail || 'Google login failed');
 };
 
-export const logoutUser = async () => {
-    // Clear all stored credentials before redirecting to the auth stack.
-    // Older builds kept token copies here; clear them too.
-    await AsyncStorage.multiRemove(['access_token', 'refresh_token']);
-    await AsyncStorage.removeItem('user_email');
+// Forget the session on this phone. Older builds kept token copies in AsyncStorage; clear them too.
+export const clearLocalSession = async () => {
+    await AsyncStorage.multiRemove(['access_token', 'refresh_token', 'user_email']);
     await clearToken();
+};
+
+export const logoutUser = async () => {
+    await clearLocalSession();
     router.replace("/(auth)/login/page");
+};
+
+// Profile → Settings → Delete account. Google-only accounts send an empty password.
+export const deleteAccount = async (password: string) => {
+    const res = await authFetch('/auth/me/', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ confirm: 'DELETE', password }),
+    });
+    if (res.ok) return;
+    const result = await res.json().catch(() => ({}));
+    throw new Error(result.detail || "We couldn't delete your account. Please try again.");
 };

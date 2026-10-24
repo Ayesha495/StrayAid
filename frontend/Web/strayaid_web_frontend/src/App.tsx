@@ -1,38 +1,41 @@
+import { lazy, Suspense } from "react";
 import { BrowserRouter, Navigate, Routes, Route } from "react-router-dom";
 import { MotionConfig } from "motion/react";
 import LandingPage from "./pages/LandingPage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import ForgotPassword from "./pages/ForgotPassword";
 import ProtectedRoute from "./components/ProtectedRoute";
 import OrganizationRoute from "./components/OrganizationRoute";
 import DashboardLayout from "./components/DashboardLayout";
-import OrganizationRegistration from "./pages/OrganizationRegistration";
-import Dashboard from "./pages/Dashboard";
-import CaseDetail from "./pages/CaseDetail";
-import AnimalManagement from "./pages/AnimalManagement";
-import AnimalDetail from "./pages/AnimalDetail";
-import AnimalDirectory from "./pages/AnimalDirectory";
-import OrganizationPublicProfile from "./pages/OrganizationPublicProfile";
-import PostFeed from "./pages/PostFeed";
-import Cases from "./pages/Cases";
-import WorkflowListPage from "./pages/WorkflowListPage";
-import Applications from "./pages/Applications";
-import Funds from "./pages/Funds";
-import Messages from "./pages/Messages";
-import Notifications from "./pages/Notifications";
-import Organizations from "./pages/Organizations";
-import PublicCase from "./pages/PublicCase";
-import MyReports from "./pages/MyReports";
-import Following from "./pages/Following";
-import MyApplications from "./pages/MyApplications";
-import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
-import LegalPage from "./pages/LegalPage";
 import DsScope from "./layout/DsScope";
 import { AdaptiveLayout, ShellLayout } from "./layout/PublicLayout";
 import { ShellProvider } from "./layout/ShellContext";
 import { ToastProvider } from "./ui/Toast";
+import { Spinner } from "./ui/States";
+
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const OrganizationRegistration = lazy(() => import("./pages/OrganizationRegistration"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const CaseDetail = lazy(() => import("./pages/CaseDetail"));
+const AnimalManagement = lazy(() => import("./pages/AnimalManagement"));
+const AnimalDetail = lazy(() => import("./pages/AnimalDetail"));
+const AnimalDirectory = lazy(() => import("./pages/AnimalDirectory"));
+const OrganizationPublicProfile = lazy(() => import("./pages/OrganizationPublicProfile"));
+const PostFeed = lazy(() => import("./pages/PostFeed"));
+const Cases = lazy(() => import("./pages/Cases"));
+const WorkflowListPage = lazy(() => import("./pages/WorkflowListPage"));
+const Applications = lazy(() => import("./pages/Applications"));
+const Funds = lazy(() => import("./pages/Funds"));
+const Messages = lazy(() => import("./pages/Messages"));
+const Notifications = lazy(() => import("./pages/Notifications"));
+const Organizations = lazy(() => import("./pages/Organizations"));
+const PublicCase = lazy(() => import("./pages/PublicCase"));
+const MyReports = lazy(() => import("./pages/MyReports"));
+const Following = lazy(() => import("./pages/Following"));
+const MyApplications = lazy(() => import("./pages/MyApplications"));
+const Settings = lazy(() => import("./pages/Settings"));
+const LegalPage = lazy(() => import("./pages/LegalPage"));
 
 function App() {
   return (
@@ -41,6 +44,7 @@ function App() {
     <BrowserRouter>
       <ToastProvider>
         <ShellProvider>
+          <Suspense fallback={<div className="page-loading"><Spinner label="Loading page" /></div>}>
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<LandingPage />} />
@@ -98,6 +102,7 @@ function App() {
             <Route path="/delete-account" element={<Navigate to="/legal/delete-account" replace />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </Suspense>
         </ShellProvider>
       </ToastProvider>
     </BrowserRouter>

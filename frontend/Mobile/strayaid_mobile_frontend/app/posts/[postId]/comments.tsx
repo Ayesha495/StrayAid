@@ -356,7 +356,7 @@ export default function CommentsScreen() {
 
         <ScrollView contentContainerStyle={styles.list} keyboardShouldPersistTaps="handled">
           {pinned && (
-            <Pressable onLongPress={() => commentOptions(pinned)} style={styles.pinned}>
+            <Pressable accessibilityRole="button" accessibilityHint="Double tap and hold for comment options" accessibilityActions={[{ name: "longpress", label: "Comment options" }]} onAccessibilityAction={() => commentOptions(pinned)} onLongPress={() => commentOptions(pinned)} style={styles.pinned}>
               <View style={styles.pinnedTop}>
                 <View style={styles.pinnedLabelRow}>
                   <MaterialIcons name="push-pin" size={16} color={C.primary} />
@@ -479,7 +479,7 @@ function LikeColumn({ comment, onLike, small }: { comment: PostComment; onLike: 
 
 function CommentRow({ comment, onLike, onReply, onMore }: RowProps & { comment: PostComment; onReply: (comment: PostComment) => void }) {
   return (
-    <Pressable onLongPress={() => onMore(comment)} style={styles.row}>
+    <Pressable accessibilityRole="button" accessibilityHint="Double tap and hold for comment options" accessibilityActions={[{ name: "longpress", label: "Comment options" }]} onAccessibilityAction={() => onMore(comment)} onLongPress={() => onMore(comment)} style={styles.row}>
       <CommentAvatar author={comment.author} />
       <View style={styles.rowBody}>
         <View style={styles.nameRow}>
@@ -506,7 +506,7 @@ function CommentRow({ comment, onLike, onReply, onMore }: RowProps & { comment: 
 
 function ReplyRow({ reply, onLike, onMore }: RowProps & { reply: PostComment }) {
   return (
-    <Pressable onLongPress={() => onMore(reply)} style={styles.replyRow}>
+    <Pressable accessibilityRole="button" accessibilityHint="Double tap and hold for comment options" accessibilityActions={[{ name: "longpress", label: "Comment options" }]} onAccessibilityAction={() => onMore(reply)} onLongPress={() => onMore(reply)} style={styles.replyRow}>
       <CommentAvatar author={reply.author} size={28} />
       <View style={styles.replyBubble}>
         <View style={styles.replyTop}>

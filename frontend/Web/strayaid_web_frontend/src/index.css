@@ -52,3 +52,4 @@ button:focus-visible {
 #root {
   min-height: 100vh;
 }
+.page-loading { display: grid; min-height: 60vh; place-items: center; }

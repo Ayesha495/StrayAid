@@ -1,0 +1,14 @@
+# Secret scanning (CI "Secret scan" job). Uses gitleaks' default rules; the paths below hold
+# fake values made up for tests and CI, never real credentials.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Test fixtures and CI-only placeholder values"
+paths = [
+  '''backend/core/tests\.py''',
+  '''backend/config/test_settings\.py''',
+  '''\.github/workflows/ci\.yml''',
+  '''(^|/)__tests__/''',
+  '''\.env\.example$''',
+]

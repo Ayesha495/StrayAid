@@ -2,35 +2,32 @@ FROM python:3.11-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1
+    PIP_NO_CACHE_DIR=1 \
+    DJANGO_SETTINGS_MODULE=config.settings
 
 WORKDIR /app
 
-# System deps needed for psycopg2, Pillow, and cryptography
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpq-dev \
-    gcc \
-    libffi-dev \
-    libjpeg-dev \
-    libpng-dev \
+# libpq for psycopg2, image libraries for Pillow.
+RUN apt-get update && apt-get install -y --no-install-recommends libpq5 libjpeg62-turbo zlib1g \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements-docker.txt .
-RUN pip install -r requirements-docker.txt
+COPY requirements.txt .
+RUN pip install -r requirements.txt
 
-COPY StrayAid_backend/ .
+COPY . .
 
 # Free animal-detection model (SSD-MobileNet v1, ONNX Model Zoo), checksum-verified.
-# Plain settings are enough here: the command doesn't touch the database.
-RUN python manage.py download_ai_model --settings=StrayAid_backend.settings
+# Build-only settings: nothing here touches the database or needs real secrets.
+RUN DEBUG=1 python manage.py download_ai_model \
+    && DJANGO_SECRET_KEY=build-only python manage.py collectstatic --noinput
 
-# Collect static files at build time
-RUN python manage.py collectstatic --noinput --settings=StrayAid_backend.settings_docker 2>/dev/null || true
+# Run as an unprivileged user; only uploaded media needs to be writable.
+RUN useradd --create-home --uid 1000 strayaid && mkdir -p /app/media && chown -R strayaid /app/media
+USER strayaid
 
 EXPOSE 8000
 
-CMD ["gunicorn", "StrayAid_backend.wsgi:application", \
-     "--bind", "0.0.0.0:8000", \
-     "--workers", "3", \
-     "--timeout", "120", \
-     "--access-logfile", "-"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health/', timeout=4)"
+
+CMD ["sh", "-c", "python manage.py migrate --noinput && gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers ${WEB_CONCURRENCY:-2} --timeout 120 --access-logfile -"]

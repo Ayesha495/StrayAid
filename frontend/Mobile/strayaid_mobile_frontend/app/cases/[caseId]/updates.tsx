@@ -154,5 +154,5 @@ const styles = StyleSheet.create({
     color: colors.primary,
   },
   message: { fontFamily: fonts.body, fontSize: 13, lineHeight: 19, color: "#475569" },
-  meta: { fontFamily: fonts.bodyMedium, fontSize: 11, lineHeight: 15, color: "#94A3B8" },
+  meta: { fontFamily: fonts.bodyMedium, fontSize: 11, lineHeight: 15, color: "#64748B" },
 });

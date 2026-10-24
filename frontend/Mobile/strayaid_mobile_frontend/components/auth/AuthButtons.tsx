@@ -1,3 +1,4 @@
+import { router } from "expo-router";
 import { ActivityIndicator, Pressable, StyleSheet, Text } from "react-native";
 
 import GoogleMark from "../brand/GoogleMark";
@@ -62,6 +63,25 @@ export function GoogleButton({ onPress, loading, disabled }: Omit<ButtonProps, "
   );
 }
 
+const openPolicy = (doc: "terms" | "privacy") => router.push({ pathname: "/legal/[doc]", params: { doc } });
+
+// Shown under "Continue with Google": signing in with Google can create a new account.
+export function GoogleTermsNote() {
+  return (
+    <Text style={styles.note}>
+      By continuing with Google, you agree to the{" "}
+      <Text style={styles.noteLink} accessibilityRole="link" onPress={() => openPolicy("terms")}>
+        Terms of Service
+      </Text>{" "}
+      and{" "}
+      <Text style={styles.noteLink} accessibilityRole="link" onPress={() => openPolicy("privacy")}>
+        Privacy Policy
+      </Text>
+      .
+    </Text>
+  );
+}
+
 const styles = StyleSheet.create({
   primary: {
     height: 50,
@@ -98,4 +118,6 @@ const styles = StyleSheet.create({
   googlePressed: { backgroundColor: "#F9FAFB", transform: [{ scale: 0.99 }] },
   googleText: { fontFamily: fonts.displaySemiBold, fontSize: 14, color: colors.ink },
   disabled: { opacity: 0.6 },
+  note: { fontFamily: fonts.body, fontSize: 12, lineHeight: 18, color: colors.inkMuted, textAlign: "center", marginTop: 8 },
+  noteLink: { color: colors.primary, textDecorationLine: "underline" },
 });

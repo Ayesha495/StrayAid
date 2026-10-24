@@ -20,13 +20,12 @@ export function useGoogleAuth(options: UseGoogleAuthOptions = {}) {
     onErrorRef.current = options.onError;
   });
 
-  // androidClientId requires the SHA-1 of your EAS keystore registered in
-  // Google Cloud Console under the Android OAuth 2.0 client.
-  // Run: eas credentials --platform android  to get your SHA-1.
+  // OAuth client IDs are public, but they differ per environment, so they come from .env.
+  // The Android client needs the SHA-1 of the EAS keystore (eas credentials --platform android).
   const [request, response, promptAsync] = Google.useAuthRequest({
-    androidClientId: "998658289609-u4an6pas5lcpg578tb3c1rhdre8g5eji.apps.googleusercontent.com",
-    iosClientId: "998658289609-1g2mm1bre24hlccle05gmon0c416h44v.apps.googleusercontent.com",
-    clientId: "998658289609-9afrhr6aesljjbf2o9kdbc10k6vlq1ac.apps.googleusercontent.com",
+    androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
+    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+    clientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
   });
 
   useEffect(() => {

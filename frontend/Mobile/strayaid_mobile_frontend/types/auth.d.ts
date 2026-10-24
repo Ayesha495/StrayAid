@@ -3,6 +3,7 @@ export type SignUpData = {
     email: string;
     password: string;
     rePassword: string;
+    acceptTerms: boolean;
     avatar?: { uri: string; name: string; type: string } | null;
 };
 

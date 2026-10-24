@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import LocationMapPicker from "../../components/LocationMapPicker";
+import LocationMapPicker from "../../components/map/LocationMapPicker";
 import { describeLocation, getCurrentLocation } from "../../services/locationService";
 import { getReportDraft, LatLng, setReportLocation } from "../../services/reportDraft";
 import { colors, fonts } from "../../theme/tokens";

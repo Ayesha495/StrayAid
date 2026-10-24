@@ -1,0 +1,120 @@
+name: CI
+
+on:
+  push:
+    branches: [main, Ayesha]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend (Django)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: strayaid_ci
+          POSTGRES_USER: strayaid
+          POSTGRES_PASSWORD: ci-only-password
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U strayaid" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DJANGO_SECRET_KEY: ci-only-secret-key-that-is-long-enough-for-the-deploy-check-1234567890
+      DATABASE_URL: postgres://strayaid:ci-only-password@localhost:5432/strayaid_ci
+      DATABASE_SSLMODE: disable
+      ALLOWED_HOSTS: api.strayaid.example
+      CORS_ALLOWED_ORIGINS: https://strayaid.example
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: backend/requirements*.txt
+      - run: pip install -r requirements-dev.txt
+      - name: Known vulnerabilities in dependencies
+        run: pip-audit -r requirements.txt
+      - name: Production settings pass Django's deploy check
+        run: python manage.py check --deploy --fail-level WARNING
+      - name: Every model change has a migration
+        run: python manage.py makemigrations --check --dry-run
+      - name: Migrations apply to Postgres
+        run: python manage.py migrate --noinput
+      - name: Tests with coverage
+        run: |
+          coverage run --source=. --omit="venv/*,*/migrations/*,*/tests.py,*/test_*.py,manage.py" manage.py test --settings=config.test_settings --noinput
+          coverage report --fail-under=85
+
+  web:
+    name: Web (React)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend/Web/strayaid_web_frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/Web/strayaid_web_frontend/package-lock.json
+      - run: npm ci
+      - name: Known vulnerabilities in shipped dependencies
+        run: npm audit --omit=dev --audit-level=high
+      - run: npm run lint
+      - name: Tests (including accessibility and colour contrast)
+        run: npx jest --ci
+      - name: Type check and production build
+        run: npm run build
+        env:
+          VITE_API_URL: https://api.strayaid.example
+
+  mobile:
+    name: Mobile (Expo)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend/Mobile/strayaid_mobile_frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/Mobile/strayaid_mobile_frontend/package-lock.json
+      - run: npm ci
+      # The web policies are compared word for word with the app's.
+      - name: Install the website too, for the shared-policy test
+        working-directory: frontend/Web/strayaid_web_frontend
+        run: npm ci --ignore-scripts
+      - run: npm run lint
+      - run: npm run typecheck
+      - name: Tests (including accessibility and colour contrast)
+        run: npx jest --ci
+      - name: Known vulnerabilities in shipped dependencies
+        # Remaining advisories sit in Expo's build tooling and need an Expo SDK upgrade.
+        continue-on-error: true
+        run: npm audit --omit=dev --audit-level=critical
+
+  secrets:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

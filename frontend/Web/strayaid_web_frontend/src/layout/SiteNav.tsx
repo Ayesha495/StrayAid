@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { LogoMark } from "../ui/Logo";
-import { SpotlightNavbar } from "@/components/ui/spotlight-navbar";
+import { SpotlightNavbar } from "@/components/vendor/spotlight-navbar";
 import "./SiteNav.css";
 
 const LINKS = [

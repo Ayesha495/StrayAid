@@ -7,13 +7,14 @@ export const colors = {
   primary: "#1E6B56", // Rescue Green: primary buttons, active nav, verified
   primaryDeep: "#12251D",
   secondary: "#35A982", // Emerald: progress, success, rescued
-  critical: "#F47C6C", // Urgent Coral: high/critical severity, destructive
+  critical: "#F47C6C", // Urgent Coral: high/critical severity fills and icons
+  criticalInk: "#B4483A", // Urgent Coral dark enough for text: errors, destructive labels
   warning: "#F4B860", // Amber: medium severity, pending
   info: "#4A90E2", // Blue: info, AI highlights, map pins
 
   // Text
   ink: "#243447", // Slate Navy: headings and primary text
-  inkMuted: "#747474", // supporting text
+  inkMuted: "#707070", // supporting text (4.5:1 on canvas and surface)
   onPrimary: "#FFFFFF",
 
   // Surfaces

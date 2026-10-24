@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { useCurrentUser } from "../services/authSevice";
+import { useCurrentUser } from "../services/authService";
 import { getOrganizationProfile } from "../services/platformService";
 import { getUnreadCounts } from "../services/notificationService";
 import { usePolling } from "../hooks/useApi";

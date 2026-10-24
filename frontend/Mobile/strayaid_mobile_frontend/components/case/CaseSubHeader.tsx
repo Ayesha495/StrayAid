@@ -50,6 +50,6 @@ const styles = StyleSheet.create({
   pressed: { backgroundColor: "#F1F5F9" },
   titleBlock: { flex: 1, alignItems: "center" },
   title: { fontFamily: fonts.displaySemiBold, fontSize: 14, lineHeight: 20, letterSpacing: -0.3, color: "#243447" },
-  subtitle: { fontFamily: fonts.bodyMedium, fontSize: 10, lineHeight: 14, color: "#747474" },
+  subtitle: { fontFamily: fonts.bodyMedium, fontSize: 10, lineHeight: 14, color: "#707070" },
   spacer: { width: 36, height: 36 },
 });

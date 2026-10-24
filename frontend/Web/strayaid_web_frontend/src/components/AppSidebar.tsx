@@ -4,10 +4,10 @@ import {
   LayoutDashboard, ClipboardList, PawPrint, Newspaper, LogOut, FileText, Wallet, MessageSquare,
   Building2, Heart, HandHeart, Settings, ArrowRight,
 } from "lucide-react";
-import { clearSession, useCurrentUser } from "../services/authSevice";
+import { clearSession, useCurrentUser } from "../services/authService";
 import { getOrganizationProfile } from "../services/platformService";
 import { LogoMark } from "../ui/Logo";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea } from "@/components/vendor/scroll-area";
 import MenuToggleIcon from "./MenuToggleIcon";
 
 type AppSidebarProps = {

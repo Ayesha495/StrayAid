@@ -422,7 +422,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   photoEmpty: { alignItems: "center", gap: 8, paddingBottom: 40 },
-  photoHint: { fontFamily: fonts.bodyMedium, fontSize: 13, color: "#9CA3AF" },
+  photoHint: { fontFamily: fonts.bodyMedium, fontSize: 13, color: "#6B7280" },
   photoShade: { position: "absolute", left: 0, right: 0, bottom: 0, height: 64 },
   photoPill: {
     position: "absolute",

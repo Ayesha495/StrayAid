@@ -18,8 +18,8 @@ Checked against the code on the `Ayesha` branch, including uncommitted work. Leg
 | Week 1: repo and security | 🟡 | emaan merged; `__pycache__` and SQLite are untracked and ignored. Mobile `.env` and the Google client files are still tracked; the secret hasn't been rotated; `settings.py` still has the hard-coded key. |
 | Week 1: deployment | ❌ | `docker-compose.yml` exists; no VM, Caddy, domain or end-to-end test yet. |
 | Week 1: design system | 🟡 | Mobile light tokens (`theme/tokens.ts`) plus `Button`, `Input` and `Toggle`. No dark tokens, no web tokens, no API contract doc. |
-| Backend features (1–11) | 🟡 | AI score, notifications inbox, case follows (with animal auto-follow), animal-update notifications, adoption, chat, sponsorship and community are mostly built. Role rename, status rules, preferences, block, delete account and story upload are missing. |
-| Mobile features | 🟡 | Most screens are built (Stitch redesign). Settings switches, dark mode and delete account are missing. |
+| Backend features (1–11) | 🟡 | AI score, notifications inbox, case follows (with animal auto-follow), animal-update notifications, adoption, chat, sponsorship and community are mostly built. Role rename, status rules, preferences, block and story upload are missing. Delete account is done (anonymises, 24 Oct). |
+| Mobile features | 🟡 | Most screens are built (Stitch redesign). Settings switches and dark mode are missing. Delete account is done (Profile → Delete account). |
 | Web features | 🟡 | Guest routes exist; the case map frames the pins and shows the org's service area (15 Oct). Other new feature screens aren't built (the notification bell is only an icon). |
 | Tests | 🟡 | 157 Django tests, all passing. 1 Jest test file, 1 Playwright smoke test. No CI workflow. |
 | Docs (SRS/SDS/report) | ❌ | Not updated in the repo. |
@@ -119,15 +119,15 @@ Every service, API and deployment must be free. Where a card is unavoidable, a s
 **Repo and security:**
 - [x] Merge `emaan` into `Ayesha` (done, c67edf2).
 - [ ] Remove from git and add to `.gitignore`:
-  - [ ] the mobile `.env` (ignored by the root `.gitignore`, but still tracked: needs `git rm --cached`)
-  - [ ] `client_secret_*.json` and `client_*.plist` (still tracked in `frontend/Mobile/strayaid_mobile_frontend/`)
+  - [x] the mobile `.env`
+  - [x] `client_secret_*.json` and `client_*.plist`
   - [x] 164 `__pycache__` files
   - [x] `test_db.sqlite3`
 - [ ] Rotate the Google OAuth client secret. The old one is in the git history.
-- [ ] Move `SECRET_KEY`, `DEBUG`, `ALLOWED_HOSTS`, CORS and the Google client IDs into env vars. *(Partly done: `settings_docker.py` reads all of them from env, and the Google client IDs and email settings are env vars. `settings.py` still hard-codes `SECRET_KEY`, `DEBUG = True`, `ALLOWED_HOSTS = ['*']`, CORS and the database password.)*
+- [x] Move `SECRET_KEY`, `DEBUG`, `ALLOWED_HOSTS`, CORS and the Google client IDs into env vars. *(Done 24 Oct: one env-driven `config/settings.py`; see docs/COMPLIANCE.md.)*
 
 **Deployment:**
-- [ ] Set up an Oracle Always Free VM running the `docker-compose.yml`. *(The compose file, `Dockerfile`, `settings_docker.py` and `.env.example` exist.)*
+- [ ] Set up an Oracle Always Free VM running the `docker-compose.yml`. *(The compose file, `Dockerfile` and `.env.example` exist; see docs/DEPLOYMENT.md.)*
 - [ ] Put Caddy in front for HTTPS on DuckDNS.
 - [ ] Serve `/media/` from the `media_data` volume. Gunicorn doesn't serve images with `DEBUG` off. *(The volume exists in compose; nothing serves it yet.)*
 - [ ] Add the domain to Google OAuth origins and set `VITE_API_URL`.
@@ -162,7 +162,7 @@ Every service, API and deployment must be free. Where a card is unavoidable, a s
 | 7 | Chat (case threads + DMs) | 🟡 `chat` app, polling | ❌ Org inbox | ✅ DM inbox and threads | 3 |
 | 8 | Sponsorship | 🟡 Inside the `animals` app (not a separate `sponsorship` app) | ❌ Confirm or reject receipts | ✅ Pledge, upload receipt, My sponsorships | 3 |
 | 9 | Instagram-style community | ✅ Avatars, likes, comments, 24h stories; ❌ story upload API | ❌ Likes, comments, story upload | ✅ Stories row, likes, comments | 3 |
-| 10 | Settings | ❌ Preference fields; delete account by anonymising | ❌ Settings page | 🟡 Settings screen | 3 |
+| 10 | Settings | ❌ Preference fields; ✅ delete account by anonymising | ✅ Settings page (incl. delete account) | 🟡 Settings screen; ✅ delete account | 3 |
 | 11 | Case map polish | — | 🟡 Restyle `RescueBoard.tsx` (reported cases as pins): pins auto-framed, service-area circle and empty-area hint done 15 Oct; restyle open | — | 4 |
 
 **Feature freeze: 25 Oct.** Week 4 is bug fixes, the redesign sweep, dark mode, tests, docs and a demo rehearsal.
@@ -304,7 +304,7 @@ Anything else returns 400.
   - ❌ dark mode (saved on the device)
   - ✅ about and help (mobile `legal/[doc].tsx`)
   - ✅ logout
-  - ❌ delete account
+  - ✅ delete account
 - ❌ **Deleting an account** deactivates the user and clears their name and email. Their cases and reports are kept.
 
 ---
@@ -324,7 +324,7 @@ Anything else returns 400.
 
 Every PR runs the Django and Jest tests on GitHub Actions. A failing PR is not merged. ❌ *No `.github/workflows` yet.*
 
-Run the Django tests with `python manage.py test --settings=StrayAid_backend.test_settings` (from `backend/StrayAid_backend`, using `backend/venv`).
+Run the Django tests with `python manage.py test --settings=config.test_settings` (from `backend/`, using `backend/venv`).
 
 ---
 
@@ -362,9 +362,9 @@ Run the Django tests with `python manage.py test --settings=StrayAid_backend.tes
 - demo **Nov 1** (assumed)
 
 **Still open, as of 15 Oct** (in suggested order):
-1. Backend: role rename, status rules, sponsorship-confirm follow, `notify_users` (skip actor, background batches, dead tokens, preferences), chat block and "who can message me", story upload, preferences and delete account.
+1. Backend: role rename, status rules, sponsorship-confirm follow, `notify_users` (skip actor, background batches, dead tokens, preferences), chat block and "who can message me", story upload and preferences.
 2. Web: every feature column in section 5 (bell, score badge, status buttons, adoption review, receipts, inbox, likes/comments/stories, settings, map).
-3. Mobile: settings switches, change password, dark mode, delete account.
+3. Mobile: settings switches, change password, dark mode.
 4. Week 1 leftovers: Firebase, Maps key, dev build, secrets cleanup, deployment.
 5. Tests (role tests, Jest, Playwright, CI), docs and demo script.
 

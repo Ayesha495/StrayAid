@@ -15,7 +15,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import Toggle from "../../components/ui/Toggle";
-import VoiceInputButton from "../../components/VoiceInputButton";
+import VoiceInputButton from "../../components/report/VoiceInputButton";
 import { SessionExpiredError } from "../../services/apiClient";
 import { isNetworkError, queueReport } from "../../services/offlineQueue";
 import { submitReport } from "../../services/mobileContentService";
@@ -29,7 +29,7 @@ import { appendFile } from "../../utils/formFile";
 const SEVERITIES: { value: Severity; label: string; color: string; text: string }[] = [
   { value: "low", label: "Low", color: colors.secondary, text: colors.onPrimary },
   { value: "medium", label: "Medium", color: colors.warning, text: "#4A3000" },
-  { value: "high", label: "High", color: "#E5534B", text: colors.onPrimary },
+  { value: "high", label: "High", color: "#B4483A", text: colors.onPrimary },
   { value: "critical", label: "Critical", color: "#B42318", text: colors.onPrimary },
 ];
 
@@ -399,7 +399,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 16,
     letterSpacing: -0.2,
-    color: "#94A3B8",
+    color: "#64748B",
     textAlign: "center",
   },
 });

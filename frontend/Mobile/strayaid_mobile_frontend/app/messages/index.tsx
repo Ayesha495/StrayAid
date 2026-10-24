@@ -268,8 +268,8 @@ export default function MessagesScreen() {
       )}
 
       <Modal visible={!!picker} transparent animationType="fade" onRequestClose={() => setPicker(null)}>
-        <Pressable style={styles.backdrop} onPress={() => setPicker(null)}>
-          <Pressable style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 16) + 8 }]} onPress={() => null}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Close" style={styles.backdrop} onPress={() => setPicker(null)}>
+          <Pressable accessible={false} style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 16) + 8 }]} onPress={() => null}>
             <View style={styles.handle} />
             <Text style={styles.sheetTitle}>New message</Text>
             <Text style={styles.sheetSub}>Choose a rescue organization to message.</Text>
@@ -488,7 +488,7 @@ const styles = StyleSheet.create({
   titleRow: { flexDirection: "row", alignItems: "center", gap: 6, flexShrink: 1 },
   rowTitle: { flexShrink: 1, fontFamily: fonts.displayBold, fontSize: 14, lineHeight: 20, color: "#0F172A" },
   rowTitleRead: { fontFamily: fonts.displaySemiBold },
-  time: { fontFamily: fonts.displayMedium, fontSize: 11, lineHeight: 16, color: "#94A3B8" },
+  time: { fontFamily: fonts.displayMedium, fontSize: 11, lineHeight: 16, color: "#64748B" },
   timeUnread: { fontFamily: fonts.displaySemiBold, color: colors.primary },
   tag: {
     alignSelf: "flex-start",

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
-import { useCurrentUser } from "../services/authSevice";
+import { useCurrentUser } from "../services/authService";
 import { MessagesPanel, NotificationsPanel } from "../layout/TopbarPanels";
 
 const BREADCRUMBS: Array<{ prefix: string; label: string }> = [

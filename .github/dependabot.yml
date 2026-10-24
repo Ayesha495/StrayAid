@@ -1,0 +1,27 @@
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: /backend
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 5
+    target-branch: Ayesha
+  - package-ecosystem: npm
+    directory: /frontend/Web/strayaid_web_frontend
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 5
+    target-branch: Ayesha
+  - package-ecosystem: npm
+    directory: /frontend/Mobile/strayaid_mobile_frontend
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 5
+    target-branch: Ayesha
+    # Expo pins its own package versions; upgrade those with `npx expo install --fix`.
+    ignore:
+      - dependency-name: "expo*"
+      - dependency-name: "react-native*"
+      - dependency-name: "react"
+      - dependency-name: "react-dom"
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: monthly }
+    target-branch: Ayesha

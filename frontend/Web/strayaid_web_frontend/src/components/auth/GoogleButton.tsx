@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { preloadGoogle } from "../../services/authSevice";
+import { preloadGoogle } from "../../services/authService";
 
 type GoogleButtonProps = {
   onClick: () => Promise<void>;

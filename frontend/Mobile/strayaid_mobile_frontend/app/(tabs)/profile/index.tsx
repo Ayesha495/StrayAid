@@ -222,6 +222,8 @@ export default function ProfileScreen() {
     Alert.alert("Settings", profile.email, [
       { text: "Edit profile", onPress: () => router.push("/profile/edit" as Href) },
       { text: "Notifications", onPress: () => router.push("/notifications" as Href) },
+      { text: "Policies & terms", onPress: () => router.push({ pathname: "/legal/[doc]", params: { doc: "terms" } }) },
+      { text: "Delete account", style: "destructive", onPress: () => router.push("/profile/delete-account" as Href) },
       { text: "Sign out", style: "destructive", onPress: signOut },
       { text: "Cancel", style: "cancel" },
     ]);
@@ -547,7 +549,20 @@ export default function ProfileScreen() {
             sub={`Signed in as ${profile.email}`}
             onPress={() => router.push({ pathname: "/legal/[doc]", params: { doc: "privacy" } })}
           />
+          <Row
+            icon="gavel"
+            title="Policies & Terms"
+            sub="Terms, cookies, donations and refunds"
+            onPress={() => router.push({ pathname: "/legal/[doc]", params: { doc: "terms" } })}
+          />
           <Row icon="logout" title="Sign out" sub="" danger onPress={signOut} />
+          <Row
+            icon="delete-forever"
+            title="Delete account"
+            sub="Remove your account and personal details"
+            danger
+            onPress={() => router.push("/profile/delete-account" as Href)}
+          />
         </View>
       </ScrollView>
     </SafeAreaView>

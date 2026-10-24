@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Compass } from "lucide-react";
 import { EmptyState } from "../ui/States";
-import { useCurrentUser, getDefaultAuthenticatedRoute } from "../services/authSevice";
+import { useCurrentUser, getDefaultAuthenticatedRoute } from "../services/authService";
 
 function NotFound() {
   const user = useCurrentUser();

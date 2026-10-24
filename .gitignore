@@ -26,10 +26,10 @@ staticfiles/
 *.sqlite3-journal
 
 # Uploaded / seeded media (the seed command recreates it from images/)
-backend/StrayAid_backend/media/
+backend/media/
 
 # Downloaded AI model (python manage.py download_ai_model)
-backend/StrayAid_backend/ai_models/
+backend/ai_models/
 
 # Node / build output
 node_modules/

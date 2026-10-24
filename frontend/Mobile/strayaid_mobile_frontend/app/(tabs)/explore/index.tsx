@@ -29,8 +29,8 @@ const FILTERS: { value: Filter; label: string; dot?: string }[] = [
 const SEVERITY_CHIP = {
   critical: { label: "Critical", color: "#B42318", background: "#FDECEC" },
   high: { label: "High", color: colors.critical, background: "#FDECE9" },
-  medium: { label: "Medium", color: "#B7791F", background: "#FEF6EC" },
-  low: { label: "Low", color: "#1E8A66", background: "#E8F7F2" },
+  medium: { label: "Medium", color: "#8A5A12", background: "#FEF6EC" },
+  low: { label: "Low", color: "#1A7558", background: "#E8F7F2" },
 };
 
 // Islamabad, until we know where the person is.
@@ -455,7 +455,7 @@ const styles = StyleSheet.create({
   chipDot: { width: 6, height: 6, borderRadius: 3 },
   chipText: { fontFamily: fonts.bodyBold, fontSize: 10.5, lineHeight: 15, letterSpacing: -0.2 },
   cardMeta: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 8 },
-  cardMetaText: { flex: 1, fontFamily: fonts.bodyMedium, fontSize: 11.5, color: "#767C86" },
+  cardMetaText: { flex: 1, fontFamily: fonts.bodyMedium, fontSize: 11.5, color: "#6B7079" },
   viewCase: {
     marginTop: 14,
     height: 44,

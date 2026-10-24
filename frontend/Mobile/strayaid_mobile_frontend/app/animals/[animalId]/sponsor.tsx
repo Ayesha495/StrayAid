@@ -408,8 +408,8 @@ export default function SponsorScreen() {
       </View>
 
       <Modal visible={sheet !== "closed"} transparent animationType="fade" onRequestClose={() => setSheet("closed")}>
-        <Pressable style={styles.backdrop} onPress={() => !sending && setSheet("closed")}>
-          <Pressable style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 16) + 8 }]} onPress={() => null}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Close" style={styles.backdrop} onPress={() => !sending && setSheet("closed")}>
+          <Pressable accessible={false} style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 16) + 8 }]} onPress={() => null}>
             <View style={styles.handle} />
             {sheet === "sent" ? (
               <View style={styles.sent}>
@@ -639,7 +639,7 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 1,
   },
-  amountTop: { fontFamily: fonts.bodyMedium, fontSize: 11, lineHeight: 16, color: "#94A3B8" },
+  amountTop: { fontFamily: fonts.bodyMedium, fontSize: 11, lineHeight: 16, color: "#64748B" },
   amountTopUpper: { textTransform: "uppercase", letterSpacing: 0.55 },
   amountTopOn: { fontFamily: fonts.bodySemiBold, color: "#D1FAE5" },
   amountValue: { marginTop: 2, fontFamily: fonts.bodyBold, fontSize: 12, lineHeight: 16, color: "#1E293B" },
@@ -656,7 +656,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
   },
-  customPrefix: { fontFamily: fonts.bodySemiBold, fontSize: 13, color: "#94A3B8" },
+  customPrefix: { fontFamily: fonts.bodySemiBold, fontSize: 13, color: "#64748B" },
   customInput: { flex: 1, height: "100%", fontFamily: fonts.bodyBold, fontSize: 15, color: "#111827" },
   supports: {
     marginTop: 14,
@@ -693,7 +693,7 @@ const styles = StyleSheet.create({
   monthly: { flexDirection: "row", alignItems: "center", gap: 4 },
   monthlyText: { fontFamily: fonts.bodyMedium, fontSize: 11, lineHeight: 16, color: colors.primary },
   monthlySwap: { marginLeft: 2, opacity: 0.7 },
-  needed: { flexShrink: 1, textAlign: "right", fontFamily: fonts.body, fontSize: 11, lineHeight: 16, color: "#94A3B8" },
+  needed: { flexShrink: 1, textAlign: "right", fontFamily: fonts.body, fontSize: 11, lineHeight: 16, color: "#64748B" },
   partnerWrap: { paddingHorizontal: 20, paddingTop: 4, paddingBottom: 16 },
   partner: {
     flexDirection: "row",
@@ -765,7 +765,7 @@ const styles = StyleSheet.create({
   sheetBody: { fontFamily: fonts.body, fontSize: 14, lineHeight: 21, color: "#4B5563" },
   bank: { padding: 14, gap: 8, borderRadius: 16, backgroundColor: "#F8FAF9", borderWidth: 1, borderColor: "#E8ECE9" },
   bankRow: { gap: 2 },
-  bankLabel: { fontFamily: fonts.bodySemiBold, fontSize: 11, letterSpacing: 0.4, textTransform: "uppercase", color: "#94A3B8" },
+  bankLabel: { fontFamily: fonts.bodySemiBold, fontSize: 11, letterSpacing: 0.4, textTransform: "uppercase", color: "#64748B" },
   bankValue: { fontFamily: fonts.bodySemiBold, fontSize: 15, color: "#111827" },
   bankNumber: { fontFamily: fonts.displayBold, fontSize: 17, letterSpacing: 1 },
   receipt: {

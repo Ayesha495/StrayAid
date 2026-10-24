@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Building2, Heart } from "lucide-react";
-import { authErrorMessage, login, register, signInWithGoogle, syncCurrentUser } from "../services/authSevice";
+import { authErrorMessage, login, register, signInWithGoogle, syncCurrentUser } from "../services/authService";
 import AuthLayout from "../components/auth/AuthLayout";
 import GoogleButton from "../components/auth/GoogleButton";
 import PasswordInput from "../components/auth/PasswordInput";

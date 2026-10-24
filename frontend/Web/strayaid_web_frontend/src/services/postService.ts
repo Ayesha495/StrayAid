@@ -1,5 +1,5 @@
 import API, { PublicAPI } from "../api/axios";
-import { getStoredUser } from "./authSevice";
+import { getStoredUser } from "./authService";
 import { normalizePost } from "../utils/media";
 import type { Post } from "../types/platform";
 import type { PostComment, Story, StoryGroup } from "../types/api";

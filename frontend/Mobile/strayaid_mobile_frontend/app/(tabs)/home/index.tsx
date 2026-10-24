@@ -8,7 +8,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { HomeHeader, HomeSearchBar, ReportAnimalButton } from "../../../components/home/HomeTop";
 import PostCard from "../../../components/home/PostCard";
 import StoriesRow from "../../../components/home/StoriesRow";
-import { usePostActions } from "../../../components/home/usePostActions";
+import { usePostActions } from "../../../hooks/usePostActions";
 import { useSession } from "../../../hooks/useSession";
 import { FeedPost, getHomeFeed, getStoryGroups, StoryGroup } from "../../../services/homeService";
 import { getUnreadCounts, UnreadCounts } from "../../../services/inboxService";

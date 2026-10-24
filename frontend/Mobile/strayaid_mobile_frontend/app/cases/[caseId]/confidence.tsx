@@ -24,13 +24,13 @@ const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 const TIERS = [
   { min: 70, label: "High confidence", color: colors.secondary, ring: colors.primary },
-  { min: 40, label: "Medium confidence", color: "#C98A2E", ring: colors.warning },
+  { min: 40, label: "Medium confidence", color: "#8A5A12", ring: colors.warning },
   { min: 0, label: "Low confidence", color: colors.critical, ring: colors.critical },
 ];
 
 const SEVERITY: Record<Severity, { label: string; color: string; background: string; border: string }> = {
-  low: { label: "Low Severity", color: "#1E8A66", background: "#E8F7F2", border: "rgba(53,169,130,0.25)" },
-  medium: { label: "Medium Severity", color: "#B7791F", background: "#FEF7ED", border: "rgba(244,184,96,0.3)" },
+  low: { label: "Low Severity", color: "#1A7558", background: "#E8F7F2", border: "rgba(53,169,130,0.25)" },
+  medium: { label: "Medium Severity", color: "#8A5A12", background: "#FEF7ED", border: "rgba(244,184,96,0.3)" },
   high: { label: "High Severity", color: "#DC2626", background: "#FEF1F0", border: "rgba(244,124,108,0.2)" },
   critical: { label: "Critical Severity", color: "#B42318", background: "#FDECEC", border: "rgba(180,35,24,0.25)" },
 };
@@ -267,7 +267,7 @@ export default function ConfidenceScreen() {
             ) : (
               <View style={[styles.gauge, styles.unscored]}>
                 <Text style={styles.score}>—</Text>
-                <Text style={[styles.tierText, { color: "#94A3B8" }]}>Not scored yet</Text>
+                <Text style={[styles.tierText, { color: "#64748B" }]}>Not scored yet</Text>
               </View>
             )}
             <Text style={styles.disclaimer}>
@@ -524,7 +524,7 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     letterSpacing: 0.6,
     textTransform: "uppercase",
-    color: "#94A3B8",
+    color: "#64748B",
   },
   model: { flexShrink: 1, fontFamily: fonts.bodySemiBold, fontSize: 11, color: colors.primary, textAlign: "right" },
   factor: { gap: 6 },
@@ -547,7 +547,7 @@ const styles = StyleSheet.create({
   feedbackPressed: { opacity: 0.7 },
   feedbackText: { fontFamily: fonts.bodyMedium, fontSize: 12, color: "#64748B" },
   feedbackDone: { flexDirection: "row", alignItems: "center", gap: 6 },
-  feedbackDoneText: { fontFamily: fonts.bodyMedium, fontSize: 12, color: "#1E8A66" },
+  feedbackDoneText: { fontFamily: fonts.bodyMedium, fontSize: 12, color: "#1A7558" },
   footer: {
     paddingHorizontal: 16,
     paddingTop: 16,

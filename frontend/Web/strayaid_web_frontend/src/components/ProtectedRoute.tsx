@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
-import { clearSession, syncCurrentUser, useCurrentUser } from "../services/authSevice";
+import { clearSession, syncCurrentUser, useCurrentUser } from "../services/authService";
 import { Spinner } from "../ui/States";
 
 export function FullPageLoading({ label }: { label: string }) {

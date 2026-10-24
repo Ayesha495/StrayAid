@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { authErrorMessage, login, resolvePostLoginRoute, signInWithGoogle, syncCurrentUser } from "../services/authSevice";
+import { authErrorMessage, login, resolvePostLoginRoute, signInWithGoogle, syncCurrentUser } from "../services/authService";
 import AuthLayout from "../components/auth/AuthLayout";
 import GoogleButton from "../components/auth/GoogleButton";
 import PasswordInput from "../components/auth/PasswordInput";
