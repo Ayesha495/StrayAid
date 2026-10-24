@@ -97,7 +97,10 @@ class PostViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["get"], permission_classes=[AllowAny], url_path="public-feed")
     def public_feed(self, request):
-        serializer = self.get_serializer(self.get_queryset(), many=True)
+        # Once an animal is adopted it has left the team's care: its posts stay on its own
+        # profile (by-animal) as a record, but no longer appear in the community feed.
+        queryset = self.get_queryset().exclude(animal__status=Animal.STATUS_ADOPTED)
+        serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
     @action(detail=False, methods=["get"], permission_classes=[AllowAny], url_path="by-animal")

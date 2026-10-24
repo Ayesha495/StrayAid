@@ -124,6 +124,18 @@ class PostApiTests(MediaEnabledAPITestCase):
         self.assertEqual(response.data[0]["animal"]["donation_info"]["account_name"], "Safe Paws Rescue")
         self.assertEqual(response.data[0]["animal"]["donation_info"]["account_number"], "1234567890")
 
+    def test_public_feed_leaves_out_adopted_animals_but_their_profile_keeps_the_posts(self):
+        post = Post.objects.create(animal=self.animal, organization=self.organization, title="Going home", content="Adopted!")
+        self.animal.status = Animal.STATUS_ADOPTED
+        self.animal.save(update_fields=["status"])
+
+        feed = self.client.get("/api/posts/public-feed/")
+        record = self.client.get(f"/api/posts/by-animal/?animal_id={self.animal.id}")
+
+        self.assertEqual(feed.status_code, status.HTTP_200_OK)
+        self.assertNotIn(post.id, [item["id"] for item in feed.data])
+        self.assertIn(post.id, [item["id"] for item in record.data])
+
     def test_by_animal_returns_empty_list_for_unknown_animal(self):
         Post.objects.create(
             animal=self.animal,
