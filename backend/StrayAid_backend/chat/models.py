@@ -2,6 +2,8 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
+from core.uploads import UniqueUploadPath, validate_image_size
+
 
 class Conversation(models.Model):
     """A chat between a member of the public and a rescue organization (Stitch 18 and 19).
@@ -51,7 +53,7 @@ class Message(models.Model):
     conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name="messages")
     sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="chat_messages")
     body = models.TextField(max_length=2000, blank=True)
-    image = models.ImageField(upload_to="chat/", null=True, blank=True)
+    image = models.ImageField(upload_to=UniqueUploadPath("chat"), validators=[validate_image_size], null=True, blank=True)
     created_at = models.DateTimeField(default=timezone.now)
 
     class Meta:

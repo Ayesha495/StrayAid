@@ -2,9 +2,10 @@ import re
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.test import APITestCase
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from organizations.models import Organization
+from rescue.tests import MediaEnabledAPITestCase
 
 
 User = get_user_model()
@@ -262,6 +263,7 @@ class SignUpTests(APITestCase):
                 "email": "Hira@Example.com",
                 "password": "Rescue!Pass2026",
                 "re_password": "Rescue!Pass2026",
+                "accept_terms": True,
                 "avatar": self._png(),
             },
             format="multipart",
@@ -280,7 +282,7 @@ class SignUpTests(APITestCase):
 
         response = self.client.post(
             "/auth/users/",
-            {"full_name": "Hira", "email": "hira@example.com", "password": "Rescue!Pass2026", "re_password": "Rescue!Pass2026"},
+            {"full_name": "Hira", "email": "hira@example.com", "password": "Rescue!Pass2026", "re_password": "Rescue!Pass2026", "accept_terms": True},
             format="json",
         )
 
@@ -290,7 +292,7 @@ class SignUpTests(APITestCase):
     def test_web_sign_up_with_username_still_works(self):
         response = self.client.post(
             "/auth/users/",
-            {"username": "webuser", "email": "web@example.com", "password": "Rescue!Pass2026", "re_password": "Rescue!Pass2026"},
+            {"username": "webuser", "email": "web@example.com", "password": "Rescue!Pass2026", "re_password": "Rescue!Pass2026", "accept_terms": True},
             format="json",
         )
 
@@ -302,7 +304,7 @@ class SignUpTests(APITestCase):
 
         response = self.client.post(
             "/auth/users/",
-            {"full_name": "Hira", "email": "HIRA@example.com", "password": "Rescue!Pass2026", "re_password": "Rescue!Pass2026"},
+            {"full_name": "Hira", "email": "HIRA@example.com", "password": "Rescue!Pass2026", "re_password": "Rescue!Pass2026", "accept_terms": True},
             format="json",
         )
 
@@ -312,12 +314,12 @@ class SignUpTests(APITestCase):
     def test_mismatched_and_weak_passwords_are_rejected(self):
         mismatch = self.client.post(
             "/auth/users/",
-            {"full_name": "Hira", "email": "a@example.com", "password": "Rescue!Pass2026", "re_password": "Other!Pass2026"},
+            {"full_name": "Hira", "email": "a@example.com", "password": "Rescue!Pass2026", "re_password": "Other!Pass2026", "accept_terms": True},
             format="json",
         )
         weak = self.client.post(
             "/auth/users/",
-            {"full_name": "Hira", "email": "b@example.com", "password": "12345678", "re_password": "12345678"},
+            {"full_name": "Hira", "email": "b@example.com", "password": "12345678", "re_password": "12345678", "accept_terms": True},
             format="json",
         )
 
@@ -420,3 +422,242 @@ class ProfileAndActivityTests(APITestCase):
         self.assertIn(near.id, alerted)
         self.assertNotIn(far.id, alerted)
         self.assertNotIn(self.user.id, alerted)
+
+
+class TermsConsentTests(APITestCase):
+    SIGN_UP = {"full_name": "Hira", "email": "hira@example.com", "password": "Rescue!Pass2026", "re_password": "Rescue!Pass2026"}
+
+    def test_sign_up_needs_the_terms_to_be_accepted(self):
+        for answer in (None, False, "false"):
+            data = dict(self.SIGN_UP) if answer is None else {**self.SIGN_UP, "accept_terms": answer}
+            response = self.client.post("/auth/users/", data, format="json")
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+            self.assertIn("accept_terms", response.data)
+        self.assertFalse(User.objects.filter(email="hira@example.com").exists())
+
+    def test_the_time_of_acceptance_is_recorded(self):
+        from django.utils import timezone
+
+        before = timezone.now()
+        response = self.client.post("/auth/users/", {**self.SIGN_UP, "accept_terms": True}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+        accepted_at = User.objects.get(email="hira@example.com").accepted_terms_at
+        self.assertIsNotNone(accepted_at)
+        self.assertGreaterEqual(accepted_at, before)
+
+    def test_sign_up_reply_does_not_leak_the_password(self):
+        response = self.client.post("/auth/users/", {**self.SIGN_UP, "accept_terms": True}, format="json")
+        self.assertNotIn("password", response.data)
+        self.assertNotIn("re_password", response.data)
+        self.assertNotIn("accept_terms", response.data)
+
+    @patch("accounts.views._verify_google_id_token")
+    def test_new_google_accounts_record_acceptance(self, mock_verify):
+        mock_verify.return_value = {"email": "g@example.com", "email_verified": True}
+        self.client.post("/auth/google/", {"id_token": "t", "accept_terms": True}, format="json")
+        self.assertIsNotNone(User.objects.get(email="g@example.com").accepted_terms_at)
+
+
+class GoogleAccessTokenTests(APITestCase):
+    """Mobile signs in with a Google access token. The token must have been issued to one
+    of StrayAid's own client apps, or a token from any other app could be replayed here."""
+
+    def _google_replies(self, token_info, user_info=None):
+        def fake_get(url, **kwargs):
+            response = MagicMock()
+            response.raise_for_status.return_value = None
+            response.json.return_value = token_info if "tokeninfo" in url else (user_info or {})
+            return response
+
+        return patch("accounts.views.requests.get", side_effect=fake_get)
+
+    def test_token_for_our_app_signs_in(self):
+        from django.conf import settings
+
+        token_info = {"aud": settings.GOOGLE_OAUTH_CLIENT_IDS[0], "email": "m@example.com", "email_verified": "true"}
+        with self._google_replies(token_info, {"email": "m@example.com", "given_name": "Mona", "family_name": "Ali"}):
+            response = self.client.post("/auth/google/", {"access_token": "ya29.token"}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual((response.data["user"]["first_name"], response.data["user"]["last_name"]), ("Mona", "Ali"))
+
+    def test_token_issued_to_another_app_is_refused(self):
+        token_info = {"aud": "another-app.apps.googleusercontent.com", "email": "m@example.com", "email_verified": "true"}
+        with self._google_replies(token_info):
+            response = self.client.post("/auth/google/", {"access_token": "ya29.token"}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(User.objects.filter(email="m@example.com").exists())
+
+    def test_unverified_email_in_token_info_is_refused(self):
+        from django.conf import settings
+
+        token_info = {"aud": settings.GOOGLE_OAUTH_CLIENT_IDS[0], "email": "m@example.com", "email_verified": "false"}
+        with self._google_replies(token_info):
+            response = self.client.post("/auth/google/", {"access_token": "ya29.token"}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_google_being_unreachable_is_a_clean_error(self):
+        with patch("accounts.views.requests.get", side_effect=OSError("offline")):
+            response = self.client.post("/auth/google/", {"access_token": "ya29.token"}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data["detail"], "Google token verification failed.")
+
+    @patch("accounts.views.google_id_token.verify_oauth2_token")
+    def test_id_token_for_another_app_is_refused(self, mock_verify):
+        mock_verify.return_value = {"aud": "another-app", "email": "x@example.com", "email_verified": True}
+        response = self.client.post("/auth/google/", {"id_token": "t"}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @patch("accounts.views._verify_google_id_token")
+    def test_returning_google_user_gets_names_refreshed(self, mock_verify):
+        User.objects.create_user(email="g@example.com", username="g", password="x", first_name="Old")
+        mock_verify.return_value = {"email": "G@example.com", "email_verified": True, "given_name": "New", "family_name": "Name"}
+        response = self.client.post("/auth/google/", {"id_token": "t"}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(User.objects.filter(email__iexact="g@example.com").count(), 1)
+        self.assertEqual(User.objects.get(email="g@example.com").first_name, "New")
+
+    @patch("accounts.views._verify_google_id_token")
+    def test_deactivated_accounts_cannot_sign_in_through_google(self, mock_verify):
+        User.objects.create_user(email="g@example.com", username="g", password="x", is_active=False)
+        mock_verify.return_value = {"email": "g@example.com", "email_verified": True}
+        response = self.client.post("/auth/google/", {"id_token": "t"}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class LoginBackendTests(APITestCase):
+    def test_username_that_looks_like_another_email_does_not_crash(self):
+        User.objects.create_user(email="a@example.com", username="a", password="Pass!2026a")
+        User.objects.create_user(email="b@example.com", username="a@example.com", password="Pass!2026b")
+        response = self.client.post("/auth/jwt/create/", {"email": "a@example.com", "password": "Pass!2026a"}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_backend_accepts_email_or_username_in_any_case(self):
+        from django.contrib.auth import authenticate
+
+        user = User.objects.create_user(email="a@example.com", username="Asma", password="Pass!2026a")
+        self.assertEqual(authenticate(username="A@Example.com", password="Pass!2026a"), user)
+        self.assertEqual(authenticate(username="asma", password="Pass!2026a"), user)
+        self.assertIsNone(authenticate(username="asma", password="wrong"))
+        self.assertIsNone(authenticate(username=None, password="Pass!2026a"))
+        self.assertIsNone(authenticate(username="nobody", password="Pass!2026a"))
+
+    def test_inactive_accounts_cannot_sign_in(self):
+        User.objects.create_user(email="a@example.com", username="a", password="Pass!2026a", is_active=False)
+        response = self.client.post("/auth/jwt/create/", {"email": "a@example.com", "password": "Pass!2026a"}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_empty_login_is_refused(self):
+        response = self.client.post("/auth/jwt/create/", {"email": "  ", "password": "x"}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertNotIn("access", response.data)
+
+
+class DeleteAccountTests(MediaEnabledAPITestCase):
+    """Settings, Delete account: personal details go, the rescue history stays."""
+
+    def setUp(self):
+        super().setUp()
+        from animals.models import AdoptionApplication, Animal, Sponsorship
+        from notifications.models import AnimalFollow, PushToken
+        from posts.models import Post, PostComment
+        from rescue.models import Case, Report
+
+        org_user = User.objects.create_user(email="o@example.com", username="o", password="x", role="organization")
+        self.organization = Organization.objects.create(user=org_user, name="Paws & Care Rescue")
+        self.user = User.objects.create_user(
+            email="sara@example.com", username="sara", password="Pass!2026s", first_name="Sara", last_name="Khan",
+            phone="03001234567", area="G-11", radius_alerts=True, alert_latitude=33.7, alert_longitude=73.0,
+        )
+        self.case = Case.objects.create(description="Dog", latitude=33.7, longitude=73.0, reported_by=self.user)
+        Report.objects.create(case=self.case, user=self.user, image="reports/x.jpg", description="d", latitude=33.7, longitude=73.0)
+        animal = Animal.objects.create(case=self.case, organization=self.organization, name="Luna")
+        self.application = AdoptionApplication.objects.create(
+            animal=animal, applicant=self.user, full_name="Sara Khan", phone="03001234567", home_type="house", city="Islamabad",
+        )
+        Sponsorship.objects.create(animal=animal, sponsor=self.user, amount_pkr=1000, status="confirmed")
+        post = Post.objects.create(animal=animal, organization=self.organization, title="Luna", content="Safe")
+        PostComment.objects.create(post=post, user=self.user, body="Get well soon")
+        AnimalFollow.objects.get_or_create(user=self.user, animal=animal)
+        PushToken.objects.create(user=self.user, token="ExponentPushToken[abc]")
+        self.client.force_authenticate(user=self.user)
+
+    def _delete(self, **data):
+        return self.client.delete("/auth/me/", {"confirm": "DELETE", **data}, format="json")
+
+    def test_needs_the_confirmation_word(self):
+        response = self.client.delete("/auth/me/", {"confirm": "yes", "password": "Pass!2026s"}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.is_active)
+
+    def test_wrong_password_is_refused(self):
+        response = self._delete(password="wrong")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.is_active)
+
+    def test_personal_details_are_removed(self):
+        response = self._delete(password="Pass!2026s")
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.user.refresh_from_db()
+        self.assertFalse(self.user.is_active)
+        self.assertFalse(self.user.has_usable_password())
+        self.assertNotIn("sara", self.user.email.lower())
+        self.assertNotIn("sara", self.user.username.lower())
+        self.assertEqual((self.user.first_name, self.user.last_name), ("Deleted", "user"))
+        self.assertEqual((self.user.phone, self.user.area), ("", ""))
+        self.assertFalse(self.user.radius_alerts)
+        self.assertIsNone(self.user.alert_latitude)
+
+    def test_rescue_history_is_kept_without_the_name(self):
+        from animals.models import Sponsorship
+        from rescue.models import Report
+
+        self._delete(password="Pass!2026s")
+        self.assertEqual(Report.objects.filter(case=self.case).count(), 1)
+        self.assertEqual(Sponsorship.objects.count(), 1)
+        self.application.refresh_from_db()
+        self.assertEqual(self.application.status, "withdrawn")
+        self.assertEqual((self.application.full_name, self.application.phone, self.application.city), ("Deleted user", "", ""))
+
+    def test_follows_and_push_tokens_are_cleared(self):
+        from notifications.models import AnimalFollow, PushToken
+
+        self._delete(password="Pass!2026s")
+        self.assertFalse(PushToken.objects.filter(user=self.user).exists())
+        self.assertFalse(AnimalFollow.objects.filter(user=self.user).exists())
+
+    def test_the_account_can_no_longer_sign_in(self):
+        self._delete(password="Pass!2026s")
+        self.client.force_authenticate(user=None)
+        response = self.client.post("/auth/jwt/create/", {"email": "sara@example.com", "password": "Pass!2026s"}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_the_email_can_be_used_for_a_new_account(self):
+        self._delete(password="Pass!2026s")
+        self.client.force_authenticate(user=None)
+        response = self.client.post(
+            "/auth/users/",
+            {"full_name": "Sara", "email": "sara@example.com", "password": "Rescue!Pass2026", "re_password": "Rescue!Pass2026", "accept_terms": True},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+
+    def test_google_accounts_can_delete_with_the_confirmation_word_alone(self):
+        self.user.set_unusable_password()
+        self.user.save()
+        self.assertEqual(self._delete().status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_password_accounts_must_give_their_password(self):
+        self.assertEqual(self._delete().status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_organization_accounts_are_hidden_from_the_public(self):
+        self.client.force_authenticate(user=self.organization.user)
+        response = self.client.delete("/auth/me/", {"confirm": "DELETE", "password": "x"}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.organization.refresh_from_db()
+        self.assertFalse(self.organization.is_available)
+
+    def test_needs_an_account(self):
+        self.client.force_authenticate(user=None)
+        self.assertEqual(self._delete().status_code, status.HTTP_401_UNAUTHORIZED)

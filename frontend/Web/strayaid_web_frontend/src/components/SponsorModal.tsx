@@ -29,10 +29,9 @@ function SponsorModal({ isOpen, onClose, title, donationInfo }: SponsorModalProp
   }
 
   return (
-    <div className="modal-backdrop" onClick={onClose} role="presentation">
+    <div className="modal-backdrop" role="presentation" onClick={(event) => event.target === event.currentTarget && onClose()}>
       <div
         className="modal-card"
-        onClick={(event) => event.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-labelledby="donation-modal-title"

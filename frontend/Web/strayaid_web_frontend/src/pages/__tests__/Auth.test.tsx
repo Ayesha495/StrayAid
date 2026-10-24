@@ -58,7 +58,7 @@ describe("Continue with Google", () => {
     renderAt(<Login />, "/login");
     fireEvent.click(screen.getByRole("button", { name: /Continue with Google/ }));
     expect(await screen.findByText("Feed page")).toBeInTheDocument();
-    expect(api.post).toHaveBeenCalledWith("/auth/google/", { access_token: "google-token" });
+    expect(api.post).toHaveBeenCalledWith("/auth/google/", { access_token: "google-token", accept_terms: true });
     expect(JSON.parse(localStorage.getItem("currentUser") ?? "{}").email).toBe("new@x.pk");
   });
 
@@ -75,6 +75,7 @@ describe("Continue with Google", () => {
     api.post.mockResolvedValue({ data: { access: "a", refresh: "r", user: PERSON } });
     renderAt(<Register />, "/register", "/register?as=organization");
     expect(screen.getByRole("radio", { name: /A rescue team/ })).toBeChecked();
+    fireEvent.click(screen.getByRole("checkbox", { name: /I agree/ }));
     fireEvent.click(screen.getByRole("button", { name: /Sign up with Google/ }));
     expect(await screen.findByText("Team details page")).toBeInTheDocument();
     expect(localStorage.getItem("access")).toBe("a");
@@ -129,5 +130,54 @@ describe("Meet the animals", () => {
     fireEvent.click(screen.getByRole("button", { name: "Cats" }));
     await waitFor(() => expect(screen.getByText("No animals match")).toBeInTheDocument());
     expect(within(screen.getByRole("group", { name: "What they need" })).getByRole("button", { name: /Looking for a home/ })).toHaveTextContent("1");
+  });
+});
+
+describe("Sign up consent", () => {
+  const fillIn = () => {
+    fireEvent.change(screen.getByLabelText("Username"), { target: { value: "newbie" } });
+    fireEvent.change(screen.getByLabelText("Email"), { target: { value: "new@x.pk" } });
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "Rescue!Pass2026" } });
+    fireEvent.change(screen.getByLabelText("Confirm password"), { target: { value: "Rescue!Pass2026" } });
+  };
+
+  it("can't create an account until the terms are accepted", async () => {
+    renderAt(<Register />, "/register");
+    fillIn();
+    fireEvent.click(screen.getByRole("button", { name: "Create account" }));
+    expect(await screen.findByText(/Accept the Terms of Service and Privacy Policy/)).toBeInTheDocument();
+    expect(api.post).not.toHaveBeenCalled();
+  });
+
+  it("sends the acceptance with the sign-up", async () => {
+    api.post
+      .mockResolvedValueOnce({ data: {} })
+      .mockResolvedValueOnce({ data: { access: "a", refresh: "r" } });
+    api.get.mockResolvedValue({ data: PERSON });
+    renderAt(<Register />, "/register");
+    fillIn();
+    fireEvent.click(screen.getByRole("checkbox", { name: /I agree to the Terms of Service and Privacy Policy/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Create account" }));
+    expect(await screen.findByText("Feed page")).toBeInTheDocument();
+    expect(api.post).toHaveBeenNthCalledWith(1, "/auth/users/", expect.objectContaining({ email: "new@x.pk", accept_terms: true }));
+  });
+
+  it("links the terms and privacy policy from the checkbox, opening in a new tab", () => {
+    renderAt(<Register />, "/register");
+    expect(screen.getByRole("link", { name: "Terms of Service" })).toHaveAttribute("href", "/legal/terms");
+    expect(screen.getByRole("link", { name: "Privacy Policy" })).toHaveAttribute("href", "/legal/privacy");
+    expect(screen.getByRole("link", { name: "Terms of Service" })).toHaveAttribute("target", "_blank");
+  });
+
+  it("tells people that continuing with Google means accepting the terms", () => {
+    renderAt(<Login />, "/login");
+    expect(screen.getByText(/By continuing with Google, you agree to/)).toBeInTheDocument();
+  });
+
+  it("puts the form fields in a sensible keyboard order with labels", () => {
+    renderAt(<Register />, "/register");
+    const fields = ["Username", "Email", "Password", "Confirm password"].map((label) => screen.getByLabelText(label));
+    fields.forEach((field) => expect(field).not.toHaveAttribute("tabindex", "-1"));
+    expect(screen.getByRole("checkbox", { name: /I agree/ })).toBeRequired();
   });
 });

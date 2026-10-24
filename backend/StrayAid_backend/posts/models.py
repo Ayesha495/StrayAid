@@ -4,6 +4,8 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
+from core.uploads import UniqueUploadPath, validate_image_size
+
 STORY_LIFETIME = timedelta(hours=24)
 
 
@@ -34,7 +36,7 @@ class Post(models.Model):
     )
     title = models.CharField(max_length=255)
     content = models.TextField()
-    image = models.ImageField(upload_to="posts/", null=True, blank=True)
+    image = models.ImageField(upload_to=UniqueUploadPath("posts"), validators=[validate_image_size], null=True, blank=True)
     # How many times people shared it from the app ("14 shares", Stitch 22).
     share_count = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -119,7 +121,7 @@ class Story(models.Model):
         related_name="stories",
     )
     category = models.CharField(max_length=30, choices=CATEGORY_CHOICES)
-    image = models.ImageField(upload_to="stories/")
+    image = models.ImageField(upload_to=UniqueUploadPath("stories"), validators=[validate_image_size])
     # The story viewer (Stitch 21) shows a headline over the caption, and the animal's
     # sponsorship progress when the story is about one animal.
     headline = models.CharField(max_length=160, blank=True)

@@ -1,5 +1,6 @@
 import { Circle, CircleMarker, MapContainer } from "react-leaflet";
-import { MapTiles, areaPathOptions, basePathOptions } from "./map/mapLook";
+import MapTiles from "./map/MapTiles";
+import { areaPathOptions, basePathOptions } from "./map/mapStyle";
 
 /** Where an organization is based and how far it travels for rescues. */
 function ServiceAreaMap({ latitude, longitude, radiusKm, label }: { latitude: number; longitude: number; radiusKm?: number; label: string }) {

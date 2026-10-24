@@ -20,3 +20,8 @@ export const updateMyProfile = async (data: FormData) => (await API.patch<MyProf
 export const changePassword = async (current_password: string, new_password: string) => {
   await API.post("/auth/users/set_password/", { current_password, new_password });
 };
+
+/** Delete the signed-in account (Settings → Delete account). Google-only accounts send no password. */
+export const deleteAccount = async (password: string) => {
+  await API.delete("/auth/me/", { data: { confirm: "DELETE", password } });
+};

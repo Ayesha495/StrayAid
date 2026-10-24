@@ -38,7 +38,7 @@
   overflow: hidden;
   border-radius: 10px;
   background: #eef1f5;
-  color: #8590a0;
+  color: var(--color-ink-subtle);
 }
 
 .wf-thumb img { width: 100%; height: 100%; object-fit: cover; }
@@ -53,9 +53,9 @@
   white-space: nowrap;
 }
 
-.wf-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; color: #8590a0; font-size: 12px; }
+.wf-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; color: var(--color-ink-subtle); font-size: 12px; }
 .wf-money { color: var(--amber-800); font-weight: 600; }
-.wf-chevron { flex-shrink: 0; color: #a0a8b4; }
+.wf-chevron { flex-shrink: 0; color: var(--color-ink-subtle); }
 
 .wf-status {
   padding: 2px 8px;

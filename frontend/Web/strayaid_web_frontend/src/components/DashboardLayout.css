@@ -268,7 +268,7 @@
 }
 
 .dashboard-breadcrumb-brand { color: var(--navy-500); font-weight: 400; }
-.dashboard-breadcrumb-sep { color: var(--navy-300); }
+.dashboard-breadcrumb-sep { color: var(--color-ink-subtle); }
 .dashboard-breadcrumb-current { overflow: hidden; color: var(--navy-900); font-weight: 500; text-overflow: ellipsis; }
 
 .dashboard-search {

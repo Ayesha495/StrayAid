@@ -4,7 +4,8 @@ import { Circle, CircleMarker, MapContainer, Marker, Popup, useMap } from "react
 import L from "leaflet";
 import type { Case, Organization } from "../types/platform";
 import ScoreBadge from "../ui/ScoreBadge";
-import { MapTiles, areaPathOptions, basePathOptions, casePin } from "./map/mapLook";
+import MapTiles from "./map/MapTiles";
+import { areaPathOptions, basePathOptions, casePin } from "./map/mapStyle";
 
 const DEFAULT_CENTER: [number, number] = [30.3753, 69.3451];
 

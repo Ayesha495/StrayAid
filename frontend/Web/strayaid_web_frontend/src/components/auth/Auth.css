@@ -259,3 +259,9 @@
 .auth-head p { font-size: 14px; }
 .auth-steps span { height: 3px; background: var(--navy-100); box-shadow: none; }
 .auth-role { border-radius: 8px; }
+
+/* Terms notice and checkbox: links stay underlined so they read as links without colour. */
+.auth-terms { margin-bottom: 16px; align-items: flex-start; line-height: 1.5; }
+.auth-terms a,
+.auth-legal a { color: var(--green-800); text-decoration: underline; text-underline-offset: 2px; }
+.auth-legal { margin: 10px 0 0; color: var(--color-ink-muted); font-size: 13px; line-height: 1.5; text-align: center; }

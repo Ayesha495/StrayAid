@@ -48,12 +48,13 @@ function AdoptForm({ animalId, animalName, defaultName = "", onClose, onDone }: 
   const [form, setForm] = useState<AdoptionForm>({ ...EMPTY, full_name: defaultName });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sharesDetails, setSharesDetails] = useState(false);
   const set = <K extends keyof AdoptionForm>(key: K, value: AdoptionForm[K]) => setForm((current) => ({ ...current, [key]: value }));
 
   const stepValid = [
     form.full_name.trim().length >= 3 && form.phone.trim().length >= 10,
     Boolean(form.city.trim() && form.household_size !== "" && form.hours_alone !== "" && form.experience),
-    Boolean(form.reason.trim() && form.agrees_home_visit && form.agrees_return_policy),
+    Boolean(form.reason.trim() && form.agrees_home_visit && form.agrees_return_policy && sharesDetails),
   ];
 
   const submit = async () => {
@@ -98,6 +99,7 @@ function AdoptForm({ animalId, animalName, defaultName = "", onClose, onDone }: 
 
       {step === 0 ? (
         <div className="form-grid">
+          <p className="span-2 small muted">Only the rescue team caring for {animalName} sees your answers.</p>
           <label className="field span-2">
             <span className="field-label">Full name</span>
             <input className="input" value={form.full_name} onChange={(event) => set("full_name", event.target.value)} autoComplete="name" />
@@ -173,6 +175,10 @@ function AdoptForm({ animalId, animalName, defaultName = "", onClose, onDone }: 
           <label className="check">
             <input type="checkbox" checked={form.agrees_return_policy} onChange={(event) => set("agrees_return_policy", event.target.checked)} />
             If it doesn't work out, I'll return {animalName} to the rescue team.
+          </label>
+          <label className="check">
+            <input type="checkbox" checked={sharesDetails} onChange={(event) => setSharesDetails(event.target.checked)} />
+            I agree to share these answers with the rescue team caring for {animalName}, so they can assess my application and contact me.
           </label>
         </div>
       ) : null}

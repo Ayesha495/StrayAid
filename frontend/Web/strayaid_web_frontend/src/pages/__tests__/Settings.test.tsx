@@ -11,7 +11,7 @@ jest.mock("react-leaflet", () => ({
   TileLayer: () => null, Circle: () => null, CircleMarker: () => null,
   useMap: () => ({ setView: jest.fn(), getZoom: () => 11 }), useMapEvents: () => null,
 }));
-jest.mock("../../services/accountService", () => ({ getMyProfile: jest.fn(), updateMyProfile: jest.fn(), changePassword: jest.fn() }));
+jest.mock("../../services/accountService", () => ({ getMyProfile: jest.fn(), updateMyProfile: jest.fn(), changePassword: jest.fn(), deleteAccount: jest.fn() }));
 jest.mock("../../services/platformService", () => ({ getOrganizationProfile: jest.fn(), createOrganizationProfile: jest.fn(), updateOrganizationProfile: jest.fn() }));
 jest.mock("../../services/notificationService", () => ({ getUnreadCounts: jest.fn().mockResolvedValue({ notifications: 0, messages: 0 }) }));
 
@@ -56,5 +56,54 @@ describe("Organization profile form", () => {
     fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("base location");
     expect(p.createOrganizationProfile).not.toHaveBeenCalled();
+  });
+});
+
+describe("Delete account", () => {
+  beforeEach(() => {
+    a.getMyProfile.mockResolvedValue({ id: 26, email: "ali.raza@strayaid.local", first_name: "Ali", last_name: "Raza", role: "public", avatar: null, area: "", phone: "", member_since: "2026-10-04T00:00:00Z" });
+  });
+
+  const openDialog = async () => {
+    renderPage(<Settings />, { user: REPORTER_USER, path: "/settings", route: "/settings" });
+    fireEvent.click(await screen.findByRole("button", { name: "Delete account…" }));
+    return screen.getByRole("dialog", { name: "Delete your account?" });
+  };
+
+  it("explains what is deleted and what is kept before anything happens", async () => {
+    const dialog = await openDialog();
+    expect(dialog).toHaveTextContent(/name, email, phone and photo/);
+    expect(dialog).toHaveTextContent(/reports stay/);
+    expect(a.deleteAccount).not.toHaveBeenCalled();
+  });
+
+  it("only deletes after typing DELETE and the password", async () => {
+    a.deleteAccount.mockResolvedValue();
+    await openDialog();
+    const confirm = screen.getByRole("button", { name: "Delete my account" });
+    expect(confirm).toBeDisabled();
+    fireEvent.change(screen.getByLabelText(/Type DELETE/), { target: { value: "DELETE" } });
+    fireEvent.change(screen.getByLabelText("Your password"), { target: { value: "demo12345" } });
+    expect(confirm).toBeEnabled();
+    fireEvent.click(confirm);
+    await waitFor(() => expect(a.deleteAccount).toHaveBeenCalledWith("demo12345"));
+    expect(await screen.findByText("Other page")).toBeInTheDocument();
+    expect(localStorage.getItem("access")).toBeNull();
+  });
+
+  it("keeps the account and says why when the server refuses", async () => {
+    a.deleteAccount.mockRejectedValue(new Error("That password isn't right."));
+    await openDialog();
+    fireEvent.change(screen.getByLabelText(/Type DELETE/), { target: { value: "DELETE" } });
+    fireEvent.change(screen.getByLabelText("Your password"), { target: { value: "wrong" } });
+    fireEvent.click(screen.getByRole("button", { name: "Delete my account" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("That password isn't right.");
+    expect(localStorage.getItem("access")).toBe("test-token");
+  });
+
+  it("can be cancelled", async () => {
+    await openDialog();
+    fireEvent.click(screen.getByRole("button", { name: "Keep my account" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 });

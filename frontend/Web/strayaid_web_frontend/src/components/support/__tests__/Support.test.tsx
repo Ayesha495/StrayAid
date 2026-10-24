@@ -33,6 +33,8 @@ describe("Adoption form", () => {
     expect(send).toBeDisabled(); // agreements not ticked
     fireEvent.click(screen.getByLabelText(/home visit/));
     fireEvent.click(screen.getByLabelText(/return Luna/));
+    expect(send).toBeDisabled(); // data sharing not agreed yet
+    fireEvent.click(screen.getByLabelText(/share these answers/));
     fireEvent.click(send);
 
     await waitFor(() => expect(onDone).toHaveBeenCalled());
@@ -55,6 +57,7 @@ describe("Adoption form", () => {
     fireEvent.change(screen.getByLabelText(/Why do you want/), { target: { value: "Love cats" } });
     fireEvent.click(screen.getByLabelText(/home visit/));
     fireEvent.click(screen.getByLabelText(/return Luna/));
+    fireEvent.click(screen.getByLabelText(/share these answers/));
     fireEvent.click(screen.getByRole("button", { name: "Send application" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("already applied");
   });
@@ -75,6 +78,9 @@ describe("Pledge form", () => {
     const receipt = new File(["x"], "receipt.png", { type: "image/png" });
     fireEvent.change(screen.getByLabelText(/Transfer receipt/), { target: { files: [receipt] } });
     fireEvent.click(screen.getByRole("button", { name: /Send Rs 2,500 receipt/ }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Confirm the transfer is yours");
+    fireEvent.click(screen.getByLabelText(/I made this transfer myself/));
+    fireEvent.click(screen.getByRole("button", { name: /Send Rs 2,500 receipt/ }));
     await waitFor(() => expect(onSubmit).toHaveBeenCalled());
     const sent: FormData = onSubmit.mock.calls[0][0];
     expect([sent.get("amount_pkr"), sent.get("monthly"), sent.get("receipt")]).toEqual(["2500", "true", receipt]);
@@ -84,5 +90,18 @@ describe("Pledge form", () => {
     render(<PledgeForm title="Give" intro="" bank={null} onSubmit={jest.fn()} onClose={jest.fn()} />);
     expect(screen.getByText(/hasn't added bank details/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /receipt/ })).toBeDisabled();
+  });
+});
+
+describe("Form consent", () => {
+  it("says who will see an adoption application before it is sent", () => {
+    render(<AdoptForm animalId={15} animalName="Luna" defaultName="Ali Raza" onClose={jest.fn()} onDone={jest.fn()} />);
+    expect(screen.getByText(/only the rescue team caring for Luna/i)).toBeInTheDocument();
+  });
+
+  it("links the donations and refunds policy from the pledge form", () => {
+    render(<PledgeForm title="Sponsor Luna" intro="" bank={BANK} onSubmit={jest.fn()} onClose={jest.fn()} />);
+    expect(screen.getByRole("link", { name: "Donations & Refunds policy" })).toHaveAttribute("href", "/legal/donations");
+    expect(screen.getByText(/StrayAid never receives or holds/)).toBeInTheDocument();
   });
 });

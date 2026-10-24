@@ -7,25 +7,3 @@
 }
 
 .public-main { flex: 1; }
-
-.public-footer {
-  border-top: 1px solid var(--line);
-  background: #fff;
-}
-
-.public-footer-inner {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 12px 24px;
-  max-width: var(--content-max);
-  margin: 0 auto;
-  padding: 24px;
-}
-
-.public-footer-inner p:last-child { margin-left: auto; }
-
-@media (max-width: 760px) {
-  .public-footer-inner { padding: 20px 16px; }
-  .public-footer-inner p:last-child { margin-left: 0; }
-}

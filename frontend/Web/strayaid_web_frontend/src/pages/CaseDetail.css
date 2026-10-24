@@ -131,7 +131,7 @@
 .cd-report-body p { margin: 0; color: #33404f; font-size: 14px; line-height: 1.5; }
 .cd-report-who { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin-bottom: 2px !important; }
 .cd-report-who strong { color: #12151c; }
-.cd-report-who span { color: #8590a0; font-size: 12px; }
+.cd-report-who span { color: var(--color-ink-subtle); font-size: 12px; }
 .cd-msg { flex-shrink: 0; padding: 8px 12px; font-size: 13px; }
 
 /* ---------- History ---------- */
@@ -181,7 +181,7 @@
 .cd-timeline p { margin: 0; color: #33404f; font-size: 14px; line-height: 1.5; }
 .cd-timeline-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
 .cd-timeline-head strong { color: #12151c; }
-.cd-timeline-head span { display: inline-flex; align-items: center; gap: 4px; color: #8590a0; font-size: 12px; }
+.cd-timeline-head span { display: inline-flex; align-items: center; gap: 4px; color: var(--color-ink-subtle); font-size: 12px; }
 
 /* ---------- Side ---------- */
 .cd-status .case-progress { margin-bottom: 14px; }

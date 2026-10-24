@@ -2,9 +2,12 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db.models import Case as CaseWhen, Count, F, IntegerField, Q, Value, When
 from django.utils import timezone
+
 from animals.models import Animal
+from core.uploads import validate_image_upload
 from organizations.permissions import IsOrganizationUser
 
 from .models import SEVERITY_ORDER, AIFeedback, Case, CaseUpdate, Report
@@ -73,8 +76,12 @@ def alert_nearby_organizations(case):
 
 
 def _photo_check_error(image):
-    """Run the animal detector on an uploaded photo before anything is saved.
-    Returns (result, None) when it shows an animal, or (None, error response)."""
+    """Check an uploaded photo before anything is saved: it must be a real image, and the
+    animal detector must see an animal in it. Returns (result, None) or (None, error response)."""
+    try:
+        validate_image_upload(image)
+    except DjangoValidationError as error:
+        return None, Response({"error": error.messages[0], "code": "invalid_image"}, status=status.HTTP_400_BAD_REQUEST)
     result = detector.detect_animal(image)
     if result is None:
         return None, Response(
@@ -152,6 +159,8 @@ def report_case(request):
             {"error": "Invalid latitude or longitude format"},
             status=status.HTTP_400_BAD_REQUEST
         )
+    if not (-90 <= latitude <= 90 and -180 <= longitude <= 180):
+        return Response({"error": "Latitude or longitude is out of range"}, status=status.HTTP_400_BAD_REQUEST)
 
     # Reports must show an animal: photos without one are refused, to keep out false reports.
     detection, error = _photo_check_error(image)

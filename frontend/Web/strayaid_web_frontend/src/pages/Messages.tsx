@@ -154,7 +154,7 @@ function Thread({ conversationId }: { conversationId: string }) {
                   <div className="bubble">
                     {!message.from_me ? <span className="bubble-name">{message.sender_name}</span> : null}
                     {message.image ? (
-                      <a href={message.image} target="_blank" rel="noreferrer"><img src={message.image} alt="Shared photo" className="bubble-image" /></a>
+                      <a href={message.image} target="_blank" rel="noreferrer"><img src={message.image} alt={`Sent by ${message.sender_name || "you"}`} className="bubble-image" /></a>
                     ) : null}
                     {message.body ? <p>{message.body}</p> : null}
                     <span className="bubble-time">{timeLabel(message.created_at)}</span>
@@ -239,7 +239,7 @@ function Messages() {
             </label>
             <div className="tabs inbox-tabs" role="group" aria-label="Conversation type">
               {FILTERS.map((entry) => (
-                <button key={entry.key} type="button" className="tab" aria-selected={filter === entry.key} aria-pressed={filter === entry.key} onClick={() => setFilter(entry.key)}>
+                <button key={entry.key} type="button" className="tab" aria-pressed={filter === entry.key} onClick={() => setFilter(entry.key)}>
                   {entry.label}
                 </button>
               ))}

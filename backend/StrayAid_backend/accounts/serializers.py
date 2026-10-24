@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 from djoser.serializers import UserCreatePasswordRetypeSerializer
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
@@ -70,9 +71,12 @@ class StrayAidUserCreateSerializer(UserCreatePasswordRetypeSerializer):
     """
 
     full_name = serializers.CharField(write_only=True, required=False, allow_blank=True, max_length=150)
+    accept_terms = serializers.BooleanField(
+        write_only=True, error_messages={"required": "Accept the Terms of Service and Privacy Policy to continue."}
+    )
 
     class Meta(UserCreatePasswordRetypeSerializer.Meta):
-        fields = UserCreatePasswordRetypeSerializer.Meta.fields + ("full_name", "avatar")
+        fields = UserCreatePasswordRetypeSerializer.Meta.fields + ("full_name", "avatar", "accept_terms")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -94,7 +98,14 @@ class StrayAidUserCreateSerializer(UserCreatePasswordRetypeSerializer):
             raise serializers.ValidationError("Choose a photo smaller than 5 MB.")
         return value
 
+    def validate_accept_terms(self, value):
+        if not value:
+            raise serializers.ValidationError("Accept the Terms of Service and Privacy Policy to continue.")
+        return value
+
     def validate(self, attrs):
+        attrs.pop("accept_terms", None)
+        attrs["accepted_terms_at"] = timezone.now()
         full_name = " ".join(attrs.pop("full_name", "").split())
         if full_name:
             first_name, _, last_name = full_name.partition(" ")

@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.db import models
 
+from core.uploads import UniqueUploadPath, validate_image_size
+
 
 class Organization(models.Model):
     # This profile extends a regular user account with rescue-specific data.
@@ -23,7 +25,7 @@ class Organization(models.Model):
     radius = models.FloatField(null=True, blank=True)
     is_available = models.BooleanField(default=True)
     description = models.TextField(blank=True)
-    image = models.ImageField(upload_to="organizations/", null=True, blank=True)
+    image = models.ImageField(upload_to=UniqueUploadPath("organizations"), validators=[validate_image_size], null=True, blank=True)
     bank_name = models.CharField(max_length=255, blank=True)
     bank_account_title = models.CharField(max_length=255, blank=True)
     bank_account_number = models.CharField(max_length=100, blank=True)
@@ -48,7 +50,7 @@ class ShelterDonation(models.Model):
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name="donations")
     donor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="shelter_donations")
     amount_pkr = models.PositiveIntegerField()
-    receipt = models.ImageField(upload_to="receipts/", null=True, blank=True)
+    receipt = models.ImageField(upload_to=UniqueUploadPath("receipts"), validators=[validate_image_size], null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
     created_at = models.DateTimeField(auto_now_add=True)
 

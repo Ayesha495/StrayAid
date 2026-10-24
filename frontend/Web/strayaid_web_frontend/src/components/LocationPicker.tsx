@@ -2,7 +2,8 @@ import { useEffect } from "react";
 import { MapContainer, Marker, useMapEvents } from "react-leaflet";
 import { type LatLngExpression, type LeafletMouseEvent } from "leaflet";
 import { CircleCheck, MapPin } from "lucide-react";
-import { MapTiles, placePin } from "./map/mapLook";
+import MapTiles from "./map/MapTiles";
+import { placePin } from "./map/mapStyle";
 
 type LocationPickerProps = {
   latitude: number;

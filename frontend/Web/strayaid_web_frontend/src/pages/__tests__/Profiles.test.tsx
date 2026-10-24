@@ -1,7 +1,7 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import AnimalDetail from "../AnimalDetail";
 import OrganizationPublicProfile from "../OrganizationPublicProfile";
-import LandingPage from "../LandinPage";
+import LandingPage from "../LandingPage";
 import { ORG_USER, REPORTER_USER, renderPage } from "../../test/render";
 import { ORGANIZATION } from "../../test/fixtures";
 import * as platform from "../../services/platformService";
@@ -12,7 +12,6 @@ jest.mock("../../api/axios", () => ({ __esModule: true, default: {}, PublicAPI: 
 jest.mock("../../components/ServiceAreaMap", () => ({ __esModule: true, default: () => null }));
 jest.mock("../landing/Carousels", () => ({
   AnimalCarousel: ({ animals }: { animals: Animal[] }) => <ul>{animals.map((animal) => <li key={animal.id}>{animal.name}</li>)}</ul>,
-  TestimonialCarousel: () => <div>Testimonials</div>,
 }));
 jest.mock("../../services/platformService", () => ({
   getAnimal: jest.fn(),

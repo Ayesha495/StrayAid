@@ -364,7 +364,7 @@
 }
 
 .animal-app-text { display: flex; flex: 1; flex-direction: column; min-width: 0; }
-.animal-app-chevron { flex-shrink: 0; color: var(--navy-300); transition: transform 0.2s var(--ease-out); }
+.animal-app-chevron { flex-shrink: 0; color: var(--color-ink-subtle); transition: transform 0.2s var(--ease-out); }
 
 @media (hover: hover) and (pointer: fine) {
   .animal-app-row:hover { background: var(--mint); }

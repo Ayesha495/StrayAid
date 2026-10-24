@@ -65,6 +65,7 @@ function OrganizationRegistration() {
   const [step, setStep] = useState(0);
   const [stepError, setStepError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [confirmedDetails, setConfirmedDetails] = useState(false);
 
   useEffect(() => {
     getOrganizationProfile()
@@ -180,6 +181,10 @@ function OrganizationRegistration() {
         setStepError(error);
         return;
       }
+    }
+    if (!hasProfile && !confirmedDetails) {
+      setStepError("Confirm you're allowed to register this team and that the details are true.");
+      return;
     }
 
     setSubmitting(true);
@@ -366,10 +371,19 @@ function OrganizationRegistration() {
               <div className="wizard-review-item"><span>Account Name</span><strong>{form.bank_account_title || "Not provided"}</strong></div>
               <div className="wizard-review-item"><span>Account Number</span><strong>{form.bank_account_number || "Not provided"}</strong></div>
             </div>
+            {!hasProfile ? (
+              <label className="check wizard-confirm">
+                <input type="checkbox" checked={confirmedDetails} onChange={(event) => { setConfirmedDetails(event.target.checked); setStepError(null); }} />
+                <span>
+                  I'm allowed to register {form.name || "this team"}, these details are true, and I agree to the{" "}
+                  <Link to="/legal/terms" target="_blank">Terms of Service</Link>.
+                </span>
+              </label>
+            ) : null}
           </div>
         ) : null}
 
-        {stepError ? <p className="wizard-step-error">{stepError}</p> : null}
+        {stepError ? <p className="wizard-step-error" role="alert">{stepError}</p> : null}
 
         <div className="portal-actions wizard-actions">
           {step > 0 ? <button type="button" className="secondary-btn" onClick={handleBack}>Back</button> : <span />}
@@ -391,7 +405,7 @@ function OrganizationRegistration() {
             Organization Profile
             {isVerified ? <span className="badge badge-green profile-verified-pill"><BadgeCheck size={12} /> Verified</span> : null}
           </h1>
-          <p>Update your rescue identity, operational service range, verified banking information, and public transparency profile.</p>
+          <p>Update your rescue's details, service area, bank details and public profile.</p>
         </div>
         <div className="profile-header-actions">
           {orgId ? (
@@ -528,7 +542,7 @@ function OrganizationRegistration() {
             <span className="profile-section-icon"><Landmark size={16} /></span>
             <div>
               <h2>Donation &amp; Direct Sponsorship Channel</h2>
-              <p className="meta-line">These verified banking and payment details appear on animal case profiles and medical sponsorship panels.</p>
+              <p className="meta-line">These bank details appear on your animals' pages so people can sponsor them. StrayAid doesn't check them, so make sure they're right.</p>
             </div>
           </div>
 
@@ -574,7 +588,7 @@ function OrganizationRegistration() {
           </div>
         </section>
 
-        {stepError ? <p className="wizard-step-error">{stepError}</p> : null}
+        {stepError ? <p className="wizard-step-error" role="alert">{stepError}</p> : null}
 
         <div className="profile-save-bar">
           <span className="profile-save-status">

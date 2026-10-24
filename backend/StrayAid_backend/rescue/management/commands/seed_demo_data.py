@@ -5,16 +5,21 @@ Fresh: python manage.py seed_demo_data --reset   (deletes every @strayaid.local 
 Ducky paws Rescue only: python manage.py seed_demo_data --only-ducky-paws
 Stories only (they last 24 hours): python manage.py seed_demo_data --stories
 
+Live server: DEMO_PASSWORD=<strong password> python manage.py seed_demo_data --production
+
 Safe to re-run: records are matched by stable keys and photos are only attached once.
 Timestamps are relative to "now", so stories stay inside their 24-hour window; re-run before a demo.
-All demo accounts use the password in DEMO_PASSWORD.
+Every demo account uses the DEMO_PASSWORD environment variable (demo12345 locally).
+No admin account is made: use `python manage.py createsuperuser` for that.
 """
 
+import os
 from datetime import timedelta
 from pathlib import Path
 
+from django.conf import settings
 from django.core.files.base import ContentFile
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
@@ -31,7 +36,7 @@ from rescue.utils.scoring import refresh_case_score, score_report
 
 STITCH_IMAGES = Path(__file__).resolve().parents[5] / "images" / "stitch"
 DEMO_DOMAIN = "@strayaid.local"
-DEMO_PASSWORD = "demo12345"
+LOCAL_DEMO_PASSWORD = "demo12345"
 
 
 def photo(name):
@@ -879,13 +884,32 @@ class Command(BaseCommand):
             help="Only bring every demo story back inside its 24-hour window (and add any missing ones).",
         )
         parser.add_argument(
+            "--production",
+            action="store_true",
+            help="Allow seeding with DEBUG off (a live server). Needs DEMO_PASSWORD to be set.",
+        )
+        parser.add_argument(
             "--only-ducky-paws",
             action="store_true",
             help=f"Only add the animals and posts for {DUCKY_PAWS_NAME} (needs the demo reporters to exist).",
         )
 
-    @transaction.atomic
     def handle(self, *args, **options):
+        self.password = self.demo_password(options["production"])
+        self.seed(options)
+
+    def demo_password(self, production):
+        if settings.DEBUG:
+            return os.getenv("DEMO_PASSWORD") or LOCAL_DEMO_PASSWORD
+        if not production:
+            raise CommandError("DEBUG is off, so this looks like a live server. Re-run with --production to seed it anyway.")
+        password = os.getenv("DEMO_PASSWORD", "")
+        if len(password) < 12:
+            raise CommandError("Set DEMO_PASSWORD (12+ characters) so the demo accounts don't share a known password.")
+        return password
+
+    @transaction.atomic
+    def seed(self, options):
         if options["stories"]:
             organizations = {
                 data["key"]: organization
@@ -907,7 +931,6 @@ class Command(BaseCommand):
             deleted, _ = User.objects.filter(email__endswith=DEMO_DOMAIN).exclude(is_superuser=True).delete()
             self.stdout.write(self.style.WARNING(f"Reset: removed {deleted} demo records."))
 
-        self.seed_admin()
         organizations = self.seed_organizations()
         reporters = self.seed_reporters()
         self.seed_open_cases(organizations, reporters)
@@ -924,18 +947,11 @@ class Command(BaseCommand):
         self.seed_ducky_paws()
 
         self.stdout.write(self.style.SUCCESS("Demo data ready."))
-        self.stdout.write(f"Password for every demo account: {DEMO_PASSWORD}")
+        if settings.DEBUG:
+            self.stdout.write(f"Password for every demo account: {self.password}")
         self.stdout.write("Reporters: " + ", ".join(f"{username}{DEMO_DOMAIN}" for username, _, _ in REPORTERS))
         self.stdout.write("Organizations: " + ", ".join(f"{org['key']}{DEMO_DOMAIN}" for org in ORGANIZATIONS))
         self.stdout.write(f"Applications, messages and notifications to demo: {SHOWCASE}{DEMO_DOMAIN}")
-
-    def seed_admin(self):
-        admin, _ = User.objects.get_or_create(
-            email=f"admin{DEMO_DOMAIN}",
-            defaults={"username": "admin", "role": "admin", "is_staff": True, "is_superuser": True},
-        )
-        admin.set_password("admin12345")
-        admin.save()
 
     def seed_organizations(self):
         organizations = {}
@@ -945,7 +961,7 @@ class Command(BaseCommand):
                 defaults={"username": data["key"].replace("-", "_"), "role": "organization"},
             )
             user.role = "organization"
-            user.set_password(DEMO_PASSWORD)
+            user.set_password(self.password)
             user.save()
             organization, _ = Organization.objects.update_or_create(
                 user=user,
@@ -981,7 +997,7 @@ class Command(BaseCommand):
                 email=f"{username}{DEMO_DOMAIN}",
                 defaults={"username": username.replace(".", "_"), "first_name": first_name, "last_name": last_name},
             )
-            user.set_password(DEMO_PASSWORD)
+            user.set_password(self.password)
             user.save()
             reporters[username] = user
         return reporters
@@ -1536,7 +1552,7 @@ class Command(BaseCommand):
             f"{DUCKY_PAWS_NAME}: {len(DUCKY_PAWS_ANIMALS)} animals with their posts, {len(DUCKY_PAWS_CASES)} reports nearby, "
             f"{len(DUCKY_PAWS_CHATS)} chats."
         )
-        self.stdout.write(f"Kahuta reporter: {KAHUTA_REPORTER['key']}{DEMO_DOMAIN} / {DEMO_PASSWORD}")
+        self.stdout.write(f"Kahuta reporter: {KAHUTA_REPORTER['key']}{DEMO_DOMAIN}")
 
     def seed_kahuta_reporter(self):
         data = KAHUTA_REPORTER
@@ -1544,7 +1560,7 @@ class Command(BaseCommand):
             email=f"{data['key']}{DEMO_DOMAIN}",
             defaults={"username": data["key"].replace(".", "_"), "first_name": data["first_name"], "last_name": data["last_name"]},
         )
-        person.set_password(DEMO_PASSWORD)
+        person.set_password(self.password)
         for field in ("area", "phone", "alert_latitude", "alert_longitude"):
             setattr(person, field, data[field])
         person.field_ready = True

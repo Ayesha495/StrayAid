@@ -351,7 +351,7 @@
 }
 
 .post-actions button:hover { background: #f8fafc; }
-.post-actions button.is-on { color: var(--coral-600); }
+.post-actions button.is-on { color: var(--coral-700); }
 .post-actions .post-share { margin-left: auto; }
 .post-actions .post-save.is-on { color: var(--green-700); }
 
@@ -410,7 +410,7 @@
 }
 
 .comment-actions button:hover:not(:disabled) { color: var(--color-ink); }
-.comment-actions button.is-on { color: var(--coral-600); }
+.comment-actions button.is-on { color: var(--coral-700); }
 .comment-actions button.is-danger:hover { color: var(--color-danger-ink); }
 
 .comment-form { display: flex; flex-direction: column; gap: 6px; }

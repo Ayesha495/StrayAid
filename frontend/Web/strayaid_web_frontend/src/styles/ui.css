@@ -32,7 +32,7 @@
 .btn-ghost:hover:not(:disabled) { background: var(--navy-50); color: var(--color-ink); }
 
 .btn-danger { background: var(--color-danger); color: #fff; }
-.btn-danger:hover:not(:disabled) { background: var(--coral-700); }
+.btn-danger:hover:not(:disabled) { background: #9c3826; }
 
 .btn-danger-outline { background: var(--color-surface); border-color: var(--coral-500); color: var(--color-danger-ink); }
 .btn-danger-outline:hover:not(:disabled) { background: var(--color-danger-soft); }
@@ -181,7 +181,7 @@
   border-bottom: 1px solid var(--color-border);
 }
 
-.card-header h3 { font-size: var(--text-lg); font-weight: 700; }
+.card-header h2, .card-header h3 { font-size: var(--text-lg); font-weight: 700; }
 .card-body { padding: var(--space-5); }
 
 .divider {
@@ -419,7 +419,7 @@
 }
 
 .state-error .state-icon { background: var(--coral-50); color: var(--coral-600); }
-.state h3 { font-size: var(--text-lg); }
+.state h3, .state .state-title { font-size: var(--text-lg); }
 .state p { max-width: 380px; }
 
 .skeleton {
@@ -623,7 +623,7 @@
   overflow: hidden;
   border-radius: var(--radius-lg);
   background: var(--navy-100);
-  color: var(--navy-300);
+  color: var(--color-ink-subtle);
 }
 
 .animal-photo-preview img { width: 100%; height: 100%; object-fit: cover; }

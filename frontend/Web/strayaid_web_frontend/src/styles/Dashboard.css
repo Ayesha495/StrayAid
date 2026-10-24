@@ -180,6 +180,8 @@
 }
 
 .rescue-case-content {
+  color: inherit;
+  text-decoration: none;
   display: flex;
   flex: 1;
   flex-direction: column;

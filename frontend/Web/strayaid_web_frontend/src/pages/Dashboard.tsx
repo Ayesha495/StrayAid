@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Activity, ArrowRight, Download, Folder, HeartHandshake, MapPin, PawPrint, Plus } from "lucide-react";
 import AnimalCard from "../components/AnimalCard";
 import ConcentricRingChart from "../components/ConcentricRingChart";
@@ -27,7 +27,6 @@ function pct(part: number, total: number): number {
 }
 
 function Dashboard() {
-  const navigate = useNavigate();
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [cases, setCases] = useState<Case[]>([]);
   const [animals, setAnimals] = useState<Animal[]>([]);
@@ -271,23 +270,10 @@ function Dashboard() {
               {openRescueCases.map((caseItem) => {
                 const elapsedMinutes = minutesSince(caseItem.created_at);
                 const isHighPriority = elapsedMinutes > 120;
-                const goToCase = () => navigate(`/cases/${caseItem.id}`);
 
                 return (
-                  <li
-                    className="rescue-case-row"
-                    key={caseItem.id}
-                    role="link"
-                    tabIndex={0}
-                    onClick={goToCase}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        goToCase();
-                      }
-                    }}
-                  >
-                    <div className="rescue-case-content">
+                  <li className="rescue-case-row" key={caseItem.id}>
+                    <Link className="rescue-case-content" to={`/cases/${caseItem.id}`}>
                       <div className="rescue-case-id-row">
                         <span className="rescue-case-number">Case #R-{caseItem.id}</span>
                         <span className={`priority-tag ${isHighPriority ? "priority-high" : "priority-medium"}`}>
@@ -299,7 +285,7 @@ function Dashboard() {
                         {formatRelativeTime(caseItem.created_at)}
                         {caseItem.distance_km != null ? <> &middot; {caseItem.distance_km.toFixed(1)} km away</> : null}
                       </p>
-                    </div>
+                    </Link>
                     <div className="rescue-case-actions">
                       <button
                         className="icon-btn"

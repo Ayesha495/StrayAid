@@ -8,6 +8,8 @@ import PasswordInput from "../components/auth/PasswordInput";
 
 type Role = "person" | "organization";
 
+const TERMS_REQUIRED = "Accept the Terms of Service and Privacy Policy to continue.";
+
 const registerErrorMessage = (error: unknown) => {
   const data = (error as { response?: { data?: Record<string, string[] | string> } })?.response?.data;
   if (!data) return authErrorMessage(error, "Sign-up failed. Please try again.");
@@ -22,6 +24,7 @@ function Register() {
   const [form, setForm] = useState({ email: "", username: "", password: "", re_password: "" });
   const [errors, setErrors] = useState<Partial<typeof form>>({});
   const [formError, setFormError] = useState("");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const update = (name: keyof typeof form, value: string) => {
@@ -33,8 +36,15 @@ function Register() {
   // A rescue team continues straight into the organization form; people go to the feed.
   const next = () => navigate(role === "organization" ? "/organization/register" : "/feed", { replace: true });
 
+  const requireTerms = () => {
+    if (acceptedTerms) return true;
+    setFormError(TERMS_REQUIRED);
+    return false;
+  };
+
   const handleGoogle = async () => {
     setFormError("");
+    if (!requireTerms()) return;
     try {
       const user = await signInWithGoogle();
       if (user.role === "organization") navigate("/dashboard", { replace: true });
@@ -57,10 +67,10 @@ function Register() {
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    if (!validate()) return;
+    if (!validate() || !requireTerms()) return;
     setSubmitting(true);
     try {
-      await register({ ...form, email: form.email.trim(), username: form.username.trim() });
+      await register({ ...form, email: form.email.trim(), username: form.username.trim(), accept_terms: true });
       // Sign straight in, so nobody has to type the same details twice.
       const session = await login({ email: form.email.trim(), password: form.password });
       await syncCurrentUser(session);
@@ -112,7 +122,23 @@ function Register() {
         </label>
       </fieldset>
 
-      <GoogleButton onClick={handleGoogle} label="Sign up with Google" />
+      <label className="check auth-terms">
+        <input
+          type="checkbox"
+          required
+          checked={acceptedTerms}
+          onChange={(event) => {
+            setAcceptedTerms(event.target.checked);
+            setFormError("");
+          }}
+        />
+        <span>
+          I agree to the <Link to="/legal/terms" target="_blank">Terms of Service</Link> and{" "}
+          <Link to="/legal/privacy" target="_blank">Privacy Policy</Link>.
+        </span>
+      </label>
+
+      <GoogleButton onClick={handleGoogle} label="Sign up with Google" showTerms={false} />
       <div className="auth-divider">or with your email</div>
 
       <form className="auth-form" onSubmit={handleSubmit} noValidate>

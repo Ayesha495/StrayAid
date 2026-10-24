@@ -149,7 +149,7 @@ function CaseDetail() {
               <>
                 <div className="cd-photo">
                   <img className="cd-photo-blur" src={shown.image} alt="" aria-hidden="true" />
-                  <img src={shown.image} alt={`Photo from the report: ${shown.description}`} />
+                  <img src={shown.image} alt={`Reported: ${shown.description}`} />
                   <span className="cd-photo-count"><Camera size={13} /> {photos.length} photo{photos.length === 1 ? "" : "s"}</span>
                 </div>
                 {photos.length > 1 ? (
