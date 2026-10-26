@@ -127,7 +127,8 @@ jobs:
   deploy-database:
     name: Deploy database policy (Neon)
     needs: [backend, web, mobile, secrets]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # Deploys start once the production environment's BACKEND_URL variable is set.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.BACKEND_URL != ''
     runs-on: ubuntu-latest
     environment: production
     steps:
