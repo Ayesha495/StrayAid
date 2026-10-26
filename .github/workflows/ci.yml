@@ -70,7 +70,7 @@ jobs:
         working-directory: frontend/Web/strayaid_web_frontend
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 20
           cache: npm
@@ -94,7 +94,7 @@ jobs:
         working-directory: frontend/Mobile/strayaid_mobile_frontend
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 20
           cache: npm
@@ -133,7 +133,7 @@ jobs:
     environment: production
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 20
       - run: npm ci
@@ -179,7 +179,7 @@ jobs:
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 20
       - run: npm install --global vercel@latest
@@ -211,7 +211,7 @@ jobs:
             echo "app=false" >> "$GITHUB_OUTPUT"
             echo "No app changes; nothing to publish."
           fi
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         if: steps.changes.outputs.app == 'true'
         with:
           node-version: 20
