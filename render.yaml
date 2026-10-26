@@ -7,9 +7,12 @@ services:
     plan: free
     region: singapore
     branch: Ayesha
-    rootDir: backend
-    dockerfilePath: ./Dockerfile
-    dockerContext: .
+    # Paths are relative to the repo root (Render Blueprint spec).
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    buildFilter:
+      paths:
+        - backend/**
     healthCheckPath: /api/health/
     envVars:
       - key: DJANGO_SECRET_KEY
