@@ -4,7 +4,7 @@ from environment variables (see .env.example); nothing secret is written here.""
 import os
 from datetime import timedelta
 from pathlib import Path
-from urllib.parse import unquote, urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 
 from django.core.exceptions import ImproperlyConfigured
 
@@ -31,7 +31,7 @@ def env_list(name, default=""):
 
 def database_from_url(url):
     parsed = urlparse(url)
-    return {
+    config = {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": unquote(parsed.path.lstrip("/")),
         "USER": unquote(parsed.username or ""),
@@ -40,8 +40,14 @@ def database_from_url(url):
         "PORT": parsed.port or 5432,
         "CONN_MAX_AGE": 60,
         "CONN_HEALTH_CHECKS": True,
-        "OPTIONS": {"sslmode": os.getenv("DATABASE_SSLMODE", "prefer")},
+        "OPTIONS": {"sslmode": parse_qs(parsed.query).get("sslmode", [os.getenv("DATABASE_SSLMODE", "prefer")])[0]},
     }
+    # Neon's pooler (a "-pooler" host) is PgBouncer in transaction mode: no server-side
+    # cursors, and Django shouldn't hold connections it hands back to the pool.
+    if "-pooler" in config["HOST"]:
+        config["DISABLE_SERVER_SIDE_CURSORS"] = True
+        config["CONN_MAX_AGE"] = 0
+    return config
 
 
 DEBUG = env_bool("DEBUG", False)
@@ -115,8 +121,11 @@ TEMPLATES = [
     },
 ]
 
-if os.getenv("DATABASE_URL"):
-    DATABASES = {"default": database_from_url(os.environ["DATABASE_URL"])}
+# A long-running server with migrations at start-up uses Neon's direct connection when it is
+# given (DATABASE_URL_UNPOOLED, as `neon env pull` writes it); otherwise DATABASE_URL.
+DATABASE_URL = os.getenv("DATABASE_URL_UNPOOLED") or os.getenv("DATABASE_URL")
+if DATABASE_URL:
+    DATABASES = {"default": database_from_url(DATABASE_URL)}
 else:
     DATABASES = {
         "default": {

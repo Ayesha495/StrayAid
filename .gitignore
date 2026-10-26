@@ -42,3 +42,4 @@ playwright-report/
 .idea/
 .DS_Store
 Thumbs.db
+.neon
