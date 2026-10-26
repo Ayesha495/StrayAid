@@ -59,7 +59,9 @@ def load_settings(env):
         "os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')\n"
         "from django.conf import settings\n"
         f"names = {SETTING_NAMES!r}\n"
-        "print(json.dumps({name: getattr(settings, name, None) for name in names}, default=str))\n"
+        "values = {name: getattr(settings, name, None) for name in names}\n"
+        "values['DATABASE_URL_USED'] = settings.DATABASES['default']\n"
+        "print(json.dumps(values, default=str))\n"
     )
     result = run_with_env(code, env)
     return result, (json.loads(result.stdout) if result.returncode == 0 else None)
@@ -105,6 +107,28 @@ class ProductionSettingsTests(SimpleTestCase):
             (database["NAME"], database["USER"], database["PASSWORD"], database["HOST"], database["PORT"]),
             ("strayaid", "user", "pass", "db.example", 5432),
         )
+
+    def test_neon_direct_connection_is_preferred_for_a_long_running_server(self):
+        env = {
+            **PRODUCTION_ENV,
+            "DATABASE_URL": "postgresql://u:p@ep-cool-name-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require",
+            "DATABASE_URL_UNPOOLED": "postgresql://u:p@ep-cool-name.us-east-2.aws.neon.tech/neondb?sslmode=require",
+        }
+        result, values = load_settings(env)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        database = values["DATABASE_URL_USED"]
+        self.assertEqual(database["HOST"], "ep-cool-name.us-east-2.aws.neon.tech")
+        self.assertFalse(database.get("DISABLE_SERVER_SIDE_CURSORS", False))
+        self.assertEqual(database["OPTIONS"]["sslmode"], "require")
+
+    def test_pooled_neon_connection_disables_server_side_cursors(self):
+        env = {**PRODUCTION_ENV, "DATABASE_URL": "postgresql://u:p@ep-cool-name-pooler.us-east-2.aws.neon.tech/neondb"}
+        result, values = load_settings(env)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        database = values["DATABASE_URL_USED"]
+        self.assertEqual(database["HOST"], "ep-cool-name-pooler.us-east-2.aws.neon.tech")
+        self.assertTrue(database["DISABLE_SERVER_SIDE_CURSORS"])
+        self.assertEqual(database["CONN_MAX_AGE"], 0)
 
     def test_database_can_come_from_postgres_variables(self):
         env = {key: value for key, value in PRODUCTION_ENV.items() if key != "DATABASE_URL"}

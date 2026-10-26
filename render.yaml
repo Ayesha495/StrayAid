@@ -5,7 +5,7 @@ services:
     name: strayaid-api
     runtime: docker
     plan: free
-    region: singapore
+    region: ohio  # next to the Neon database (us-east-2); cannot change after creation
     branch: Ayesha
     # Paths are relative to the repo root (Render Blueprint spec).
     dockerfilePath: ./backend/Dockerfile
