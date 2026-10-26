@@ -9,7 +9,7 @@ google-auth==2.48.0
 requests==2.34.2
 Pillow==13.0.0
 psycopg2-binary==2.9.10
-gunicorn==23.0.0
+gunicorn==26.2.0
 whitenoise==6.9.0
 python-dotenv==1.2.4
 onnxruntime==1.30.0
