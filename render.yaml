@@ -1,0 +1,39 @@
+# Render Blueprint: New → Blueprint → pick this repo. Values marked sync: false are typed
+# in on Render's screen (they are secrets or depend on the other services).
+services:
+  - type: web
+    name: strayaid-api
+    runtime: docker
+    plan: free
+    region: singapore
+    branch: Ayesha
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health/
+    envVars:
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "0"
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_SSLMODE
+        value: require
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: CSRF_TRUSTED_ORIGINS
+        sync: false
+      - key: GOOGLE_OAUTH_CLIENT_IDS
+        value: 998658289609-9afrhr6aesljjbf2o9kdbc10k6vlq1ac.apps.googleusercontent.com,998658289609-u4an6pas5lcpg578tb3c1rhdre8g5eji.apps.googleusercontent.com,998658289609-1g2mm1bre24hlccle05gmon0c416h44v.apps.googleusercontent.com
+      - key: EMAIL_HOST_USER
+        value: strayaid0@gmail.com
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: SERVE_MEDIA
+        value: "1"
+      - key: ADMIN_URL
+        value: staff-panel/
+      # One worker keeps the AI model inside the free plan's 512 MB.
+      - key: WEB_CONCURRENCY
+        value: "1"
