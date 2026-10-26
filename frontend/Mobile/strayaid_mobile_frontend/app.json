@@ -83,6 +83,12 @@
         "projectId": "e39dc577-928c-4f2a-90d0-d96d825d9a8c"
       }
     },
-    "owner": "ayesha495"
+    "owner": "ayesha495",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/e39dc577-928c-4f2a-90d0-d96d825d9a8c"
+    }
   }
 }

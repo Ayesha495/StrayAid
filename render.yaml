@@ -6,7 +6,9 @@ services:
     runtime: docker
     plan: free
     region: ohio  # next to the Neon database (us-east-2); cannot change after creation
-    branch: Ayesha
+    branch: main
+    # Deploys are started by the CI/CD pipeline (deploy hook) once every check passes.
+    autoDeployTrigger: "off"
     # Paths are relative to the repo root (Render Blueprint spec).
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
