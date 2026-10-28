@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Check, HandCoins, Receipt, Wallet, X } from "lucide-react";
+import { BadgeCheck, HandCoins, Receipt, SearchX, Wallet } from "lucide-react";
 import { getDonations, getOrganizationStats, getSponsorships, reviewDonation, reviewSponsorship } from "../services/fundingService";
 import { getOrganizationAnimals } from "../services/platformService";
 import { useApi } from "../hooks/useApi";
@@ -15,6 +15,15 @@ import { formatRelativeTime } from "../utils/time";
 import { errorMessage } from "../utils/errors";
 import type { ShelterDonation, Sponsorship } from "../types/api";
 import "./Funds.css";
+
+/**
+ * Payment verification. Supporters transfer money themselves and upload the receipt; the
+ * organization checks its account and either verifies the payment or says it can't find it.
+ * A payment may already have been made, so nothing here "rejects" or cancels it: "can't find
+ * it" asks the supporter to get in touch so the transfer can be matched.
+ */
+
+type Verdict = "confirmed" | "rejected";
 
 /** Sponsorships and shelter donations share one queue on this page. */
 type FundItem = {
@@ -63,7 +72,7 @@ const startOfMonth = () => {
   return new Date(now.getFullYear(), now.getMonth(), 1).getTime();
 };
 
-function FundRow({ item, onReview, onZoom, busy }: { item: FundItem; onReview?: (item: FundItem, status: "confirmed" | "rejected") => void; onZoom: (item: FundItem) => void; busy: boolean }) {
+function FundRow({ item, onReview, onZoom, busy }: { item: FundItem; onReview?: (item: FundItem, status: Verdict) => void; onZoom: (item: FundItem) => void; busy: boolean }) {
   return (
     <li className="fund-row">
       <button type="button" className="fund-receipt" onClick={() => onZoom(item)} disabled={!item.receipt} aria-label={item.receipt ? `View receipt from ${item.who}` : "No receipt"}>
@@ -79,15 +88,15 @@ function FundRow({ item, onReview, onZoom, busy }: { item: FundItem; onReview?: 
       <span className="fund-amount">{formatPkr(item.amount)}</span>
       {onReview && item.status === "pending" ? (
         <div className="fund-actions">
-          <button type="button" className="btn btn-danger-outline btn-sm" disabled={busy} onClick={() => onReview(item, "rejected")}>
-            <X size={14} /> Reject
+          <button type="button" className="btn btn-secondary btn-sm" disabled={busy} onClick={() => onReview(item, "rejected")}>
+            <SearchX size={14} /> Can&apos;t find payment
           </button>
           <button type="button" className="btn btn-primary btn-sm" disabled={busy} onClick={() => onReview(item, "confirmed")}>
-            <Check size={14} /> Confirm
+            <BadgeCheck size={14} /> Verify payment
           </button>
         </div>
       ) : (
-        <StatusChip kind="review" value={item.status} />
+        <StatusChip kind="payment" value={item.status} />
       )}
     </li>
   );
@@ -103,6 +112,8 @@ function Funds() {
   const [tab, setTab] = useState<"pending" | "history">("pending");
   const [zoomed, setZoomed] = useState<FundItem | null>(null);
   const [busyKey, setBusyKey] = useState<string | null>(null);
+  // "Can't find payment" asks first: it tells the supporter their transfer wasn't found.
+  const [notFound, setNotFound] = useState<FundItem | null>(null);
 
   const items = useMemo(
     () => [...(sponsorships.data ?? []).map(fromSponsorship), ...(donations.data ?? []).map(fromDonation)]
@@ -125,7 +136,12 @@ function Funds() {
     return totals;
   }, [sponsorships.data]);
 
-  const review = async (item: FundItem, status: "confirmed" | "rejected") => {
+  const ask = (item: FundItem, status: Verdict) => {
+    if (status === "rejected") setNotFound(item);
+    else review(item, status);
+  };
+
+  const review = async (item: FundItem, status: Verdict) => {
     setBusyKey(item.key);
     try {
       if (item.kind === "sponsorship") {
@@ -136,10 +152,14 @@ function Funds() {
         donations.setData((current = []) => current.map((row) => (row.id === item.id ? { ...row, status } : row)));
       }
       toast({
-        title: status === "confirmed" ? `${formatPkr(item.amount)} confirmed` : "Receipt rejected",
-        body: status === "confirmed" ? `${item.who} has been thanked.` : `${item.who} has been asked to message you.`,
+        title: status === "confirmed" ? `${formatPkr(item.amount)} payment verified` : "Marked as not found",
+        body:
+          status === "confirmed"
+            ? `${item.who} has been thanked.`
+            : `${item.who} has been asked to message you so you can match the transfer.`,
       });
       setZoomed(null);
+      setNotFound(null);
       stats.reload();
     } catch (error) {
       toast({ title: "Couldn't save that", body: errorMessage(error), tone: "error" });
@@ -157,21 +177,24 @@ function Funds() {
     <div className="page">
       <div className="page-header">
         <div>
-          <h1>Funds</h1>
-          <p>Check transfer receipts for sponsorships and shelter donations. Only confirmed money counts towards goals.</p>
+          <h1>Payment verification</h1>
+          <p>
+            Check each transfer receipt against your bank account, then verify the payment. Only verified payments count
+            towards goals.
+          </p>
         </div>
       </div>
 
       <div className="fund-stats">
         <div className="card sa-stat tint-coral">
-          <span className="sa-stat-label"><span className="stat-chip"><Receipt size={16} /></span> Receipts to check</span>
+          <span className="sa-stat-label"><span className="stat-chip"><Receipt size={16} /></span> Awaiting verification</span>
           <span className="stat-value">{loading ? "–" : pending.length}</span>
-          <span className="stat-foot">{formatPkr(pending.reduce((sum, item) => sum + item.amount, 0))} waiting</span>
+          <span className="stat-foot">{formatPkr(pending.reduce((sum, item) => sum + item.amount, 0))} to verify</span>
         </div>
         <div className="card sa-stat tint-green">
-          <span className="sa-stat-label"><span className="stat-chip"><HandCoins size={16} /></span> Confirmed this month</span>
+          <span className="sa-stat-label"><span className="stat-chip"><HandCoins size={16} /></span> Verified this month</span>
           <span className="stat-value">{loading ? "–" : formatPkr(confirmedThisMonth)}</span>
-          <span className="stat-foot">{formatPkr(confirmedTotal)} confirmed in total</span>
+          <span className="stat-foot">{formatPkr(confirmedTotal)} verified in total</span>
         </div>
         <div className="card sa-stat tint-amber">
           <span className="sa-stat-label"><span className="stat-chip"><Wallet size={16} /></span> {fund ? `${fund.month} supply fund` : "Supply fund"}</span>
@@ -192,7 +215,7 @@ function Funds() {
           <div className="card-header fund-tabs-head">
             <div className="tabs" role="tablist">
               <button type="button" role="tab" className="tab" aria-selected={tab === "pending"} onClick={() => setTab("pending")}>
-                To check ({pending.length})
+                To verify ({pending.length})
               </button>
               <button type="button" role="tab" className="tab" aria-selected={tab === "history"} onClick={() => setTab("history")}>
                 History ({history.length})
@@ -206,14 +229,18 @@ function Funds() {
           ) : list.length ? (
             <ul className="fund-list">
               {list.map((item) => (
-                <FundRow key={item.key} item={item} onReview={review} onZoom={setZoomed} busy={busyKey === item.key} />
+                <FundRow key={item.key} item={item} onReview={ask} onZoom={setZoomed} busy={busyKey === item.key} />
               ))}
             </ul>
           ) : (
             <EmptyState
               icon={<Receipt size={22} />}
-              title={tab === "pending" ? "All receipts checked" : "No history yet"}
-              message={tab === "pending" ? "New sponsorship and donation receipts will appear here." : "Confirmed and rejected receipts are kept here."}
+              title={tab === "pending" ? "All payments verified" : "No history yet"}
+              message={
+                tab === "pending"
+                  ? "New sponsorship and donation receipts will appear here."
+                  : "Verified payments, and ones you couldn't find, are kept here."
+              }
             />
           )}
         </section>
@@ -222,7 +249,7 @@ function Funds() {
           <div className="card-header">
             <div>
               <h3>Care funding</h3>
-              <p className="small muted">Confirmed money against each animal's care goal.</p>
+              <p className="small muted">Verified payments against each animal&apos;s care goal.</p>
             </div>
           </div>
           {animals.data ? (
@@ -250,15 +277,52 @@ function Funds() {
           onClose={() => setZoomed(null)}
           footer={zoomed.status === "pending" ? (
             <>
-              <button type="button" className="btn btn-danger-outline" disabled={busyKey === zoomed.key} onClick={() => review(zoomed, "rejected")}>Reject</button>
-              <button type="button" className="btn btn-primary" disabled={busyKey === zoomed.key} onClick={() => review(zoomed, "confirmed")}>Confirm {formatPkr(zoomed.amount)}</button>
+              <button type="button" className="btn btn-secondary" disabled={busyKey === zoomed.key} onClick={() => ask(zoomed, "rejected")}>
+                <SearchX size={16} /> Can&apos;t find payment
+              </button>
+              <button type="button" className="btn btn-primary" disabled={busyKey === zoomed.key} onClick={() => review(zoomed, "confirmed")}>
+                <BadgeCheck size={16} /> Verify {formatPkr(zoomed.amount)} received
+              </button>
             </>
           ) : undefined}
         >
           <div className="stack">
             <p className="small muted">{zoomed.what} · {formatPkr(zoomed.amount)}{zoomed.monthly ? " monthly" : ""} · {formatDate(zoomed.created_at)}</p>
             {zoomed.receipt ? <img src={zoomed.receipt} alt={`Transfer receipt from ${zoomed.who}`} className="fund-receipt-large" /> : null}
-            <p className="small">Check the amount and that the transfer reached your account before confirming.</p>
+            <p className="small">
+              Check that {formatPkr(zoomed.amount)} reached your account before verifying. If you can&apos;t find it yet, the
+              transfer may still be processing.
+            </p>
+          </div>
+        </Modal>
+      ) : null}
+
+      {notFound ? (
+        <Modal
+          title="Can't find this payment?"
+          onClose={() => setNotFound(null)}
+          footer={
+            <>
+              <button type="button" className="btn btn-secondary" onClick={() => setNotFound(null)}>
+                Keep checking
+              </button>
+              <button type="button" className="btn btn-primary" disabled={busyKey === notFound.key} onClick={() => review(notFound, "rejected")}>
+                {busyKey === notFound.key ? "Saving…" : "Mark as not found"}
+              </button>
+            </>
+          }
+        >
+          <div className="stack">
+            <p>
+              {notFound.who}&apos;s {formatPkr(notFound.amount)} transfer ({notFound.what.toLowerCase()}) will be marked as{" "}
+              <strong>payment not found</strong>.
+            </p>
+            <ul className="fund-effects">
+              <li>Nothing is cancelled or refunded: StrayAid never holds the money.</li>
+              <li>{notFound.who} is asked to message you so you can match the transfer, for example by date or reference.</li>
+              <li>It won&apos;t count towards goals until it&apos;s verified.</li>
+            </ul>
+            <p className="small muted">Bank transfers can take a day to appear. If it&apos;s recent, you may want to wait.</p>
           </div>
         </Modal>
       ) : null}

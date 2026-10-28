@@ -34,11 +34,20 @@ const REVIEW_STATUS: Record<string, ChipStyle> = {
   withdrawn: { label: "Withdrawn", className: "chip-slate" },
 };
 
+// Transfer receipts. A payment may already have been made, so it's never "rejected": the
+// organization either finds it in its account or can't find it yet.
+const PAYMENT_STATUS: Record<string, ChipStyle> = {
+  pending: { label: "Awaiting verification", className: "chip-amber chip-dot" },
+  confirmed: { label: "Payment verified", className: "chip-emerald chip-dot" },
+  rejected: { label: "Payment not found", className: "chip-coral chip-dot" },
+};
+
 export const CHIP_KINDS = {
   case: CASE_STATUS,
   severity: SEVERITY,
   animal: ANIMAL_STATUS,
   review: REVIEW_STATUS,
+  payment: PAYMENT_STATUS,
 };
 
 export type ChipKind = keyof typeof CHIP_KINDS;
