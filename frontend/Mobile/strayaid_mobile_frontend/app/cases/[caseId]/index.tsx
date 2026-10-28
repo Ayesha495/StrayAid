@@ -20,6 +20,7 @@ import {
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
+import VerifyCasePanel from "../../../components/case/VerifyCasePanel";
 import Toggle from "../../../components/ui/Toggle";
 import { useSession } from "../../../hooks/useSession";
 import { SessionExpiredError } from "../../../services/apiClient";
@@ -438,6 +439,26 @@ export default function CaseDetailsScreen() {
 
         <Milestones status={item.status} />
 
+        {item.verification && (
+          <View style={styles.verify}>
+            <VerifyCasePanel
+              caseId={item.id}
+              verification={item.verification}
+              onVerified={(result) =>
+                setItem((current) =>
+                  current && {
+                    ...current,
+                    verification: result.verification,
+                    confidence_score: result.confidence_score,
+                    possibly_invalid: result.possibly_invalid,
+                    severity: result.severity,
+                  }
+                )
+              }
+            />
+          </View>
+        )}
+
         <View style={styles.controls}>
           <View style={styles.updatesCard}>
             <View style={styles.rowLeft}>
@@ -682,6 +703,7 @@ const styles = StyleSheet.create({
   stepLabel: { marginTop: 4, fontFamily: fonts.bodyMedium, fontSize: 10, lineHeight: 14, color: GRAY },
   stepLabelDone: { fontFamily: fonts.bodyBold, color: colors.primary },
   stepLabelCurrent: { fontFamily: fonts.displayExtraBold, color: NAVY },
+  verify: { paddingHorizontal: 20, paddingTop: 12 },
   controls: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 8, gap: 8 },
   updatesCard: {
     flexDirection: "row",

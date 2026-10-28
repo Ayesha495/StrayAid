@@ -14,29 +14,35 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import PhotoProblemModal from "../../components/report/PhotoProblemModal";
 import Toggle from "../../components/ui/Toggle";
 import VoiceInputButton from "../../components/report/VoiceInputButton";
 import { SessionExpiredError } from "../../services/apiClient";
 import { isNetworkError, queueReport } from "../../services/offlineQueue";
-import { submitReport } from "../../services/mobileContentService";
+import { ApiError, submitReport } from "../../services/mobileContentService";
 import { registerForPushNotifications, sendPushTokenToBackend } from "../../services/notificationService";
-import { resetReportDraft, Severity, updateReportDraft, useReportDraft } from "../../services/reportDraft";
+import { resetReportDraft, updateReportDraft, useReportDraft } from "../../services/reportDraft";
 import { colors, fonts } from "../../theme/tokens";
 import { appendFile } from "../../utils/formFile";
+import { describePhotoProblem, PhotoProblem } from "../../utils/photoProblems";
 
-// Stitch screen 8: Report an animal, step 2 (what happened, severity, keep me updated).
-
-const SEVERITIES: { value: Severity; label: string; color: string; text: string }[] = [
-  { value: "low", label: "Low", color: colors.secondary, text: colors.onPrimary },
-  { value: "medium", label: "Medium", color: colors.warning, text: "#4A3000" },
-  { value: "high", label: "High", color: "#B4483A", text: colors.onPrimary },
-  { value: "critical", label: "Critical", color: "#B42318", text: colors.onPrimary },
-];
+// Stitch screen 8: Report an animal, step 2 (what happened, keep me updated). Reporters
+// don't rate severity: people nearby verify the report on the map, and that decides how
+// urgent and trustworthy it is.
 
 export default function ReportDetailsScreen() {
   const draft = useReportDraft();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [problem, setProblem] = useState<PhotoProblem | null>(null);
+
+  // A photo problem found while sending: go back to step 1 for a new photo.
+  const changePhoto = () => {
+    setProblem(null);
+    updateReportDraft({ photo: null, photoCheck: { state: "idle" } });
+    if (router.canGoBack()) router.back();
+    else router.replace("/report");
+  };
 
   const submit = async () => {
     if (submitting) return;
@@ -58,7 +64,6 @@ export default function ReportDetailsScreen() {
       form.append("description", draft.description.trim());
       form.append("latitude", draft.location.latitude.toString());
       form.append("longitude", draft.location.longitude.toString());
-      form.append("severity", draft.severity);
       form.append("keep_updated", draft.keepUpdated ? "true" : "false");
       if (draft.address) form.append("area", draft.address);
       await appendFile(form, "image", draft.photo);
@@ -80,7 +85,6 @@ export default function ReportDetailsScreen() {
           caseId: String(result.case.id),
           reference: result.case.reference,
           area: result.case.area || draft.address,
-          severity: result.case.severity,
           confidence: result.case.confidence_score == null ? "" : String(result.case.confidence_score),
           keepUpdated: result.keep_updated ? "1" : "0",
         },
@@ -97,14 +101,19 @@ export default function ReportDetailsScreen() {
           location: draft.location,
           address: draft.address,
           description: draft.description.trim(),
-          severity: draft.severity,
           keepUpdated: draft.keepUpdated,
         });
         resetReportDraft();
         router.dismissAll();
         router.push({ pathname: "/offline", params: { reason: "report" } });
       } else {
-        setError(err instanceof Error ? err.message : "We couldn't send your report. Please try again.");
+        // Say what actually went wrong (the photo, the checker, the server) with next steps.
+        const found = describePhotoProblem(err);
+        if (found.kind === "server_error" && err instanceof ApiError && err.status < 500) {
+          setError(err.message); // a plain form problem the server explained
+        } else {
+          setProblem(found);
+        }
       }
     } finally {
       setSubmitting(false);
@@ -171,37 +180,16 @@ export default function ReportDetailsScreen() {
             </View>
           </View>
 
-          <View style={styles.severitySection}>
-            <View>
-              <Text style={styles.label}>Severity</Text>
-              <Text style={styles.hint}>Assists our AI triage and closest rescue priority</Text>
+          <View style={styles.verifyNote}>
+            <View style={styles.verifyIcon}>
+              <MaterialIcons name="groups" size={16} color={colors.info} />
             </View>
-            <View style={styles.severityRow} accessibilityRole="radiogroup">
-              {SEVERITIES.map((option) => {
-                const selected = draft.severity === option.value;
-                return (
-                  <View
-                    key={option.value}
-                    style={[styles.severityRing, selected && { borderColor: option.color }]}
-                  >
-                    <Pressable
-                      accessibilityRole="radio"
-                      accessibilityState={{ checked: selected }}
-                      onPress={() => updateReportDraft({ severity: option.value })}
-                      style={[
-                        styles.severity,
-                        selected && [styles.severitySelected, { backgroundColor: option.color, shadowColor: option.color }],
-                      ]}
-                    >
-                      <Text
-                        style={[styles.severityText, selected && [styles.severityTextSelected, { color: option.text }]]}
-                      >
-                        {option.label}
-                      </Text>
-                    </Pressable>
-                  </View>
-                );
-              })}
+            <View style={styles.verifyText}>
+              <Text style={styles.label}>Verified by people nearby</Text>
+              <Text style={styles.hint}>
+                After you send it, people near the spot can confirm the animal is there and whether it needs urgent
+                help. That decides how quickly rescuers act, so you don&apos;t need to rate it yourself.
+              </Text>
             </View>
           </View>
 
@@ -248,6 +236,19 @@ export default function ReportDetailsScreen() {
           <Text style={styles.footerNote}>Your report will be reviewed by a rescue organization.</Text>
         </View>
       </KeyboardAvoidingView>
+
+      <PhotoProblemModal
+        problem={problem}
+        photoUri={draft.photo?.uri ?? null}
+        canUseCamera={Platform.OS !== "web"}
+        onRetake={changePhoto}
+        onChooseAnother={changePhoto}
+        onRetry={() => {
+          setProblem(null);
+          submit();
+        }}
+        onClose={() => setProblem(null)}
+      />
     </SafeAreaView>
   );
 }
@@ -304,29 +305,26 @@ const styles = StyleSheet.create({
   // Matches the reference: the Voice pill sits 5px above the box's bottom edge.
   descriptionWrap: { paddingBottom: 5 },
   voice: { position: "absolute", right: 10, bottom: 10 },
-  severitySection: { gap: 10 },
-  hint: { fontFamily: fonts.body, fontSize: 12, lineHeight: 16, color: "#64748B", marginTop: 2 },
-  severityRow: { flexDirection: "row", gap: 8 },
-  // Holds the 2px ring (with a 1px white gap) around the selected option.
-  severityRing: { flex: 1, padding: 1, borderRadius: 15, borderWidth: 2, borderColor: "transparent", margin: -3 },
-  severity: {
-    height: 38,
-    borderRadius: 12,
+  hint: { fontFamily: fonts.body, fontSize: 12, lineHeight: 17, color: "#64748B", marginTop: 2 },
+  verifyNote: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12,
+    padding: 14,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
-    backgroundColor: colors.surface,
+    borderColor: "#DBEAFE",
+    backgroundColor: "#F5F9FF",
+  },
+  verifyIcon: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: "rgba(74,144,226,0.12)",
     alignItems: "center",
     justifyContent: "center",
   },
-  severitySelected: {
-    borderWidth: 0,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.3,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  severityText: { fontFamily: fonts.bodySemiBold, fontSize: 12, lineHeight: 16, color: "#334155" },
-  severityTextSelected: { fontFamily: fonts.bodyBold, letterSpacing: -0.2 },
+  verifyText: { flex: 1 },
   updates: {
     flexDirection: "row",
     alignItems: "center",

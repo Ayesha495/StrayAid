@@ -46,8 +46,39 @@ describe("Adoption applications", () => {
     renderPage(<Applications />, { path: "/applications", route: "/applications" });
     fireEvent.click((await screen.findAllByRole("button", { name: /Compare/ }))[0]);
     const dialog = screen.getByRole("dialog", { name: "Compare applicants for Luna" });
-    expect(within(dialog).getByText("Rents (pets allowed)")).toBeInTheDocument();
-    expect(within(dialog).getByRole("button", { name: "Hina Malik" })).toBeInTheDocument();
+    expect(within(dialog).getByText("Apartment, rents, pets allowed")).toBeInTheDocument();
+    expect(within(dialog).getAllByRole("button", { name: "Hina Malik" }).length).toBeGreaterThan(0);
+  });
+
+  it("suggests the strongest applicant who meets every requirement", async () => {
+    renderPage(<Applications />, { path: "/applications", route: "/applications" });
+    fireEvent.click((await screen.findAllByRole("button", { name: /Compare/ }))[0]);
+    const dialog = screen.getByRole("dialog", { name: "Compare applicants for Luna" });
+
+    // Usman owns a house; Hina rents an apartment: same answers otherwise.
+    expect(within(dialog).getByRole("status")).toHaveTextContent("Suggested: Usman Tariq");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Review Usman" }));
+    expect(await screen.findByRole("region", { name: "Application" })).toHaveTextContent("Usman Tariq");
+  });
+
+  it("never suggests someone missing a requirement, and says so", async () => {
+    f.getApplications.mockResolvedValue([
+      application(2, "Usman Tariq", LUNA, { agrees_home_visit: false }),
+      application(3, "Hina Malik", LUNA, { ownership: "rent", landlord_allows_pets: null }),
+    ]);
+    renderPage(<Applications />, { path: "/applications", route: "/applications" });
+    fireEvent.click(await screen.findByRole("button", { name: /Compare/ }));
+    const dialog = screen.getByRole("dialog", { name: "Compare applicants for Luna" });
+
+    expect(within(dialog).getByRole("status")).toHaveTextContent("No open applicant meets every requirement yet");
+    expect(within(dialog).queryByText("Top match")).not.toBeInTheDocument();
+  });
+
+  it("shows each applicant's match score in the list", async () => {
+    renderPage(<Applications />, { path: "/applications", route: "/applications" });
+    const luna = (await screen.findByText("Luna")).closest("section") as HTMLElement;
+    expect(within(luna).getByText("Top match")).toBeInTheDocument();
+    expect(within(luna).getAllByText(/out of 100 match score/)).toHaveLength(2);
   });
 
   it("approves after warning that other applicants are declined", async () => {

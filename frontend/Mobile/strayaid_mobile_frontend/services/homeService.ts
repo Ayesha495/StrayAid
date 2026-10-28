@@ -1,4 +1,5 @@
 import { authFetch, optionalAuthFetch } from "./apiClient";
+import type { CaseVerification } from "./caseService";
 import { MobilePost, normalizePost, resolveMediaUrl } from "./mobileContentService";
 
 export type FeedPost = MobilePost & {
@@ -26,6 +27,7 @@ export type TrendingCase = {
   image: string | null;
   report_count: number;
   created_at: string;
+  verification: CaseVerification;
 };
 
 export type Story = {

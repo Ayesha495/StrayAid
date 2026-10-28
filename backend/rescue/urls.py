@@ -9,6 +9,7 @@ from .views import (
     case_keep_updated,
     case_reports,
     case_updates,
+    case_verify,
     community_stats,
     keep_me_updated,
     map_cases,
@@ -35,5 +36,6 @@ urlpatterns = [
     path('public/<int:case_id>/reports/', case_reports),
     path('public/<int:case_id>/keep-updated/', case_keep_updated),
     path('public/<int:case_id>/ai-feedback/', case_ai_feedback),
+    path('public/<int:case_id>/verify/', case_verify),
     path('', include(router.urls)),
 ]
