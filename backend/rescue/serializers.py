@@ -62,12 +62,36 @@ PUBLIC_STATUS_LABELS = {
 }
 
 
+def verification_for_viewer(case, user):
+    """The community check on a case ("Is this animal still there?") as the viewer sees it:
+    the counts, the viewer's own answer, and why they can't answer (if they can't)."""
+    from .utils.scoring import community_summary
+    from .views import verify_blocker
+
+    verifications = list(case.verifications.all())
+    summary = community_summary(verifications)
+    viewer = user if user and user.is_authenticated else None
+    mine = next((item for item in verifications if viewer and item.user_id == viewer.id), None)
+    return {
+        "status": summary["status"],
+        "confirmations": summary["confirmations"],
+        "disputes": summary["disputes"],
+        "urgent": summary["urgent"],
+        "nearby": summary["nearby"],
+        "my_response": mine.response if mine else None,
+        "my_urgent": bool(mine and mine.urgent),
+        "my_updated_at": mine.updated_at if mine else None,
+        "blocked": verify_blocker(case, viewer),
+    }
+
+
 class TrendingCaseSerializer(serializers.ModelSerializer):
     # Public card data only: no reporter identity or organization internals.
     title = serializers.SerializerMethodField()
     status_label = serializers.SerializerMethodField()
     image = serializers.SerializerMethodField()
     report_count = serializers.IntegerField(read_only=True)
+    verification = serializers.SerializerMethodField()
 
     class Meta:
         model = Case
@@ -86,7 +110,11 @@ class TrendingCaseSerializer(serializers.ModelSerializer):
             "image",
             "report_count",
             "created_at",
+            "verification",
         ]
+
+    def get_verification(self, obj):
+        return verification_for_viewer(obj, getattr(self.context.get("request"), "user", None))
 
     def get_title(self, obj):
         if obj.title:
@@ -190,7 +218,9 @@ class CaseDetailSerializer(TrendingCaseSerializer):
             # ...and the parts of the score (see utils/scoring.py).
             "photo_confidence": parts["photo"],
             "photo_count": parts["photo_count"],
-            "severity_weight": parts["severity"],
+            "community_weight": parts["community"],
+            "confirmations": parts["verification"]["confirmations"],
+            "disputes": parts["verification"]["disputes"],
             "report_count": parts["report_count"],
             "report_weight": parts["reports"],
             "hours_unanswered": parts["hours_unanswered"],
@@ -238,7 +268,7 @@ class PublicReportSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Report
-        fields = ["id", "image", "description", "severity", "created_at", "reporter", "is_mine"]
+        fields = ["id", "image", "description", "created_at", "reporter", "is_mine"]
 
     def get_image(self, obj):
         return _absolute(self.context.get("request"), obj.image)

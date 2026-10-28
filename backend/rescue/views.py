@@ -10,7 +10,7 @@ from animals.models import Animal
 from core.uploads import validate_image_upload
 from organizations.permissions import IsOrganizationUser
 
-from .models import SEVERITY_ORDER, AIFeedback, Case, CaseUpdate, Report
+from .models import AIFeedback, Case, CaseUpdate, CaseVerification, Report
 from .serializers import (
     CaseDetailSerializer,
     CaseSerializer,
@@ -20,7 +20,13 @@ from .serializers import (
 )
 from .utils.case_matcher import find_nearby_case
 from .ai import detector
-from .utils.scoring import ANIMAL_REQUIRED, refresh_case_score, refresh_unanswered_scores_if_due
+from .utils.scoring import (
+    ANIMAL_REQUIRED,
+    community_severity,
+    community_summary,
+    refresh_case_score,
+    refresh_unanswered_scores_if_due,
+)
 from .utils.location_utils import calculate_distance
 
 
@@ -137,7 +143,8 @@ def report_case(request):
     image = request.FILES.get('image')
     # Readable place name picked on the phone (e.g. "F-7, Islamabad"); shown instead of coordinates.
     area = (request.data.get('area') or '').strip()[:100]
-    severity = (request.data.get('severity') or 'medium').strip().lower()
+    # Reporters don't choose a severity (older app versions still send one; it's ignored):
+    # people who verify the case on the map decide how urgent it is.
     # Multipart sends booleans as text; anything but an explicit "no" keeps updates on.
     notify_reporter = str(request.data.get('keep_updated', 'true')).strip().lower() not in ('false', '0', 'no', 'off')
 
@@ -145,12 +152,6 @@ def report_case(request):
     if not latitude or not longitude:
         return Response(
             {"error": "Latitude and longitude are required"},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
-    if severity not in SEVERITY_ORDER:
-        return Response(
-            {"error": "Severity must be low, medium, high or critical"},
             status=status.HTTP_400_BAD_REQUEST
         )
 
@@ -181,18 +182,9 @@ def report_case(request):
 
     if existing_case:
         case = existing_case
-        was_critical = case.severity == "critical"
-        changed = []
         if area and not case.area:
             case.area = area
-            changed.append("area")
-        # A new sighting can raise the urgency of a case, never lower it.
-        current = SEVERITY_ORDER.index(case.severity) if case.severity in SEVERITY_ORDER else 0
-        if SEVERITY_ORDER.index(severity) > current:
-            case.severity = severity
-            changed.append("severity")
-        if changed:
-            case.save(update_fields=changed)
+            case.save(update_fields=["area"])
         message = "Report attached to existing case"
     else:
         case = Case.objects.create(
@@ -200,10 +192,8 @@ def report_case(request):
             latitude=latitude,
             longitude=longitude,
             area=area,
-            severity=severity,
             reported_by=user
         )
-        was_critical = False
         message = "New case created and report added"
 
     # Every submission still gets its own report record for history.
@@ -214,7 +204,6 @@ def report_case(request):
         description=description,
         latitude=latitude,
         longitude=longitude,
-        severity=severity,
         notify_reporter=notify_reporter,
         ai_animal_confidence=detection["confidence"],
         ai_animal_label=detection["label"],
@@ -224,8 +213,6 @@ def report_case(request):
     # first: the matcher's copy has its report list cached from before this report.
     case = Case.objects.get(pk=case.pk)
     refresh_case_score(case)
-    if case.severity == "critical" and not was_critical and case.status == "reported":
-        alert_nearby_organizations(case)
 
     return Response(
         {
@@ -298,8 +285,8 @@ def map_cases(request):
     refresh_unanswered_scores_if_due()
     queryset = (
         Case.objects.filter(status__in=ACTIVE_RESCUE_STATUSES)
-        .annotate(severity_rank=SEVERITY_RANK, report_count=Count("reports"))
-        .prefetch_related("reports")
+        .annotate(severity_rank=SEVERITY_RANK, report_count=Count("reports", distinct=True))
+        .prefetch_related("reports", "verifications")
         .order_by("-severity_rank", F("confidence_score").desc(nulls_last=True), "-created_at")
     )
     cases = list(queryset[:300])
@@ -328,8 +315,8 @@ def trending_cases(request):
         limit = 3
     queryset = (
         Case.objects.filter(status__in=ACTIVE_RESCUE_STATUSES)
-        .annotate(severity_rank=SEVERITY_RANK, report_count=Count("reports"))
-        .prefetch_related("reports")
+        .annotate(severity_rank=SEVERITY_RANK, report_count=Count("reports", distinct=True))
+        .prefetch_related("reports", "verifications")
         .order_by("-severity_rank", F("confidence_score").desc(nulls_last=True), "-created_at")[:limit]
     )
     serializer = TrendingCaseSerializer(queryset, many=True, context={"request": request})
@@ -500,7 +487,7 @@ class CaseViewSet(viewsets.ReadOnlyModelViewSet):
 def _public_case(case_id):
     return (
         Case.objects.select_related("organization")
-        .prefetch_related("reports__user", "updates")
+        .prefetch_related("reports__user", "updates", "verifications")
         .filter(pk=case_id)
         .first()
     )
@@ -571,3 +558,101 @@ def case_ai_feedback(request, case_id):
         return Response({"error": "Choose what's wrong with the detection"}, status=status.HTTP_400_BAD_REQUEST)
     AIFeedback.objects.update_or_create(case=case, user=request.user, defaults={"reason": reason})
     return Response({"reason": reason}, status=status.HTTP_201_CREATED)
+
+
+# ── Community verification ("Is this animal still there?") ──────────────────
+
+def verify_blocker(case, user):
+    """Why this person can't verify the case, or None if they can."""
+    if case.status not in ACTIVE_RESCUE_STATUSES:
+        return "closed"
+    if not user or not user.is_authenticated:
+        return "sign_in"
+    if any(report.user_id == user.id for report in case.reports.all()):
+        return "reporter"
+    return None
+
+
+VERIFY_BLOCKED_MESSAGES = {
+    "closed": "This case is no longer open, so it can't be verified.",
+    "reporter": "You reported this case, so others need to verify it.",
+}
+
+
+@api_view(["POST", "DELETE"])
+@permission_classes([IsAuthenticated])
+def case_verify(request, case_id):
+    """Confirm (or dispute) that a reported animal is really there, like confirming a road
+    blockage on a map. One answer per person, which they can change or take back. The
+    answer feeds the case's confidence score; urgent confirmations raise its severity."""
+    from .serializers import verification_for_viewer
+
+    case = Case.objects.prefetch_related("reports", "verifications").filter(pk=case_id).first()
+    if not case:
+        return Response({"error": "Case not found"}, status=status.HTTP_404_NOT_FOUND)
+    blocker = verify_blocker(case, request.user)
+    if blocker:
+        return Response({"error": VERIFY_BLOCKED_MESSAGES[blocker], "code": blocker}, status=status.HTTP_403_FORBIDDEN)
+
+    if request.method == "DELETE":
+        CaseVerification.objects.filter(case=case, user=request.user).delete()
+    else:
+        response = request.data.get("response")
+        if response not in dict(CaseVerification.RESPONSE_CHOICES):
+            return Response(
+                {"error": "Say whether you found the animal: confirmed or not_found"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        urgent = response == CaseVerification.CONFIRMED and str(request.data.get("urgent", "")).strip().lower() in (
+            "true", "1", "yes", "on"
+        )
+        distance_m = None
+        try:
+            latitude, longitude = float(request.data["latitude"]), float(request.data["longitude"])
+            if -90 <= latitude <= 90 and -180 <= longitude <= 180:
+                distance_m = round(calculate_distance(latitude, longitude, case.latitude, case.longitude), 1)
+        except (KeyError, TypeError, ValueError):
+            pass
+        _, created = CaseVerification.objects.update_or_create(
+            case=case,
+            user=request.user,
+            defaults={"response": response, "urgent": urgent, "distance_m": distance_m},
+        )
+        if created and response == CaseVerification.CONFIRMED:
+            _notify_reporters_of_confirmation(case)
+
+    case = Case.objects.prefetch_related("reports", "verifications", "updates").get(pk=case.pk)
+    summary = community_summary(case.verifications.all())
+    severity = community_severity(case.severity, summary["urgent_weight"])
+    if severity != case.severity:
+        became_critical = severity == "critical"
+        case.severity = severity
+        case.save(update_fields=["severity"])
+        if became_critical and case.status == "reported":
+            alert_nearby_organizations(case)
+    refresh_case_score(case)
+    return Response(
+        {
+            "verification": verification_for_viewer(case, request.user),
+            "confidence_score": case.confidence_score,
+            "possibly_invalid": case.possibly_invalid,
+            "severity": case.severity,
+        }
+    )
+
+
+def _notify_reporters_of_confirmation(case):
+    """Tell the people who reported the case that someone confirmed it. One notification
+    per case, refreshed with the running count, so it doesn't pile up."""
+    from notifications.services import notify_users
+
+    count = case.verifications.filter(response=CaseVerification.CONFIRMED).count()
+    people = "1 person" if count == 1 else f"{count} people"
+    notify_users(
+        list({report.user_id for report in case.reports.all()}),
+        title="Report confirmed",
+        body=f"**{people}** confirmed the animal you reported in case {case.reference} is there.",
+        data={"type": "case_verified", "case_id": case.pk},
+        kind="rescue",
+        group_key=f"case-verified-{case.pk}",
+    )

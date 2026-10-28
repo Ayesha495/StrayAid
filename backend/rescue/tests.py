@@ -132,7 +132,8 @@ class RescueApiTests(MediaEnabledAPITestCase):
         self.case.refresh_from_db()
         self.assertEqual(self.case.area, "G-9, Islamabad")
 
-    def test_report_sets_severity_and_keep_updated(self):
+    def test_reporter_cannot_choose_severity(self):
+        # Older app versions still send a severity: it's ignored, and the case starts at medium.
         self.client.force_authenticate(user=self.public_user)
 
         response = self.client.post(
@@ -141,7 +142,7 @@ class RescueApiTests(MediaEnabledAPITestCase):
                 "description": "Hit by a car",
                 "latitude": "31.5200",
                 "longitude": "74.3200",
-                "severity": "Critical",
+                "severity": "critical",
                 "keep_updated": "false",
                 "image": make_test_image(),
             },
@@ -150,10 +151,10 @@ class RescueApiTests(MediaEnabledAPITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         report = Report.objects.get(pk=response.data["report_id"])
-        self.assertEqual((report.severity, report.notify_reporter), ("critical", False))
-        self.assertEqual(report.case.severity, "critical")
+        self.assertFalse(report.notify_reporter)
+        self.assertEqual(report.case.severity, "medium")
 
-    def test_report_defaults_to_medium_and_updates_on(self):
+    def test_report_keeps_updates_on_by_default(self):
         self.client.force_authenticate(user=self.public_user)
 
         response = self.client.post(
@@ -163,29 +164,16 @@ class RescueApiTests(MediaEnabledAPITestCase):
         )
 
         report = Report.objects.get(pk=response.data["report_id"])
-        self.assertEqual((report.severity, report.notify_reporter), ("medium", True))
+        self.assertTrue(report.notify_reporter)
 
-    def test_report_rejects_unknown_severity(self):
-        self.client.force_authenticate(user=self.public_user)
-
-        response = self.client.post(
-            "/api/cases/report/",
-            {"description": "x", "latitude": "31.52", "longitude": "74.32", "severity": "urgent", "image": make_test_image()},
-            format="multipart",
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(Report.objects.count(), 0)
-
-    def test_nearby_report_raises_case_severity_but_never_lowers_it(self):
+    def test_nearby_report_never_changes_case_severity(self):
+        self.case.severity = "high"
+        self.case.save(update_fields=["severity"])
         self.client.force_authenticate(user=self.public_user)
         payload = {"description": "Seen again", "latitude": "31.5100", "longitude": "74.3100"}
 
-        self.client.post("/api/cases/report/", {**payload, "severity": "high", "image": make_test_image()}, format="multipart")
-        self.case.refresh_from_db()
-        self.assertEqual(self.case.severity, "high")
-
         self.client.post("/api/cases/report/", {**payload, "severity": "low", "image": make_test_image()}, format="multipart")
+
         self.case.refresh_from_db()
         self.assertEqual(self.case.severity, "high")
 
@@ -211,7 +199,7 @@ class RescueApiTests(MediaEnabledAPITestCase):
         response = self.client.post(
             "/api/cases/report/",
             {"description": "Dog", "latitude": "31.5200", "longitude": "74.3200", "area": "G-11, Islamabad",
-             "severity": "high", "image": make_test_image()},
+             "image": make_test_image()},
             format="multipart",
         )
 
@@ -220,8 +208,8 @@ class RescueApiTests(MediaEnabledAPITestCase):
             "id": case.id,
             "reference": f"SA-{case.created_at.year}-{case.id:04d}",
             "area": "G-11, Islamabad",
-            "severity": "high",
-            "confidence_score": 74,  # stand-in detector: dog 0.9, high severity, 1 report
+            "severity": "medium",
+            "confidence_score": 67,  # stand-in detector: dog 0.9, not yet verified, 1 report
             "status": "reported",
         })
         self.assertTrue(response.data["keep_updated"])
@@ -680,12 +668,12 @@ class ConfidenceScoreTests(APITestCase):
     def test_formula_matches_spec(self):
         from .utils.scoring import compute_confidence_score
 
-        # 0.5*0.97 + 0.3*0.75 + 0.2*1.0 = 0.91
-        self.assertEqual(compute_confidence_score(0.97, "high", 3), 91)
-        # 0.5*0.9 + 0.3*0.5 + 0.2*0.33 = 0.666
-        self.assertEqual(compute_confidence_score(0.9, "medium", 1), 67)
-        self.assertEqual(compute_confidence_score(1.0, "critical", 5), 100)
-        self.assertEqual(compute_confidence_score(None, "low", 0), 8)
+        # 0.5*0.97 + 0.3*0.75 (community) + 0.2*1.0 = 0.91
+        self.assertEqual(compute_confidence_score(0.97, 0.75, 3), 91)
+        # 0.5*0.9 + 0.3*0.5 (nobody has verified yet) + 0.2*0.33 = 0.666
+        self.assertEqual(compute_confidence_score(0.9, None, 1), 67)
+        self.assertEqual(compute_confidence_score(1.0, 1.0, 5), 100)
+        self.assertEqual(compute_confidence_score(None, 0.25, 0), 8)
 
     def test_low_detector_confidence_is_flagged(self):
         from .utils.scoring import is_possibly_invalid
@@ -705,7 +693,7 @@ class CasePageTests(MediaEnabledAPITestCase):
         response = self.client.post(
             "/api/cases/report/",
             {"description": "Limping dog", "latitude": "31.52", "longitude": "74.32", "area": "G-11, Islamabad",
-             "severity": "high", "image": make_test_image()},
+             "image": make_test_image()},
             format="multipart",
         )
         self.case = Case.objects.get(pk=response.data["case_id"])
@@ -729,7 +717,9 @@ class CasePageTests(MediaEnabledAPITestCase):
         data = response.data
         self.assertEqual(data["reference"], self.case.reference)
         self.assertEqual(data["area"], "G-11, Islamabad")
-        self.assertEqual(data["severity"], "high")
+        self.assertEqual(data["severity"], "medium")
+        self.assertEqual(data["verification"]["status"], "unverified")
+        self.assertEqual(data["verification"]["blocked"], "sign_in")
         self.assertEqual(data["update_count"], 1)
         self.assertTrue(data["image"].endswith(".jpg"))
         self.assertNotIn("images", data)
@@ -828,10 +818,10 @@ class AIScoreTests(MediaEnabledAPITestCase):
     def test_formula_with_fixed_detector_output(self):
         from .utils.scoring import compute_confidence_score, is_possibly_invalid
 
-        # 0.5 * 0.9 + 0.3 * 0.75 (high) + 0.2 * 0.33 (one report) = 0.741
-        self.assertEqual(compute_confidence_score(0.9, "high", 1), 74)
-        self.assertEqual(compute_confidence_score(0.9, "high", 3), 88)  # 0.45 + 0.225 + 0.2 = 0.875
-        self.assertEqual(compute_confidence_score(0.0, "low", 1), 14)
+        # 0.5 * 0.9 + 0.3 * 0.75 (community) + 0.2 * 0.33 (one report) = 0.741
+        self.assertEqual(compute_confidence_score(0.9, 0.75, 1), 74)
+        self.assertEqual(compute_confidence_score(0.9, 0.75, 3), 88)  # 0.45 + 0.225 + 0.2 = 0.875
+        self.assertEqual(compute_confidence_score(0.0, 0.25, 1), 14)
         self.assertTrue(is_possibly_invalid(0.29))
         self.assertFalse(is_possibly_invalid(0.3))
 
@@ -839,7 +829,7 @@ class AIScoreTests(MediaEnabledAPITestCase):
         from .utils.scoring import score_breakdown
 
         other = User.objects.create_user(email="o2@example.com", username="o2", password="x")
-        payload = {"description": "Cat", "latitude": "31.52", "longitude": "74.32", "severity": "high"}
+        payload = {"description": "Cat", "latitude": "31.52", "longitude": "74.32"}
         self.client.force_authenticate(user=self.reporter)
         first = self.client.post("/api/cases/report/", {**payload, "image": make_test_image()}, format="multipart")
         again = self.client.post("/api/cases/report/", {**payload, "image": make_test_image()}, format="multipart")
@@ -876,7 +866,7 @@ class RealDetectorTests(MediaEnabledAPITestCase):
 
         response = self.client.post(
             "/api/cases/report/",
-            {"description": "Dog", "latitude": "31.52", "longitude": "74.32", "severity": "high",
+            {"description": "Dog", "latitude": "31.52", "longitude": "74.32",
              "image": stitch_upload("08_s15_bella_rescue_dog.jpg")},
             format="multipart",
         )
@@ -908,11 +898,11 @@ class RealDetectorTests(MediaEnabledAPITestCase):
         self.assertEqual(Report.objects.count(), 0)
         self.assertEqual((dog.status_code, dog.data["animal"]), (200, "dog"))
 
-    def test_case_score_follows_detector_severity_and_report_count(self):
+    def test_case_score_follows_detector_and_report_count(self):
         from unittest.mock import patch
 
         other = User.objects.create_user(email="o2@example.com", username="o2", password="x")
-        payload = {"description": "Cat", "latitude": "31.52", "longitude": "74.32", "severity": "high"}
+        payload = {"description": "Cat", "latitude": "31.52", "longitude": "74.32"}
         with patch("rescue.ai.detector.detect_animal", return_value={"confidence": 0.9, "label": "cat", "box": [0, 0, 1, 1]}):
             self.client.force_authenticate(user=self.reporter)
             first = self.client.post("/api/cases/report/", {**payload, "image": make_test_image()}, format="multipart")
@@ -920,9 +910,9 @@ class RealDetectorTests(MediaEnabledAPITestCase):
             self.client.post("/api/cases/report/", {**payload, "image": make_test_image()}, format="multipart")
 
         case = Case.objects.get(pk=first.data["case_id"])
-        self.assertEqual(first.data["case"]["confidence_score"], 74)  # one report
+        self.assertEqual(first.data["case"]["confidence_score"], 67)  # one report
         # Second report: photos combine to 1 - 0.1 * 0.1 = 0.99, and 2 reports weigh 0.67.
-        self.assertEqual(case.confidence_score, 85)  # 0.495 + 0.225 + 0.134
+        self.assertEqual(case.confidence_score, 78)  # 0.495 + 0.15 + 0.134
 
     def test_photo_without_an_animal_is_refused(self):
         from unittest.mock import patch
@@ -980,12 +970,12 @@ class RealDetectorTests(MediaEnabledAPITestCase):
         with patch("rescue.ai.detector.detect_animal", return_value={"confidence": 0.9, "label": "dog", "box": [0.1, 0.2, 0.8, 0.9]}):
             case_id = self.client.post(
                 "/api/cases/report/",
-                {"description": "Dog", "latitude": "31.52", "longitude": "74.32", "severity": "high", "image": make_test_image()},
+                {"description": "Dog", "latitude": "31.52", "longitude": "74.32", "image": make_test_image()},
                 format="multipart",
             ).data["case_id"]
 
         ai = self.client.get(f"/api/cases/public/{case_id}/").data["ai"]
-        self.assertEqual((ai["animal"], ai["animal_confidence"], ai["severity_weight"], ai["report_count"]), ("dog", 0.9, 0.75, 1))
+        self.assertEqual((ai["animal"], ai["animal_confidence"], ai["community_weight"], ai["report_count"]), ("dog", 0.9, 0.5, 1))
         self.assertEqual(ai["box"], [0.1, 0.2, 0.8, 0.9])
         self.assertIsNone(ai["my_feedback"])
 
@@ -1013,7 +1003,7 @@ class ScoreOverTimeTests(MediaEnabledAPITestCase):
         self.addCleanup(self.detector.stop)
         response = self.client.post(
             "/api/cases/report/",
-            {"description": "Dog", "latitude": "31.52", "longitude": "74.32", "severity": "high", "image": make_test_image()},
+            {"description": "Dog", "latitude": "31.52", "longitude": "74.32", "image": make_test_image()},
             format="multipart",
         )
         self.case = Case.objects.get(pk=response.data["case_id"])
@@ -1039,29 +1029,29 @@ class ScoreOverTimeTests(MediaEnabledAPITestCase):
         self.assertEqual(freshness_factor(200), 0.5)
 
     def test_unanswered_case_loses_confidence_over_time(self):
-        fresh = self.score()  # 74: 0.45 + 0.225 + 0.066
+        fresh = self.score()  # 67: 0.45 + 0.15 + 0.066
         self.age_reports(39)  # freshness 0.75
         older = self.score()
         self.age_reports(500)  # floor 0.5
         oldest = self.score()
 
-        self.assertEqual((fresh, older, oldest), (74, 56, 37))
+        self.assertEqual((fresh, older, oldest), (67, 50, 33))
         ai = self.client.get(f"/api/cases/public/{self.case.id}/").data["ai"]
         self.assertFalse(ai["answered"])
         self.assertEqual(ai["freshness"], 0.5)
 
     def test_a_new_report_restarts_the_clock_and_strengthens_the_score(self):
         self.age_reports(39)
-        self.assertEqual(self.score(), 56)
+        self.assertEqual(self.score(), 50)
 
         self.client.force_authenticate(user=User.objects.create_user(email="n@example.com", username="n", password="x"))
         self.client.post(
             "/api/cases/report/",
-            {"description": "Still here", "latitude": "31.52", "longitude": "74.32", "severity": "high", "image": make_test_image()},
+            {"description": "Still here", "latitude": "31.52", "longitude": "74.32", "image": make_test_image()},
             format="multipart",
         )
 
-        self.assertEqual(self.score(), 85)  # fresh again, two photos, two reports
+        self.assertEqual(self.score(), 78)  # fresh again, two photos, two reports
 
     def test_score_stops_falling_once_an_organization_responds(self):
         self.age_reports(39)
@@ -1069,7 +1059,7 @@ class ScoreOverTimeTests(MediaEnabledAPITestCase):
         self.case.status = "assigned"
         self.case.save()
         frozen = self.score()
-        self.assertEqual(frozen, 56)  # answered 39 hours after the report
+        self.assertEqual(frozen, 50)  # answered 39 hours after the report
 
         # Weeks later: the report and the response both move back in time together.
         from datetime import timedelta
@@ -1089,7 +1079,7 @@ class ScoreOverTimeTests(MediaEnabledAPITestCase):
         self.client.get("/api/cases/trending/")
 
         self.case.refresh_from_db()
-        self.assertEqual(self.case.confidence_score, 37)
+        self.assertEqual(self.case.confidence_score, 33)
 
 
 class ReportPhotoSafetyTests(MediaEnabledAPITestCase):
@@ -1129,3 +1119,134 @@ class ReportPhotoSafetyTests(MediaEnabledAPITestCase):
             "/api/cases/report/", {**self.payload, "latitude": "123", "image": make_test_image()}, format="multipart"
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class CaseVerificationTests(MediaEnabledAPITestCase):
+    """People near a reported animal confirm or dispute it, like confirming a road blockage
+    on a map. Their answers move the case's confidence score and can raise its severity."""
+
+    def setUp(self):
+        self.reporter = User.objects.create_user(email="r@example.com", username="r", password="x")
+        org_user = User.objects.create_user(email="o@example.com", username="o", password="x", role="organization")
+        self.organization = Organization.objects.create(
+            user=org_user, name="Safe Paws", latitude=31.52, longitude=74.32, radius=10, is_available=True
+        )
+        self.client.force_authenticate(user=self.reporter)
+        response = self.client.post(
+            "/api/cases/report/",
+            {"description": "Dog", "latitude": "31.52", "longitude": "74.32", "area": "G-11, Islamabad",
+             "image": make_test_image()},
+            format="multipart",
+        )
+        self.case = Case.objects.get(pk=response.data["case_id"])
+        self.people = [
+            User.objects.create_user(email=f"p{index}@example.com", username=f"p{index}", password="x")
+            for index in range(4)
+        ]
+
+    def verify(self, user, response, near=True, **extra):
+        self.client.force_authenticate(user=user)
+        body = {"response": response, **extra}
+        if near:
+            body.update(latitude=31.5205, longitude=74.3205)  # ~70 m from the spot
+        return self.client.post(f"/api/cases/public/{self.case.id}/verify/", body, format="json")
+
+    def test_confirmations_raise_the_score_and_disputes_lower_it(self):
+        self.assertEqual(self.case.confidence_score, 67)
+
+        first = self.verify(self.people[0], "confirmed")
+        self.assertEqual(first.status_code, status.HTTP_200_OK, first.data)
+        # Community (1 + 1) / (1 + 2) = 0.667: 0.45 + 0.2 + 0.066
+        self.assertEqual(first.data["confidence_score"], 72)
+        self.assertEqual(first.data["verification"]["status"], "verified")
+        self.assertEqual(first.data["verification"]["my_response"], "confirmed")
+
+        self.verify(self.people[1], "not_found")
+        response = self.verify(self.people[2], "not_found")
+        # (1 + 1) / (1 + 2 + 2) = 0.4
+        self.assertEqual(response.data["confidence_score"], 64)
+        self.assertEqual(response.data["verification"]["status"], "disputed")
+        counts = (response.data["verification"]["confirmations"], response.data["verification"]["disputes"])
+        self.assertEqual(counts, (1, 2))
+
+    def test_far_away_answers_count_half(self):
+        response = self.verify(self.people[0], "confirmed", near=False)
+        # (0.5 + 1) / (0.5 + 2) = 0.6
+        self.assertEqual(response.data["confidence_score"], 70)
+        self.assertEqual(response.data["verification"]["nearby"], 0)
+
+    def test_answers_can_be_changed_and_taken_back(self):
+        self.verify(self.people[0], "confirmed")
+        changed = self.verify(self.people[0], "not_found")
+        counts = (changed.data["verification"]["confirmations"], changed.data["verification"]["disputes"])
+        self.assertEqual(counts, (0, 1))
+
+        removed = self.client.delete(f"/api/cases/public/{self.case.id}/verify/")
+        self.assertEqual(removed.data["verification"]["status"], "unverified")
+        self.assertEqual(removed.data["confidence_score"], 67)
+
+    def test_reporters_guests_and_closed_cases_cannot_verify(self):
+        self.assertEqual(self.verify(self.reporter, "confirmed").status_code, status.HTTP_403_FORBIDDEN)
+        self.client.force_authenticate(user=None)
+        guest = self.client.post(f"/api/cases/public/{self.case.id}/verify/", {"response": "confirmed"}, format="json")
+        self.assertEqual(guest.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(self.verify(self.people[0], "maybe").status_code, status.HTTP_400_BAD_REQUEST)
+
+        Case.objects.filter(pk=self.case.pk).update(status="closed")
+        closed = self.verify(self.people[0], "confirmed")
+        self.assertEqual((closed.status_code, closed.data["code"]), (403, "closed"))
+
+    def test_reporter_sees_why_they_cannot_verify(self):
+        data = self.client.get(f"/api/cases/public/{self.case.id}/").data
+        self.assertEqual(data["verification"]["blocked"], "reporter")
+        self.client.force_authenticate(user=self.people[0])
+        self.assertIsNone(self.client.get("/api/cases/map/").data[0]["verification"]["blocked"])
+
+    def test_urgent_confirmations_raise_severity_and_alert_nearby_organizations(self):
+        from notifications.models import Notification
+
+        high = self.verify(self.people[0], "confirmed", urgent=True)
+        self.assertEqual(high.data["severity"], "high")
+        self.assertFalse(Notification.objects.filter(kind="alert").exists())
+
+        critical = self.verify(self.people[1], "confirmed", urgent=True)
+        self.assertEqual(critical.data["severity"], "critical")
+        alert = Notification.objects.get(kind="alert")
+        self.assertEqual(alert.user, self.organization.user)
+        self.assertEqual(alert.body, "Critical case reported near **G-11**. Tap to review details.")
+
+        # Taking urgency back doesn't lower it again: an organization decides that.
+        self.verify(self.people[1], "confirmed", urgent=False)
+        self.case.refresh_from_db()
+        self.assertEqual(self.case.severity, "critical")
+
+    def test_a_dispute_is_never_urgent(self):
+        response = self.verify(self.people[0], "not_found", urgent=True)
+        self.assertEqual(response.data["severity"], "medium")
+        self.assertFalse(response.data["verification"]["my_urgent"])
+
+    def test_reporter_hears_about_confirmations_once_per_case(self):
+        from notifications.models import Notification
+
+        self.verify(self.people[0], "confirmed")
+        self.verify(self.people[1], "confirmed")
+        self.verify(self.people[2], "not_found")
+
+        notes = Notification.objects.filter(user=self.reporter, data__type="case_verified")
+        self.assertEqual(notes.count(), 1)
+        self.assertIn("**2 people** confirmed", notes.get().body)
+
+    def test_a_mostly_disputed_case_is_flagged(self):
+        for person in self.people[:3]:
+            response = self.verify(person, "not_found")
+        # (0 + 1) / (3 + 2) = 0.2
+        self.assertTrue(response.data["possibly_invalid"])
+
+    def test_a_confirmation_restarts_the_freshness_clock(self):
+        from datetime import timedelta
+
+        from django.utils import timezone
+
+        self.case.reports.update(created_at=timezone.now() - timedelta(hours=39))
+        self.assertEqual(self.client.get(f"/api/cases/public/{self.case.id}/").data["confidence_score"], 50)
+        self.assertEqual(self.verify(self.people[0], "confirmed").data["confidence_score"], 72)

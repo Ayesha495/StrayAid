@@ -57,6 +57,9 @@ class Case(models.Model):
     species = models.CharField(max_length=30, blank=True)
     # Neighbourhood or sector shown publicly instead of raw coordinates.
     area = models.CharField(max_length=100, blank=True)
+    # How urgent the case is. Reporters don't choose it: it starts at medium and rises when
+    # people who verify the case on the map say the animal needs urgent help (see
+    # utils/scoring.py), or when an organization sets it.
     severity = models.CharField(max_length=10, choices=SEVERITY_CHOICES, default="medium")
     # 0-100 AI confidence that the report is a genuine animal in need.
     confidence_score = models.PositiveSmallIntegerField(null=True, blank=True)
@@ -83,7 +86,6 @@ class Report(models.Model):
     description =models.TextField()
     latitude = models.FloatField()
     longitude = models.FloatField()
-    severity = models.CharField(max_length=10, choices=SEVERITY_CHOICES, default="medium")
     # "Keep me updated" on the report form: push this reporter the case's status changes.
     notify_reporter = models.BooleanField(default=True)
     # Highest animal-class confidence from the image detector (0-1); null = not scored.
@@ -139,3 +141,34 @@ class AIFeedback(models.Model):
 
     def __str__(self):
         return f"AI feedback on case #{self.case_id}: {self.reason}"
+
+
+class CaseVerification(models.Model):
+    """A community check on an open case, like confirming a reported road blockage on a map:
+    "Is this animal still there?" One answer per person per case, which they can change.
+    Confirmations raise the case's confidence score and disputes lower it; people who were
+    near the spot when they answered count more (see utils/scoring.py)."""
+
+    CONFIRMED = "confirmed"
+    NOT_FOUND = "not_found"
+    RESPONSE_CHOICES = [
+        (CONFIRMED, "Yes, the animal is there"),
+        (NOT_FOUND, "No, I couldn't find it"),
+    ]
+
+    case = models.ForeignKey(Case, on_delete=models.CASCADE, related_name="verifications")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="case_verifications")
+    response = models.CharField(max_length=20, choices=RESPONSE_CHOICES)
+    # Only asked after a confirmation: does the animal need help urgently?
+    urgent = models.BooleanField(default=False)
+    # How far the person was from the reported spot when they answered (null = unknown).
+    distance_m = models.FloatField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("case", "user")
+        ordering = ["-updated_at"]
+
+    def __str__(self):
+        return f"{self.get_response_display()} on case #{self.case_id}"

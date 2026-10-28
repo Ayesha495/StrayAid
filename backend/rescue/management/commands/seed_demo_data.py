@@ -1036,7 +1036,6 @@ class Command(BaseCommand):
                         "description": data["description"],
                         "latitude": data["latitude"] + index * 0.00001,
                         "longitude": data["longitude"],
-                        "severity": data["severity"],
                     },
                 )
                 attach_photo(report, "image", data["image"])
@@ -1097,7 +1096,6 @@ class Command(BaseCommand):
                     "description": data["description"],
                     "latitude": data["latitude"],
                     "longitude": data["longitude"],
-                    "severity": "medium",
                 },
             )
             attach_photo(report, "image", data["image"])
@@ -1488,7 +1486,6 @@ class Command(BaseCommand):
                     "description": data["description"],
                     "latitude": data["latitude"],
                     "longitude": data["longitude"],
-                    "severity": data["severity"],
                 },
             )
             if not report.image:
@@ -1602,7 +1599,6 @@ class Command(BaseCommand):
                         "description": data["description"],
                         "latitude": data["latitude"] + index * 0.00001,
                         "longitude": data["longitude"],
-                        "severity": data["severity"],
                     },
                 )
                 if not report.image:
@@ -1625,7 +1621,6 @@ class Command(BaseCommand):
                         "description": case.description,
                         "latitude": case.latitude + 0.00001,
                         "longitude": case.longitude,
-                        "severity": case.severity,
                     },
                 )
                 first = case.reports.exclude(pk=report.pk).order_by("created_at").first()
