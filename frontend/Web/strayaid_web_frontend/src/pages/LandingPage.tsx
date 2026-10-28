@@ -102,13 +102,13 @@ function LandingPage() {
           </div>
         </section>
 
-        {/* Real numbers only, on a raised strip that overlaps the hero's bottom edge. */}
+        {/* Real numbers only, on a band that continues the hero's green so it reads as the hero's footer. */}
         {rescued > 0 ? (
           <section className="lp-numbers" aria-label="StrayAid so far">
             <dl>
               <div><dt>Animals rescued</dt><dd><AnimatedNumber value={rescued} /></dd></div>
               <div><dt>Rescue teams</dt><dd><AnimatedNumber value={directory.data?.length ?? 0} /></dd></div>
-              <div><dt>Raised for treatment</dt><dd><span className="lp-unit">Rs</span><AnimatedNumber value={raised} /></dd></div>
+              <div><dt>Raised for treatment</dt><dd><span className="lp-unit">Rs</span><AnimatedNumber value={raised} format /></dd></div>
               <div><dt>Cost to use StrayAid</dt><dd>Free</dd></div>
             </dl>
           </section>
@@ -132,7 +132,7 @@ function LandingPage() {
           </div>
         </section>
 
-        {/* How it works: a stack of cards */}
+        {/* How it works: a scroll story */}
         <section id="journey" className="lp-section" aria-labelledby="journey-title">
           <div className="lp-section-head">
             <h2 id="journey-title">From the curb to a couch</h2>
