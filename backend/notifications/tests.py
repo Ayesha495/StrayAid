@@ -69,17 +69,27 @@ class CaseNotificationTests(MediaEnabledAPITestCase):
         self.assertEqual((note.kind, note.title), ("rescue", "Rescue Update"))
         self.assertEqual(note.body, "The dog you reported has been accepted by **Paws & Care Rescue**.")
 
-    def test_critical_reports_alert_nearby_organizations(self):
+    def test_cases_confirmed_as_urgent_alert_nearby_organizations(self):
         far_user = User.objects.create_user(email="far@example.com", username="far", password="x", role="organization")
         Organization.objects.create(user=far_user, name="Lahore Rescue", latitude=31.5, longitude=74.3, radius=10)
         self.client.force_authenticate(user=self.reporter)
         response = self.client.post(
             "/api/cases/report/",
             {"description": "Hit by a car", "latitude": "33.7010", "longitude": "73.0510", "area": "G-11, Islamabad",
-             "severity": "critical", "image": make_test_image()},
+             "image": make_test_image()},
             format="multipart",
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+        # Reporters don't set severity: two people nearby confirming it's urgent make it critical.
+        self.assertFalse(Notification.objects.filter(kind="alert").exists())
+        for index in range(2):
+            witness = User.objects.create_user(email=f"w{index}@example.com", username=f"w{index}", password="x")
+            self.client.force_authenticate(user=witness)
+            self.client.post(
+                f"/api/cases/public/{response.data['case_id']}/verify/",
+                {"response": "confirmed", "urgent": True, "latitude": 33.701, "longitude": 73.051},
+                format="json",
+            )
         alert = Notification.objects.get(kind="alert")
         self.assertEqual(alert.user, self.org_user)
         self.assertEqual(alert.body, "Critical case reported near **G-11**. Tap to review details.")

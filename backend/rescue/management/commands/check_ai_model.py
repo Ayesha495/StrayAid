@@ -41,8 +41,8 @@ class Command(BaseCommand):
             took = (time.monotonic() - started) * 1000
             if result["label"]:
                 verdict = f"{result['label']} {result['confidence']:.0%}"
-                example = compute_confidence_score(result["confidence"], "medium", 1)
-                note = f"  -> case score with medium severity, 1 report: {example}%"
+                example = compute_confidence_score(result["confidence"], None, 1)
+                note = f"  -> case score with 1 report, not yet verified: {example}%"
             else:
                 verdict, note = "no animal found", "  -> would be flagged 'Needs verification'"
             self.stdout.write(f"{photo.name}: {verdict} ({took:.0f} ms){note}")

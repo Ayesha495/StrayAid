@@ -1,23 +1,32 @@
 """AI confidence score for a rescue case (0-100), shown on Stitch screens 9-11.
 
-    score = round(100 * (0.5 * photo + 0.3 * severity + 0.2 * reports) * freshness)
+    score = round(100 * (0.5 * photo + 0.3 * community + 0.2 * reports) * freshness)
 
 - photo: the detector's animal confidence (0-1), combined across every report photo as
   "chance that at least one photo shows an animal": 1 - (1 - c1)(1 - c2)... One photo is
   just its own confidence; more photos of the same animal strengthen it.
-- severity: low 0.25, medium 0.5, high 0.75, critical 1
+- community: how people who checked the case on the map answered "Is this animal still
+  there?" (CaseVerification): (confirmations + 1) / (confirmations + disputes + 2). It is
+  0.5 before anyone answers and moves towards 1 or 0 as answers come in. Someone within
+  NEARBY_METERS of the spot counts 1; anyone further away (or who didn't share their
+  location) counts NEARBY_WEIGHT_FAR, since they're less likely to have seen the animal.
+  Reporters can't verify their own case, and they don't choose its severity either.
 - reports: 1 report 0.33, 2 reports 0.67, 3 or more 1
-- freshness: 1 for the first 6 hours after the latest report, then falls in a straight
+- freshness: 1 for the first 6 hours after the latest sighting, then falls in a straight
   line to 0.5 at 72 hours, and never lower. It only counts while no organization has
-  responded: once a case is accepted the clock stops. A new report restarts it, because
-  it confirms the animal is still there.
+  responded: once a case is accepted the clock stops. A new report or a confirmation
+  restarts it, because it shows the animal is still there.
 
 Reports whose photo doesn't show an animal (detector confidence below 0.3) are refused
-when submitted, to keep out false reports. `possibly_invalid` remains for older reports
-saved before that check existed.
+when submitted, to keep out false reports. `possibly_invalid` is set when the photo score
+is that low (older reports) or when the community mostly says the animal isn't there.
 
 "reports" counts different people: one person reporting the same spot again doesn't
 strengthen the score (and their new report starts a new case, see case_matcher.py).
+
+Severity: a case starts at medium. People who confirm a case can say it needs urgent help;
+urgent confirmations worth URGENT_HIGH raise it to high and URGENT_CRITICAL to critical
+(which alerts nearby organizations). It never drops back on its own.
 """
 
 import threading
@@ -25,7 +34,6 @@ import time
 
 from django.utils import timezone
 
-SEVERITY_WEIGHTS = {"low": 0.25, "medium": 0.5, "high": 0.75, "critical": 1.0}
 POSSIBLY_INVALID_BELOW = 0.3
 # A new report's photo needs at least this animal confidence to be accepted.
 ANIMAL_REQUIRED = POSSIBLY_INVALID_BELOW
@@ -33,6 +41,15 @@ ANIMAL_REQUIRED = POSSIBLY_INVALID_BELOW
 FRESH_HOURS = 6
 FLOOR_HOURS = 72
 FRESHNESS_FLOOR = 0.5
+
+# Community verification (see the module docstring).
+NEARBY_METERS = 1000
+NEARBY_WEIGHT_FAR = 0.5
+NEUTRAL_COMMUNITY = 0.5
+DISPUTED_BELOW = 0.3
+VERIFIED_FROM = 0.6
+URGENT_HIGH = 1.0
+URGENT_CRITICAL = 2.0
 
 
 def report_weight(report_count):
@@ -56,6 +73,56 @@ def combined_photo_confidence(confidences):
     return 1.0 - miss
 
 
+def verification_weight(verification):
+    """A nearby answer counts fully; a far-away or location-less one counts less."""
+    distance = verification.distance_m
+    return 1.0 if distance is not None and distance <= NEARBY_METERS else NEARBY_WEIGHT_FAR
+
+
+def community_summary(verifications):
+    """Counts and weights of the community's answers on one case."""
+    from rescue.models import CaseVerification
+
+    confirmed = disputed = urgent = 0.0
+    counts = {"confirmations": 0, "disputes": 0, "urgent": 0, "nearby": 0}
+    for verification in verifications:
+        weight = verification_weight(verification)
+        counts["nearby"] += weight == 1.0
+        if verification.response == CaseVerification.CONFIRMED:
+            confirmed += weight
+            counts["confirmations"] += 1
+            if verification.urgent:
+                urgent += weight
+                counts["urgent"] += 1
+        else:
+            disputed += weight
+            counts["disputes"] += 1
+    community = (confirmed + 1) / (confirmed + disputed + 2)
+    if not counts["confirmations"] and not counts["disputes"]:
+        status = "unverified"
+    elif community >= VERIFIED_FROM:
+        status = "verified"
+    elif community <= 1 - VERIFIED_FROM:
+        status = "disputed"
+    else:
+        status = "mixed"
+    return {**counts, "weight": round(community, 4), "urgent_weight": urgent, "status": status}
+
+
+def community_severity(current, urgent_weight):
+    """The case severity after urgent confirmations: raised, never lowered."""
+    from rescue.models import SEVERITY_ORDER
+
+    if urgent_weight >= URGENT_CRITICAL:
+        target = "critical"
+    elif urgent_weight >= URGENT_HIGH:
+        target = "high"
+    else:
+        return current
+    rank = SEVERITY_ORDER.index(current) if current in SEVERITY_ORDER else 0
+    return target if SEVERITY_ORDER.index(target) > rank else current
+
+
 def freshness_factor(hours_unanswered):
     if hours_unanswered <= FRESH_HOURS:
         return 1.0
@@ -63,13 +130,10 @@ def freshness_factor(hours_unanswered):
     return max(FRESHNESS_FLOOR, 1.0 - slope * (hours_unanswered - FRESH_HOURS))
 
 
-def compute_confidence_score(detector_confidence, severity, report_count, freshness=1.0):
+def compute_confidence_score(detector_confidence, community, report_count, freshness=1.0):
     detector = min(max(detector_confidence or 0.0, 0.0), 1.0)
-    value = (
-        0.5 * detector
-        + 0.3 * SEVERITY_WEIGHTS.get(severity, SEVERITY_WEIGHTS["medium"])
-        + 0.2 * report_weight(report_count)
-    )
+    community = NEUTRAL_COMMUNITY if community is None else min(max(community, 0.0), 1.0)
+    value = 0.5 * detector + 0.3 * community + 0.2 * report_weight(report_count)
     return round(100 * value * freshness)
 
 
@@ -87,25 +151,37 @@ def answered_at(case):
 
 def score_breakdown(case, now=None):
     """Every input to the case score, for saving it and for explaining it on screen 11."""
+    from rescue.models import CaseVerification
+
     reports = list(case.reports.all())
+    verifications = list(case.verifications.all())
     reporter_count = len({report.user_id for report in reports})
     photo = combined_photo_confidence([report.ai_animal_confidence for report in reports])
-    latest_report = max((report.created_at for report in reports), default=case.created_at)
+    community = community_summary(verifications)
+    # The latest sighting: a new report, or someone confirming the animal is still there.
+    latest_sighting = max(
+        [report.created_at for report in reports]
+        + [item.updated_at for item in verifications if item.response == CaseVerification.CONFIRMED],
+        default=case.created_at,
+    )
     responded = answered_at(case)
-    # The clock runs from the latest report until an organization responds (or until now).
+    # The clock runs from the latest sighting until an organization responds (or until now).
     end = responded or now or timezone.now()
-    hours = max(0.0, (end - latest_report).total_seconds() / 3600)
+    hours = max(0.0, (end - latest_sighting).total_seconds() / 3600)
     freshness = freshness_factor(hours)
     return {
         "photo": photo,
         "photo_count": sum(1 for report in reports if report.ai_animal_confidence is not None),
-        "severity": SEVERITY_WEIGHTS.get(case.severity, SEVERITY_WEIGHTS["medium"]),
+        "community": community["weight"],
+        "verification": community,
         "report_count": reporter_count,
         "reports": report_weight(reporter_count),
         "hours_unanswered": round(hours, 1),
         "answered": responded is not None,
         "freshness": round(freshness, 4),
-        "score": None if photo is None else compute_confidence_score(photo, case.severity, reporter_count, freshness),
+        "score": None
+        if photo is None
+        else compute_confidence_score(photo, community["weight"], reporter_count, freshness),
     }
 
 
@@ -171,7 +247,9 @@ def refresh_case_score(case, now=None):
     Returns True if anything changed."""
     breakdown = score_breakdown(case, now)
     score = breakdown["score"]
-    invalid = breakdown["photo"] is not None and is_possibly_invalid(breakdown["photo"])
+    invalid = (breakdown["photo"] is not None and is_possibly_invalid(breakdown["photo"])) or (
+        breakdown["community"] < DISPUTED_BELOW
+    )
     if case.confidence_score == score and case.possibly_invalid == invalid:
         return False
     case.confidence_score = score
@@ -186,7 +264,9 @@ def refresh_unanswered_scores(now=None):
     from rescue.models import Case
 
     changed = 0
-    for case in Case.objects.filter(status="reported", confidence_score__isnull=False).prefetch_related("reports"):
+    for case in Case.objects.filter(status="reported", confidence_score__isnull=False).prefetch_related(
+        "reports", "verifications"
+    ):
         changed += refresh_case_score(case, now)
     return changed
 
