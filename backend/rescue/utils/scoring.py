@@ -112,12 +112,15 @@ def score_breakdown(case, now=None):
 def score_report(report):
     """Run the animal detector on a report's photo and store what it found.
     Returns False if the detector isn't available."""
-    from rescue.ai.detector import detect_animal
+    from rescue.ai.detector import UnreadablePhoto, detect_animal
 
     if not report.image:
         return False
-    with report.image.open("rb") as image_file:
-        result = detect_animal(image_file)
+    try:
+        with report.image.open("rb") as image_file:
+            result = detect_animal(image_file)
+    except UnreadablePhoto:
+        return False
     if result is None:
         return False
     report.ai_animal_confidence = result["confidence"]

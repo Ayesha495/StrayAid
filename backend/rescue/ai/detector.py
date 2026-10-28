@@ -33,6 +33,10 @@ _session_lock = threading.Lock()
 _unavailable = False
 
 
+class UnreadablePhoto(Exception):
+    """The upload passed the image check but can't be decoded for detection."""
+
+
 def _get_session():
     """Load the model once per process. Returns None if it can't be loaded."""
     global _session, _unavailable
@@ -67,7 +71,8 @@ def detect_animal(image_file):
 
     Returns {"confidence": 0-1, "label": "dog", "box": [x0, y0, x1, y1]} with the box in
     0-1 image coordinates, {"confidence": 0.0, "label": "", "box": None} if no animal was
-    found, or None if the detector isn't available.
+    found, or None if the detector isn't available. Raises UnreadablePhoto if the image
+    can't be decoded.
     """
     session = _get_session()
     if session is None:
@@ -75,12 +80,18 @@ def detect_animal(image_file):
 
     try:
         image_file.seek(0)
-        image = ImageOps.exif_transpose(Image.open(image_file)).convert("RGB")
-        image.thumbnail((MAX_SIDE, MAX_SIDE))
-        boxes, classes, scores, _ = session.run(None, {"inputs": np.asarray(image, dtype=np.uint8)[None]})
-    except Exception as error:
-        logger.warning("AI detection failed: %s", error)
-        return None
+        try:
+            image = ImageOps.exif_transpose(Image.open(image_file)).convert("RGB")
+            image.thumbnail((MAX_SIDE, MAX_SIDE))
+        except Exception as error:
+            # The photo itself is the problem (e.g. an iPhone HEIC the server can't decode),
+            # not the detector: say so instead of reporting the detector as unavailable.
+            raise UnreadablePhoto(str(error)) from error
+        try:
+            boxes, classes, scores, _ = session.run(None, {"inputs": np.asarray(image, dtype=np.uint8)[None]})
+        except Exception as error:
+            logger.warning("AI detection failed: %s", error)
+            return None
     finally:
         try:
             image_file.seek(0)
