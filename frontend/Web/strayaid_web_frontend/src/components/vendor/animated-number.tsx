@@ -2,11 +2,11 @@ import React, { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
 
-function AnimatedNumber({ value, className }: { value: number, className?: string }) {
+function AnimatedNumber({ value, className, format = false }: { value: number, className?: string, format?: boolean }) {
     return (
         <div className={cn("flex items-center", className)}>
             <div className="flex relative items-center">
-                {value.toString().split("").map((digit, index) => (
+                {(format ? value.toLocaleString("en-US") : value.toString()).split("").map((digit, index) => (
                     <SingleNumberHolder key={index} value={digit} index={index} />
                 ))}
             </div>
@@ -14,7 +14,7 @@ function AnimatedNumber({ value, className }: { value: number, className?: strin
     )
 }
 
-function SingleNumberHolder({ value, index }: { value: string, index: number }) {
+function SingleNumberHolder({ value }: { value: string, index: number }) {
     const [height, setHeight] = useState<string | null>(null)
     const containerRef = useRef<HTMLDivElement>(null)
     let notANumber = false
@@ -25,9 +25,8 @@ function SingleNumberHolder({ value, index }: { value: string, index: number }) 
         }
     }, [])
 
-    if (index === 0) {
-        notANumber = isNaN(Number.parseInt(value))
-    }
+    // Any non-digit (a minus sign, a thousands comma) is shown as-is.
+    notANumber = isNaN(Number.parseInt(value))
 
     const vars = {
         init: { opacity: 0 },

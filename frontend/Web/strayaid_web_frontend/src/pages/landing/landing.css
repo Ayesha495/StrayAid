@@ -136,49 +136,47 @@
 .lp-btn-ghost { border: 1px solid rgba(255, 255, 255, 0.75); background: transparent; color: #fff; }
 .lp-btn-ghost:hover { background: #fff; color: var(--green-900); }
 
-/* ---------- Numbers: a raised strip that overlaps the hero's bottom edge ---------- */
+/* ---------- Numbers: the hero's footer band ----------
+   Full-bleed in the hero's dark green and joined to its bottom edge, so the numbers belong
+   to the hero instead of floating as a card between sections. */
 .lp-numbers {
-  position: relative;
-  z-index: 2;
-  max-width: var(--lp-max);
-  margin: -44px auto 0;
-  padding: 0 var(--lp-gutter);
-  box-sizing: content-box;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--green-900);
+  color: #fff;
 }
 
 .lp-numbers dl {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  margin: 0;
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  background: #fff;
-  box-shadow: var(--elev-3);
+  max-width: var(--lp-max);
+  margin: 0 auto;
+  padding: 0 var(--lp-gutter);
+  box-sizing: content-box;
 }
 
 .lp-numbers dl > div {
   display: flex;
   flex-direction: column-reverse;
-  gap: 2px;
-  padding: 22px 26px;
-  border-left: 1px solid var(--line);
+  gap: 4px;
+  padding: 28px 28px 30px;
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-.lp-numbers dl > div:first-child { border-left: 0; }
-.lp-numbers dt { color: var(--color-ink-muted); font-size: 14px; }
+.lp-numbers dl > div:first-child { padding-left: 0; border-left: 0; }
+.lp-numbers dt { color: rgba(255, 255, 255, 0.72); font-size: 14px; }
 .lp-numbers dd {
   display: flex;
   align-items: baseline;
   gap: 6px;
   margin: 0;
-  color: var(--navy-900);
+  color: #fff;
   font-family: var(--font-display);
-  font-size: 30px;
+  font-size: 32px;
   font-weight: 800;
   line-height: 1.2;
   font-variant-numeric: tabular-nums;
 }
-.lp-unit { color: var(--amber-800); font-size: 18px; }
+.lp-unit { color: var(--amber-100, #fdecc8); font-size: 18px; }
 
 /* ---------- Why ---------- */
 .lp-why {
@@ -418,8 +416,8 @@
 @media (max-width: 860px) {
 
   .lp-numbers dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .lp-numbers dl > div { padding: 18px 20px; border-bottom: 1px solid var(--line); }
-  .lp-numbers dl > div:nth-child(odd) { border-left: 0; }
+  .lp-numbers dl > div { padding: 20px 20px 22px; border-bottom: 1px solid rgba(255, 255, 255, 0.12); }
+  .lp-numbers dl > div:nth-child(odd) { padding-left: 0; border-left: 0; }
   .lp-numbers dl > div:nth-child(n + 3) { border-bottom: 0; }
 
   .journey-card { grid-template-columns: minmax(0, 1fr); grid-template-rows: 180px auto; height: auto; }
@@ -442,7 +440,6 @@
   .lp-hero-actions .btn { flex: 1 1 100%; justify-content: center; }
   .lp-numbers dd { font-size: 22px; }
   .lp-ctas .btn { flex: 1 1 100%; justify-content: center; }
-  .lp-numbers { margin-top: 0; padding: 16px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
