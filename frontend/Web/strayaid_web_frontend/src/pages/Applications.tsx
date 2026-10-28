@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Check, CheckCircle2, Clock, Columns3, FileText, Inbox, Lightbulb, MessageSquare, X, XCircle } from "lucide-react";
+import { ArrowLeft, Check, CheckCircle2, Clock, Columns3, FileText, Inbox, Lightbulb, MessageSquare, Star, X, XCircle } from "lucide-react";
 import { decideApplication, getApplications } from "../services/fundingService";
 import { startConversation } from "../services/chatService";
 import { useApi } from "../hooks/useApi";
@@ -9,6 +9,8 @@ import Modal from "../ui/Modal";
 import FilterTiles from "../ui/FilterTiles";
 import Avatar from "../ui/Avatar";
 import StatusChip from "../ui/StatusChip";
+import ApplicantComparison, { MatchBreakdown } from "../components/ApplicantComparison";
+import { evaluate, rankApplicants, scoreLabel, type GroupRanking } from "../utils/adoptionMatch";
 import { EmptyState, ErrorState, LoadingRows } from "../ui/States";
 import { formatDate } from "../utils/format";
 import { formatRelativeTime } from "../utils/time";
@@ -54,36 +56,15 @@ function groupByAnimal(applications: AdoptionApplication[]): Group[] {
   return [...groups.values()];
 }
 
-function CompareDialog({ group, onClose, onPick }: { group: Group; onClose: () => void; onPick: (id: number) => void }) {
+function CompareDialog({ group, applications, onClose, onPick }: {
+  group: Group;
+  applications: AdoptionApplication[];
+  onClose: () => void;
+  onPick: (id: number) => void;
+}) {
   return (
     <Modal wide title={`Compare applicants for ${group.animal.name}`} onClose={onClose}>
-      <div className="table-wrap">
-        <table className="table compare-table">
-          <thead>
-            <tr>
-              <th />
-              {group.applications.map((application) => (
-                <th key={application.id}>
-                  <button type="button" className="link" onClick={() => onPick(application.id)}>{application.full_name}</button>
-                  <div><StatusChip kind="review" value={application.status} /></div>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {FACTS.map(([label, read]) => (
-              <tr key={label}>
-                <th scope="row">{label}</th>
-                {group.applications.map((application) => <td key={application.id}>{read(application)}</td>)}
-              </tr>
-            ))}
-            <tr>
-              <th scope="row">Applied</th>
-              {group.applications.map((application) => <td key={application.id}>{formatDate(application.created_at)}</td>)}
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <ApplicantComparison animalName={group.animal.name} applications={applications} onPick={onPick} />
     </Modal>
   );
 }
@@ -135,8 +116,9 @@ function DecisionDialog({ application, decision, otherPending, onCancel, onConfi
   );
 }
 
-function ApplicationDetail({ application, onDecide, onMessage, messaging, onBack }: {
+function ApplicationDetail({ application, isTopMatch, onDecide, onMessage, messaging, onBack }: {
   application: AdoptionApplication;
+  isTopMatch: boolean;
   onDecide: (decision: "approved" | "rejected") => void;
   onMessage: () => void;
   messaging: boolean;
@@ -159,6 +141,17 @@ function ApplicationDetail({ application, onDecide, onMessage, messaging, onBack
       </div>
 
       <div className="card-body stack" style={{ gap: 20 }}>
+        <div>
+          <h4 className="row" style={{ gap: 8 }}>
+            Match for {application.animal.name}
+            {isTopMatch ? (
+              <span className="match-badge">
+                <Star size={12} aria-hidden /> Top match
+              </span>
+            ) : null}
+          </h4>
+          <MatchBreakdown match={evaluate(application)} />
+        </div>
         <dl className="app-facts">
           <div><dt>Phone</dt><dd><a className="link" href={`tel:${application.phone}`}>{application.phone}</a></dd></div>
           {FACTS.map(([label, read]) => (
@@ -211,6 +204,12 @@ function Applications() {
   const scopedAnimal = animalId ? all[0]?.animal ?? null : null;
   const visible = useMemo(() => all.filter((item) => filter === "all" || item.status === filter), [all, filter]);
   const groups = useMemo(() => groupByAnimal(visible), [visible]);
+  // Rankings use every application for the animal, whatever the filter shows.
+  const rankings = useMemo(() => {
+    const byAnimal = new Map<number, GroupRanking>();
+    groupByAnimal(all).forEach((group) => byAnimal.set(group.animal.id, rankApplicants(group.applications)));
+    return byAnimal;
+  }, [all]);
   const selectedId = Number(params.get("application")) || null;
   const selected = all.find((item) => item.id === selectedId) ?? null;
 
@@ -302,20 +301,35 @@ function Applications() {
                   ) : null}
                 </header>
                 <ul className="app-rows">
-                  {group.applications.map((application) => (
-                    <li key={application.id}>
-                      <button type="button" className={`app-row${application.id === selectedId ? " is-selected" : ""}`} onClick={() => select(application.id)}>
-                        <Avatar name={application.full_name} size={32} />
-                        <span className="app-row-text">
-                          <span className="strong truncate">{application.full_name}</span>
-                          <span className="small muted truncate">
-                            {[application.city, HOME[application.home_type], formatRelativeTime(application.created_at)].filter(Boolean).join(" · ")}
+                  {group.applications.map((application) => {
+                    const score = evaluate(application).score;
+                    const isTop = rankings.get(group.animal.id)?.topMatchId === application.id;
+                    return (
+                      <li key={application.id}>
+                        <button type="button" className={`app-row${application.id === selectedId ? " is-selected" : ""}`} onClick={() => select(application.id)}>
+                          <Avatar name={application.full_name} size={32} />
+                          <span className="app-row-text">
+                            <span className="row" style={{ gap: 6, minWidth: 0 }}>
+                              <span className="strong truncate">{application.full_name}</span>
+                              {isTop ? (
+                                <span className="match-badge">
+                                  <Star size={11} aria-hidden /> Top match
+                                </span>
+                              ) : null}
+                            </span>
+                            <span className="small muted truncate">
+                              {[application.city, HOME[application.home_type], formatRelativeTime(application.created_at)].filter(Boolean).join(" · ")}
+                            </span>
                           </span>
-                        </span>
-                        <StatusChip kind="review" value={application.status} />
-                      </button>
-                    </li>
-                  ))}
+                          <span className="match-pill" title={`Match score ${score}/100: ${scoreLabel(score).toLowerCase()}`}>
+                            {score}
+                            <span className="sr-only"> out of 100 match score</span>
+                          </span>
+                          <StatusChip kind="review" value={application.status} />
+                        </button>
+                      </li>
+                    );
+                  })}
                 </ul>
               </section>
             ))
@@ -332,6 +346,7 @@ function Applications() {
           {selected ? (
             <ApplicationDetail
               application={selected}
+              isTopMatch={rankings.get(selected.animal.id)?.topMatchId === selected.id}
               onDecide={setDecision}
               onMessage={message}
               messaging={messaging}
@@ -347,7 +362,11 @@ function Applications() {
                 <li><strong>Experience.</strong> First-time adopters can be great; they may just need more guidance.</li>
                 <li><strong>Commitment.</strong> Agreeing to a home visit and the return policy.</li>
               </ul>
-              <p className="small muted">With more than one applicant, use <strong>Compare</strong> to see their answers side by side.</p>
+              <p className="small muted">
+                Each applicant gets a <strong>match score</strong> out of 100, and the strongest one who meets every
+                requirement is marked <strong>Top match</strong>. With more than one applicant, use <strong>Compare</strong> to
+                see why.
+              </p>
             </div>
           )}
         </div>
@@ -356,6 +375,7 @@ function Applications() {
       {comparing ? (
         <CompareDialog
           group={comparing}
+          applications={all.filter((item) => item.animal.id === comparing.animal.id)}
           onClose={() => setComparing(null)}
           onPick={(id) => {
             setComparing(null);
