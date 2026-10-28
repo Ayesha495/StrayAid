@@ -132,7 +132,7 @@ function LandingPage() {
           </div>
         </section>
 
-        {/* How it works: a stack of cards */}
+        {/* How it works: a scroll story */}
         <section id="journey" className="lp-section" aria-labelledby="journey-title">
           <div className="lp-section-head">
             <h2 id="journey-title">From the curb to a couch</h2>

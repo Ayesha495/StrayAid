@@ -197,33 +197,122 @@
 .lp-why-text p { max-width: 52ch; color: var(--navy-700); }
 .lp-why-text p + p { margin-top: 14px; }
 
-/* ---------- Journey: the sticky card stack ---------- */
-.journey-stack { position: relative; padding-bottom: 8vh; }
-/* Each sticky wrapper gets room below it, so the next card arrives after a short scroll. */
-.journey-stack > div { padding-bottom: 22vh; }
-.journey-stack > div:last-child { padding-bottom: 0; }
-
-.journey-card {
-  position: relative;
+/* ---------- Journey: a scroll story ---------- */
+/* Chapters scroll on the left; one sticky photo frame on the right cross-fades between them. */
+.journey {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
-  width: 100%;
-  height: clamp(360px, 58vh, 480px);
-  overflow: hidden;
-  border: 1px solid var(--line);
-  border-radius: 22px;
-  background: #fff;
-  box-shadow: var(--elev-3);
-  transform-origin: top center;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+  gap: clamp(32px, 6vw, 88px);
+  align-items: start;
 }
 
-.journey-card-text { display: flex; flex-direction: column; justify-content: center; gap: 14px; padding: clamp(28px, 4vw, 48px); }
-.journey-card-number { color: var(--green-700); font-family: var(--font-display); font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums; }
-.journey-card-number span { color: var(--color-ink-subtle); }
-.journey-card h3 { font-size: clamp(28px, 3vw, 40px); font-weight: 800; letter-spacing: -0.025em; }
-.journey-card-lead { max-width: 42ch; color: var(--navy-900); font-size: 18px; }
-.journey-card-detail { max-width: 42ch; color: var(--color-ink-muted); font-size: 15px; }
-.journey-card-photo { width: 100%; height: 100%; min-height: 0; object-fit: cover; }
+.journey-steps {
+  position: relative;
+  margin: 0;
+  padding: 0 0 0 36px;
+  list-style: none;
+}
+
+/* The rail: a quiet track with a green fill up to the chapter being read. */
+.journey-steps::before,
+.journey-steps::after {
+  content: "";
+  position: absolute;
+  top: 12vh;
+  left: 7px;
+  width: 2px;
+  border-radius: 2px;
+}
+.journey-steps::before { bottom: 12vh; background: var(--line-strong); }
+.journey-steps::after {
+  height: calc((100% - 24vh) * var(--journey-progress, 0.25));
+  background: var(--green-700);
+  transition: height 0.5s var(--ease-out, ease-out);
+}
+
+.journey-step {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  min-height: 62vh;
+  padding: 6vh 0;
+  opacity: 0.35;
+  transition: opacity 0.45s var(--ease-out, ease-out);
+}
+.journey-step.is-active { opacity: 1; }
+.journey-step:first-child { min-height: 50vh; }
+.journey-step:last-child { min-height: 50vh; }
+
+.journey-dot {
+  position: absolute;
+  top: 50%;
+  left: -36px;
+  z-index: 1;
+  width: 16px;
+  height: 16px;
+  margin-top: -8px;
+  border: 2px solid var(--line-strong);
+  border-radius: 50%;
+  background: var(--color-canvas, #fff);
+  transition: border-color 0.3s, background-color 0.3s, transform 0.3s;
+}
+.journey-step.is-done .journey-dot { border-color: var(--green-700); background: var(--green-700); }
+.journey-step.is-active .journey-dot { border-color: var(--green-700); background: #fff; transform: scale(1.25); box-shadow: 0 0 0 5px var(--green-50); }
+
+.journey-step-number { color: var(--green-700); font-family: var(--font-display); font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.journey-step-number span { color: var(--color-ink-subtle); }
+.journey-step h3 { font-size: clamp(28px, 3vw, 40px); font-weight: 800; letter-spacing: -0.025em; }
+.journey-step-lead { max-width: 42ch; color: var(--navy-900); font-size: 18px; }
+.journey-step-detail { max-width: 42ch; color: var(--color-ink-muted); font-size: 15px; }
+/* Each chapter's own photo is only shown on narrow screens, where there's no sticky frame. */
+.journey-step-photo { display: none; }
+
+.journey-media {
+  position: sticky;
+  top: calc(50vh - clamp(180px, 29vh, 260px));
+}
+
+.journey-frame {
+  position: relative;
+  height: clamp(360px, 58vh, 520px);
+  overflow: hidden;
+  border-radius: 22px;
+  background: var(--navy-100);
+  box-shadow: var(--elev-3);
+}
+
+.journey-frame img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transform: scale(1.04);
+  transition: opacity 0.7s var(--ease-out, ease-out), transform 1.2s var(--ease-out, ease-out);
+}
+.journey-frame img.is-active { opacity: 1; transform: scale(1); }
+
+.journey-caption {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--navy-900);
+  font-size: 13px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .journey-frame img,
+  .journey-step,
+  .journey-dot,
+  .journey-steps::after { transition: none; }
+  .journey-frame img { transform: none; }
+}
 
 /* ---------- Animal carousel ---------- */
 .carousel { position: relative; }
@@ -420,11 +509,17 @@
   .lp-numbers dl > div:nth-child(odd) { padding-left: 0; border-left: 0; }
   .lp-numbers dl > div:nth-child(n + 3) { border-bottom: 0; }
 
-  .journey-card { grid-template-columns: minmax(0, 1fr); grid-template-rows: 180px auto; height: auto; }
-  .journey-card-photo { height: 180px; order: -1; }
-  .journey-card-text { padding: 20px; gap: 8px; }
-  .journey-card-lead { font-size: 16px; }
-  .journey-stack > div { padding-bottom: 12vh; }
+  /* One column: no sticky frame, each chapter shows its own photo and every chapter is fully visible. */
+  .journey { grid-template-columns: minmax(0, 1fr); }
+  .journey-media { display: none; }
+  .journey-steps { padding-left: 28px; }
+  .journey-steps::before, .journey-steps::after { top: 0; }
+  .journey-steps::before { bottom: 0; }
+  .journey-steps::after { height: calc(100% * var(--journey-progress, 0.25)); }
+  .journey-step, .journey-step:first-child, .journey-step:last-child { min-height: 0; padding: 0 0 40px; opacity: 1; }
+  .journey-dot { top: 0; left: -28px; margin-top: 0; }
+  .journey-step-photo { display: block; width: 100%; height: 200px; margin-bottom: 4px; border-radius: 16px; object-fit: cover; }
+  .journey-step-lead { font-size: 16px; }
 
   .lp-way { grid-template-columns: minmax(0, 1fr); }
 }
