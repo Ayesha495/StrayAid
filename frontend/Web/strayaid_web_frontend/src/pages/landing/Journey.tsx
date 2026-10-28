@@ -1,13 +1,11 @@
-import { useRef } from "react";
-import { useScroll } from "motion/react";
-import { StickyCard_001 } from "@/components/vendor/skiper-ui/skiper16";
+import { useEffect, useRef, useState } from "react";
 
 const CHAPTERS = [
   {
     key: "spotted",
     title: "Spotted",
-    text: "Someone sees an injured stray and takes one photo in the StrayAid app. Their location and how serious it looks go with it.",
-    detail: "Our AI checks the photo really shows an animal and ranks how urgent it is.",
+    text: "Someone sees an injured stray and takes one photo in the StrayAid app. Their location goes with it.",
+    detail: "Our AI checks the photo really shows an animal, and people nearby confirm it's still there.",
     image: "/landing/spotted.webp",
     alt: "A young stray puppy asleep on bare ground beside a yellow container",
   },
@@ -38,38 +36,67 @@ const CHAPTERS = [
 ];
 
 /**
- * "From the curb to a couch": four cards that stack as you scroll (Skiper UI's sticky card
- * stack). Each card sticks a little lower than the one before and the earlier ones shrink
- * back, so the pile reads as depth. With reduced motion the cards simply stack without scaling.
+ * "From the curb to a couch" as a scroll story: the four chapters scroll by on one side
+ * while a single photo frame stays put on the other and cross-fades to the chapter you're
+ * reading. Nothing slides over anything else, and the section ends cleanly before the next.
+ * A rail beside the chapters fills as you go. On narrow screens each chapter simply shows
+ * its own photo above the text.
  */
 function Journey() {
-  const container = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: container, offset: ["start start", "end end"] });
+  const [active, setActive] = useState(0);
+  const chapters = useRef<Array<HTMLLIElement | null>>([]);
+
+  useEffect(() => {
+    if (typeof IntersectionObserver === "undefined") return;
+    // A chapter becomes active when it reaches the middle band of the screen.
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) setActive(Number((entry.target as HTMLElement).dataset.index));
+        });
+      },
+      { rootMargin: "-45% 0px -45% 0px" },
+    );
+    chapters.current.forEach((element) => element && observer.observe(element));
+    return () => observer.disconnect();
+  }, []);
 
   return (
-    <div ref={container} className="journey-stack">
-      {/* The cards must be direct siblings in one tall container for sticky stacking to work. */}
-      {CHAPTERS.map((item, i) => (
-            <StickyCard_001
-              key={item.key}
-              i={i}
-              title={item.title}
-              src={item.image}
-              progress={scrollYProgress}
-              range={[i * 0.25, 1]}
-              targetScale={1 - (CHAPTERS.length - i - 1) * 0.04}
-              top={`calc(96px + ${i * 22}px)`}
-              className="journey-card"
-            >
-              <div className="journey-card-text">
-                <span className="journey-card-number">0{i + 1} <span>/ 0{CHAPTERS.length}</span></span>
-                <h3>{item.title}</h3>
-                <p className="journey-card-lead">{item.text}</p>
-                <p className="journey-card-detail">{item.detail}</p>
-              </div>
-              <img className="journey-card-photo" src={item.image} alt={item.alt} loading="lazy" />
-            </StickyCard_001>
-      ))}
+    <div className="journey" style={{ "--journey-progress": (active + 1) / CHAPTERS.length } as React.CSSProperties}>
+      <ol className="journey-steps">
+        {CHAPTERS.map((item, i) => (
+          <li
+            key={item.key}
+            ref={(element) => {
+              chapters.current[i] = element;
+            }}
+            data-index={i}
+            className={`journey-step${i === active ? " is-active" : ""}${i < active ? " is-done" : ""}`}
+            aria-current={i === active ? "step" : undefined}
+          >
+            <span className="journey-dot" aria-hidden="true" />
+            <img className="journey-step-photo" src={item.image} alt={item.alt} loading="lazy" />
+            <span className="journey-step-number">
+              0{i + 1} <span>/ 0{CHAPTERS.length}</span>
+            </span>
+            <h3>{item.title}</h3>
+            <p className="journey-step-lead">{item.text}</p>
+            <p className="journey-step-detail">{item.detail}</p>
+          </li>
+        ))}
+      </ol>
+
+      {/* Decorative: each chapter carries the same photo with its alt text for narrow screens. */}
+      <div className="journey-media" aria-hidden="true">
+        <div className="journey-frame">
+          {CHAPTERS.map((item, i) => (
+            <img key={item.key} src={item.image} alt="" className={i === active ? "is-active" : undefined} loading="lazy" />
+          ))}
+          <span className="journey-caption">
+            <strong>{CHAPTERS[active].title}</strong> · step {active + 1} of {CHAPTERS.length}
+          </span>
+        </div>
+      </div>
     </div>
   );
 }
