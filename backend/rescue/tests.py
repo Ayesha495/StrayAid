@@ -956,6 +956,18 @@ class RealDetectorTests(MediaEnabledAPITestCase):
         self.assertEqual(response.data["code"], "detector_unavailable")
         self.assertEqual(Report.objects.count(), 0)
 
+    def test_a_photo_the_detector_cannot_open_is_blamed_on_the_photo(self):
+        # Not "we can't check photos right now": the app should ask for another photo.
+        from unittest.mock import patch
+
+        from .ai.detector import UnreadablePhoto
+
+        self.client.force_authenticate(user=self.reporter)
+        with patch("rescue.ai.detector.detect_animal", side_effect=UnreadablePhoto("cannot decode")):
+            response = self.client.post("/api/cases/check-photo/", {"image": make_test_image()}, format="multipart")
+
+        self.assertEqual((response.status_code, response.data["code"]), (400, "unreadable_image"))
+
     def test_check_photo_needs_an_account_and_a_photo(self):
         self.assertEqual(self.client.post("/api/cases/check-photo/").status_code, status.HTTP_401_UNAUTHORIZED)
         self.client.force_authenticate(user=self.reporter)

@@ -20,7 +20,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import MapPreview from "../../components/report/MapPreview";
-import NotAnimalModal from "../../components/report/NotAnimalModal";
+import PhotoProblemModal from "../../components/report/PhotoProblemModal";
 import { SessionExpiredError } from "../../services/apiClient";
 import { describeLocation, findAddress, getCurrentLocation, hasLocationPermission } from "../../services/locationService";
 import { checkReportPhoto } from "../../services/mobileContentService";
@@ -34,6 +34,7 @@ import {
   useReportDraft,
 } from "../../services/reportDraft";
 import { colors, fonts } from "../../theme/tokens";
+import { describePhotoProblem, PhotoProblem } from "../../utils/photoProblems";
 
 // Stitch screen 7: Report an animal, step 1 (photo + location).
 
@@ -43,8 +44,8 @@ export default function ReportPhotoLocationScreen() {
   const [locating, setLocating] = useState(false);
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // The photo the detector rejected, shown in the "no animal found" window.
-  const [rejectedUri, setRejectedUri] = useState<string | null>(null);
+  // Why the last photo check failed and which photo it was, shown in a window with next steps.
+  const [problem, setProblem] = useState<{ problem: PhotoProblem; photo: ReportPhoto } | null>(null);
   const searchingRef = useRef(false);
 
   // Keep the field in sync when the location changes elsewhere (GPS, map picker).
@@ -116,12 +117,7 @@ export default function ReportPhotoLocationScreen() {
     try {
       const result = await checkReportPhoto(photo);
       if (getReportDraft().photo?.uri !== photo.uri) return; // replaced while checking
-      if (result.ok) {
-        updateReportDraft({ photoCheck: { state: "ok", animal: result.animal } });
-      } else {
-        updateReportDraft({ photo: null, photoCheck: { state: "idle" } });
-        setRejectedUri(photo.uri);
-      }
+      updateReportDraft({ photoCheck: { state: "ok", animal: result.animal } });
     } catch (err) {
       if (getReportDraft().photo?.uri !== photo.uri) return;
       if (err instanceof SessionExpiredError) {
@@ -129,15 +125,27 @@ export default function ReportPhotoLocationScreen() {
         router.push("/auth-sheet");
         return;
       }
-      updateReportDraft({
-        photoCheck: { state: "error", message: err instanceof Error ? err.message : "We couldn't check the photo." },
-      });
+      const found = describePhotoProblem(err);
+      if (found.fix === "photo") {
+        // This photo can't be used: clear it so a new one is taken.
+        updateReportDraft({ photo: null, photoCheck: { state: "idle" } });
+      } else {
+        // Connection or server trouble: keep the photo so it can be checked again as-is.
+        updateReportDraft({ photoCheck: { state: "error", message: found.title } });
+      }
+      setProblem({ problem: found, photo });
     }
   };
 
-  const retakeAfterRejection = (source: "camera" | "library") => {
-    setRejectedUri(null);
+  const retakeAfterProblem = (source: "camera" | "library") => {
+    setProblem(null);
     takePhoto(source);
+  };
+
+  const retryCheck = () => {
+    const photo = problem?.photo;
+    setProblem(null);
+    if (photo) verifyPhoto(photo);
   };
 
   const choosePhoto = () => {
@@ -263,7 +271,7 @@ export default function ReportPhotoLocationScreen() {
 
           {draft.photo && draft.photoCheck.state === "error" && (
             <View style={styles.checkError} accessibilityLiveRegion="polite">
-              <MaterialIcons name="cloud-off" size={16} color="#B7791F" />
+              <MaterialIcons name="info-outline" size={16} color="#B7791F" />
               <Text style={styles.checkErrorText}>{draft.photoCheck.message}</Text>
               <Pressable
                 accessibilityRole="button"
@@ -341,13 +349,14 @@ export default function ReportPhotoLocationScreen() {
         </View>
       </KeyboardAvoidingView>
 
-      <NotAnimalModal
-        visible={!!rejectedUri}
-        photoUri={rejectedUri}
+      <PhotoProblemModal
+        problem={problem?.problem ?? null}
+        photoUri={problem?.photo.uri ?? null}
         canUseCamera={Platform.OS !== "web"}
-        onRetake={() => retakeAfterRejection("camera")}
-        onChooseAnother={() => retakeAfterRejection("library")}
-        onClose={() => setRejectedUri(null)}
+        onRetake={() => retakeAfterProblem("camera")}
+        onChooseAnother={() => retakeAfterProblem("library")}
+        onRetry={retryCheck}
+        onClose={() => setProblem(null)}
       />
     </SafeAreaView>
   );

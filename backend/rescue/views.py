@@ -82,7 +82,16 @@ def _photo_check_error(image):
         validate_image_upload(image)
     except DjangoValidationError as error:
         return None, Response({"error": error.messages[0], "code": "invalid_image"}, status=status.HTTP_400_BAD_REQUEST)
-    result = detector.detect_animal(image)
+    try:
+        result = detector.detect_animal(image)
+    except detector.UnreadablePhoto:
+        return None, Response(
+            {
+                "error": "We couldn't open this photo. Take a new photo with the camera, or choose a JPG or PNG.",
+                "code": "unreadable_image",
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
     if result is None:
         return None, Response(
             {
