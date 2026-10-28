@@ -37,8 +37,6 @@ const C = {
   errorContainer: "#FFDAD6",
 };
 
-const SEVERITY: Record<string, string> = { low: "Low", medium: "Medium", high: "High", critical: "Critical" };
-
 export default function OfflineScreen() {
   const { reason } = useLocalSearchParams<{ reason?: string }>();
   const [queue, setQueue] = useState<QueuedReport[]>([]);
@@ -168,7 +166,7 @@ export default function OfflineScreen() {
                   <View style={styles.queueLeft}>
                     <MaterialIcons name="pets" size={16} color={C.soft} />
                     <Text style={styles.queueText} numberOfLines={1}>
-                      {SEVERITY[entry.draft.severity]} report • {entry.draft.description}
+                      Report • {entry.draft.description}
                     </Text>
                   </View>
                   <Text style={styles.queueMeta}>Saved {timeAgo(entry.saved_at)}</Text>

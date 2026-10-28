@@ -1,11 +1,12 @@
-import { Camera, Clock, Gauge, TriangleAlert, Users } from "lucide-react";
+import { Camera, Clock, Gauge, UserCheck, Users } from "lucide-react";
 import type { CaseAi } from "../types/api";
 import { scoreTone } from "../utils/format";
 import "./ScoreBreakdown.css";
 
 // Mirrors backend/rescue/utils/scoring.py:
-//   score = round(100 × (0.5·photo + 0.3·severity + 0.2·reports) × freshness)
-const WEIGHTS = { photo: 0.5, severity: 0.3, reports: 0.2 };
+//   score = round(100 × (0.5·photo + 0.3·community + 0.2·reports) × freshness)
+// "community" is people nearby answering "Is this animal still there?" on the mobile app.
+const WEIGHTS = { photo: 0.5, community: 0.3, reports: 0.2 };
 
 function Factor({ icon, label, detail, value, weight }: { icon: React.ReactNode; label: string; detail: string; value: number; weight: number }) {
   const points = Math.round(value * weight * 100);
@@ -52,11 +53,15 @@ function ScoreBreakdown({ score, ai }: { score: number | null; ai: CaseAi }) {
           detail={`${Math.round(photo * 100)}% sure ${ai.photo_count > 1 ? `across ${ai.photo_count} photos` : "the photo"} shows ${ai.animal ? `a ${ai.animal}` : "an animal"}`}
         />
         <Factor
-          icon={<TriangleAlert size={15} />}
-          label="Severity"
-          value={ai.severity_weight}
-          weight={WEIGHTS.severity}
-          detail="As reported: low 25%, medium 50%, high 75%, critical 100%"
+          icon={<UserCheck size={15} />}
+          label="Community verification"
+          value={ai.community_weight}
+          weight={WEIGHTS.community}
+          detail={
+            ai.confirmations + ai.disputes
+              ? `${ai.confirmations} confirmed the animal is there, ${ai.disputes} couldn't find it`
+              : "Nobody nearby has verified it yet (counts as neutral)"
+          }
         />
         <Factor
           icon={<Users size={15} />}

@@ -129,10 +129,26 @@ function errorMessage(data: unknown, status: number) {
   return "Something went wrong. Please try again.";
 }
 
+// A request the server answered with an error. `code` is the API's machine-readable reason
+// ("not_an_animal", "detector_unavailable", ...) when it gives one, so screens can react to
+// what actually went wrong instead of guessing from the wording.
+export class ApiError extends Error {
+  status: number;
+  code: string | null;
+
+  constructor(message: string, status: number, code: string | null) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.code = code;
+  }
+}
+
 export async function parseJson<T>(response: Response): Promise<T> {
   const data = await response.json().catch(() => null);
   if (!response.ok) {
-    throw new Error(errorMessage(data, response.status));
+    const code = data && typeof data === "object" && typeof data.code === "string" ? data.code : null;
+    throw new ApiError(errorMessage(data, response.status), response.status, code);
   }
   return data as T;
 }
@@ -279,15 +295,36 @@ export type SubmittedReport = {
 };
 
 // Checks a report photo for an animal before the report is filled in (Stitch 7).
-export type PhotoCheckResult = { ok: true; animal: string; confidence: number } | { ok: false; reason: "not_an_animal" };
+// Resolves when the photo shows an animal; anything else throws (ApiError with a code, a
+// network TypeError, or PhotoCheckTimeout), and utils/photoProblems.ts explains it.
+export type PhotoCheckResult = { animal: string; confidence: number };
+
+export class PhotoCheckTimeout extends Error {
+  constructor() {
+    super("Checking the photo took too long.");
+    this.name = "PhotoCheckTimeout";
+  }
+}
+
+// The first check after the server starts loads the AI model (~15 s), so allow for that
+// plus a slow upload before giving up.
+const PHOTO_CHECK_TIMEOUT_MS = 45000;
 
 export async function checkReportPhoto(photo: { uri: string; name: string; type: string }): Promise<PhotoCheckResult> {
   const form = new FormData();
   await appendFile(form, "image", photo);
-  const response = await authFetch("/api/cases/check-photo/", { method: "POST", body: form });
-  if (response.status === 422) return { ok: false, reason: "not_an_animal" };
-  const data = await parseJson<{ animal: string; confidence: number }>(response);
-  return { ok: true, animal: data.animal, confidence: data.confidence };
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), PHOTO_CHECK_TIMEOUT_MS);
+  let response: Response;
+  try {
+    response = await authFetch("/api/cases/check-photo/", { method: "POST", body: form, signal: controller.signal });
+  } catch (error) {
+    if (controller.signal.aborted) throw new PhotoCheckTimeout();
+    throw error;
+  } finally {
+    clearTimeout(timer);
+  }
+  return parseJson<PhotoCheckResult>(response);
 }
 
 export async function submitReport(formData: FormData) {

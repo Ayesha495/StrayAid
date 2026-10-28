@@ -52,7 +52,10 @@ export interface CaseAi {
   image: string | null;
   photo_confidence: number | null;
   photo_count: number;
-  severity_weight: number;
+  /** 0-1 from community verification; 0.5 until someone answers. */
+  community_weight: number;
+  confirmations: number;
+  disputes: number;
   report_count: number;
   report_weight: number;
   hours_unanswered: number;
@@ -74,7 +77,6 @@ export interface PublicReport {
   id: number;
   image: string | null;
   description: string;
-  severity: string;
   created_at: string;
   reporter: string;
   is_mine: boolean;

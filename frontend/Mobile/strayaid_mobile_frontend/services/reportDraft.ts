@@ -5,6 +5,7 @@ import { useSyncExternalStore } from "react";
 
 export type LatLng = { latitude: number; longitude: number };
 export type ReportPhoto = { uri: string; name: string; type: string };
+// How urgent a case is. Set by the community verifying it, never by the reporter.
 export type Severity = "low" | "medium" | "high" | "critical";
 
 // Result of checking the photo for an animal (it must have one before the report can go on).
@@ -21,7 +22,6 @@ export type ReportDraft = {
   // Short readable place, e.g. "F-7, Islamabad". Sent to the backend as the case's area.
   address: string;
   description: string;
-  severity: Severity;
   keepUpdated: boolean;
 };
 
@@ -31,7 +31,6 @@ const EMPTY: ReportDraft = {
   location: null,
   address: "",
   description: "",
-  severity: "medium",
   keepUpdated: true,
 };
 
