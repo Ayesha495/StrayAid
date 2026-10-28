@@ -33,23 +33,34 @@ describe("Funds", () => {
     renderPage(<Funds />, { path: "/funds", route: "/funds" });
     expect(await screen.findByText("Zainab Qureshi")).toBeInTheDocument();
     expect(screen.getByText("Bilal Hussain")).toBeInTheDocument();
-    expect(screen.getByText("Rs 3,500 waiting")).toBeInTheDocument();
+    expect(screen.getByText("Rs 3,500 to verify")).toBeInTheDocument();
     expect(await screen.findByText("Rs 1,500 of Rs 20,000")).toBeInTheDocument();
     expect(screen.queryByText("Ali Raza")).not.toBeInTheDocument();
   });
 
-  it("confirms a sponsorship and rejects a donation with the right calls", async () => {
+  it("verifies a sponsorship and marks a donation as not found with the right calls", async () => {
     f.reviewSponsorship.mockResolvedValue({} as never);
     f.reviewDonation.mockResolvedValue({ id: 7, status: "rejected" });
     renderPage(<Funds />, { path: "/funds", route: "/funds" });
 
     const zainab = (await screen.findByText("Zainab Qureshi")).closest("li") as HTMLElement;
-    fireEvent.click(within(zainab).getByRole("button", { name: /Confirm/ }));
+    fireEvent.click(within(zainab).getByRole("button", { name: /Verify payment/ }));
     await waitFor(() => expect(f.reviewSponsorship).toHaveBeenCalledWith(1, "confirmed"));
 
     const bilal = screen.getByText("Bilal Hussain").closest("li") as HTMLElement;
-    fireEvent.click(within(bilal).getByRole("button", { name: /Reject/ }));
+    fireEvent.click(within(bilal).getByRole("button", { name: /Can't find payment/ }));
+    // Asks first, and says nothing is cancelled.
+    const dialog = screen.getByRole("dialog", { name: "Can't find this payment?" });
+    expect(dialog).toHaveTextContent("Nothing is cancelled or refunded");
+    expect(f.reviewDonation).not.toHaveBeenCalled();
+    fireEvent.click(within(dialog).getByRole("button", { name: "Mark as not found" }));
     await waitFor(() => expect(f.reviewDonation).toHaveBeenCalledWith(7, "rejected"));
-    expect(await screen.findByText("All receipts checked")).toBeInTheDocument();
+    expect(await screen.findByText("All payments verified")).toBeInTheDocument();
+  });
+
+  it("never offers to reject a payment", async () => {
+    renderPage(<Funds />, { path: "/funds", route: "/funds" });
+    await screen.findByText("Zainab Qureshi");
+    expect(screen.queryByRole("button", { name: /Reject/i })).not.toBeInTheDocument();
   });
 });
