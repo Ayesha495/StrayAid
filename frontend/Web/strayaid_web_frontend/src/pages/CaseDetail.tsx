@@ -119,7 +119,8 @@ function CaseDetail() {
   const canClose = options.includes("closed");
   const photos = caseItem.reports.filter((report) => report.image);
   const shown = photos[Math.min(photo, photos.length - 1)];
-  const severity = caseItem.severity ?? caseItem.reports.find((report) => report.severity)?.severity;
+  // Set by people verifying the case on the mobile app, never by the reporter.
+  const severity = caseItem.severity;
   const title = caseItem.title || `Case #${caseItem.id}`;
 
   return (
