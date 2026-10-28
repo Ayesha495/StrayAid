@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { authFetch, optionalAuthFetch } from "./apiClient";
 import { parseJson, resolveMediaUrl } from "./mobileContentService";
-import type { Severity } from "./reportDraft";
+import type { LatLng, Severity } from "./reportDraft";
 
 // Public rescue case page (Stitch 10) with its updates and reports. Guests can read; the
 // signed-in viewer also gets keep_updated / is_reporter.
@@ -39,12 +39,60 @@ export type CaseDetail = {
   keep_updated: boolean;
   is_reporter: boolean;
   ai: CaseAI;
+  verification: CaseVerification;
 };
+
+// The community check on a case ("Is this animal still there?"), like confirming a road
+// blockage on a map. See backend rescue/views.py case_verify.
+export type VerificationResponse = "confirmed" | "not_found";
+
+export type CaseVerification = {
+  status: "unverified" | "verified" | "mixed" | "disputed";
+  confirmations: number;
+  disputes: number;
+  urgent: number; // confirmations that said the animal needs urgent help
+  nearby: number; // answers given within 1 km of the spot
+  my_response: VerificationResponse | null;
+  my_urgent: boolean;
+  my_updated_at: string | null;
+  // Why the viewer can't answer: guests sign in, reporters wait for others, closed cases are done.
+  blocked: "sign_in" | "reporter" | "closed" | null;
+};
+
+export type VerifyResult = {
+  verification: CaseVerification;
+  confidence_score: number | null;
+  possibly_invalid: boolean;
+  severity: Severity;
+};
+
+// Send (or change) the viewer's answer. Their location, if given, lets a nearby answer count fully.
+export async function verifyCase(
+  caseId: number,
+  response: VerificationResponse,
+  options: { urgent?: boolean; location?: LatLng | null } = {}
+): Promise<VerifyResult> {
+  const body: Record<string, unknown> = { response, urgent: !!options.urgent };
+  if (options.location) {
+    body.latitude = options.location.latitude;
+    body.longitude = options.location.longitude;
+  }
+  const result = await authFetch(`/api/cases/public/${caseId}/verify/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  return parseJson<VerifyResult>(result);
+}
+
+export async function removeVerification(caseId: number): Promise<VerifyResult> {
+  return parseJson<VerifyResult>(await authFetch(`/api/cases/public/${caseId}/verify/`, { method: "DELETE" }));
+}
 
 export type AIFeedbackReason = "no_animal" | "wrong_animal" | "wrong_score";
 
 // How the AI confidence score was made (Stitch 11), see backend rescue/utils/scoring.py:
-// score = (50% photo + 30% severity + 20% reports) x freshness.
+// score = (50% photo + 30% community verification + 20% reports) x freshness.
 export type CaseAI = {
   model: string;
   scored: boolean;
@@ -54,7 +102,9 @@ export type CaseAI = {
   image: string | null; // that best photo
   photo_confidence: number | null; // 0-1, all photos combined
   photo_count: number;
-  severity_weight: number; // 0-1
+  community_weight: number; // 0-1, 0.5 until someone verifies
+  confirmations: number;
+  disputes: number;
   report_count: number;
   report_weight: number; // 0-1
   hours_unanswered: number; // since the latest report, until an organization responded
@@ -76,7 +126,6 @@ export type CaseReport = {
   id: number;
   image: string | null;
   description: string;
-  severity: Severity;
   created_at: string;
   reporter: string;
   is_mine: boolean;
