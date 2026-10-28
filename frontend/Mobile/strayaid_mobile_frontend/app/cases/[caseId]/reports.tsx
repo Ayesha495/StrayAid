@@ -8,19 +8,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import CaseSubHeader from "../../../components/case/CaseSubHeader";
 import { CaseReport, getCaseReports } from "../../../services/caseService";
-import type { Severity } from "../../../services/reportDraft";
 import { colors, fonts } from "../../../theme/tokens";
 import { timeAgo } from "../../../utils/format";
 
 // "Related Reports" from the case page (Stitch 10): every sighting that rolled up into this
 // case. Reporters appear by first name only.
-
-const SEVERITY: Record<Severity, { label: string; color: string; background: string }> = {
-  low: { label: "Low", color: "#1A7558", background: "#E8F7F2" },
-  medium: { label: "Medium", color: "#8A5A12", background: "#FEF7ED" },
-  high: { label: "High", color: colors.critical, background: "#FDEEEC" },
-  critical: { label: "Critical", color: "#B42318", background: "#FDECEC" },
-};
 
 export default function CaseReportsScreen() {
   const { caseId, reference } = useLocalSearchParams<{ caseId: string; reference?: string }>();
@@ -74,7 +66,6 @@ export default function CaseReportsScreen() {
           }
           ListEmptyComponent={<Text style={styles.empty}>No reports yet.</Text>}
           renderItem={({ item }) => {
-            const severity = SEVERITY[item.severity] ?? SEVERITY.medium;
             return (
               <View style={styles.card}>
                 {item.image ? (
@@ -89,9 +80,6 @@ export default function CaseReportsScreen() {
                     <Text style={styles.reporter}>
                       {item.is_mine ? "Your report" : item.reporter}
                       <Text style={styles.time}> · {timeAgo(item.created_at)}</Text>
-                    </Text>
-                    <Text style={[styles.severity, { color: severity.color, backgroundColor: severity.background }]}>
-                      {severity.label}
                     </Text>
                   </View>
                   {!!item.description && <Text style={styles.description}>{item.description}</Text>}
@@ -129,14 +117,5 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
   reporter: { flex: 1, fontFamily: fonts.bodyBold, fontSize: 12, lineHeight: 16, color: "#243447" },
   time: { fontFamily: fonts.bodyMedium, color: "#64748B" },
-  severity: {
-    overflow: "hidden",
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 999,
-    fontFamily: fonts.bodyBold,
-    fontSize: 11,
-    lineHeight: 15,
-  },
   description: { fontFamily: fonts.body, fontSize: 13, lineHeight: 19, color: "#475569" },
 });
