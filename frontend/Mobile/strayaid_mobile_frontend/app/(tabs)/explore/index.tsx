@@ -6,8 +6,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import VerifyCasePanel from "../../../components/case/VerifyCasePanel";
 import RescueMap, { RescueMapHandle, RescueMapMessage } from "../../../components/map/RescueMap";
 import type { MapCase } from "../../../components/map/rescueMapHtml";
+import type { VerifyResult } from "../../../services/caseService";
 import { getMapCases, TrendingCase } from "../../../services/homeService";
 import { findAddress, getCurrentLocation, hasLocationPermission } from "../../../services/locationService";
 import type { LatLng } from "../../../services/reportDraft";
@@ -15,15 +17,17 @@ import { colors, fonts } from "../../../theme/tokens";
 import { distanceKm, formatDistance } from "../../../utils/format";
 
 // Stitch screen 12: Rescue map (the Explore tab). Open cases as pins coloured by severity,
-// a search box, severity filters and the selected case as a card above the tab bar.
+// a search box, filters and the selected case as a card above the tab bar. The card asks
+// "Is this animal still there?" so people nearby can verify reports, like confirming a
+// road blockage on a map; their answers feed the case's confidence score.
 
-type Filter = "all" | "high" | "medium" | "low";
+type Filter = "all" | "unverified" | "verified" | "urgent";
 
 const FILTERS: { value: Filter; label: string; dot?: string }[] = [
   { value: "all", label: "All" },
-  { value: "high", label: "High", dot: colors.critical },
-  { value: "medium", label: "Medium", dot: "#F4B360" },
-  { value: "low", label: "Low", dot: colors.secondary },
+  { value: "unverified", label: "Needs verification", dot: colors.info },
+  { value: "verified", label: "Verified", dot: colors.secondary },
+  { value: "urgent", label: "Urgent", dot: colors.critical },
 ];
 
 const SEVERITY_CHIP = {
@@ -38,8 +42,13 @@ const FALLBACK = { lat: 33.6844, lng: 73.0479 };
 // The map opens framing the person and the open cases within this distance.
 const FRAME_KM = 5;
 
-const matchesFilter = (item: TrendingCase, filter: Filter) =>
-  filter === "all" || item.severity === filter || (filter === "high" && item.severity === "critical");
+const matchesFilter = (item: TrendingCase, filter: Filter) => {
+  const verification = item.verification?.status ?? "unverified";
+  if (filter === "unverified") return verification === "unverified" || verification === "mixed";
+  if (filter === "verified") return verification === "verified";
+  if (filter === "urgent") return item.severity === "high" || item.severity === "critical";
+  return true;
+};
 
 const matchesQuery = (item: TrendingCase, query: string) => {
   const text = query.trim().toLowerCase();
@@ -144,6 +153,22 @@ export default function ExploreScreen() {
     const points = [origin, ...nearest].map((point) => ({ lat: point.latitude, lng: point.longitude }));
     map.current?.post({ type: "fit", points, top: insets.top + 150, bottom: 250 });
   }, [mapReady, me, cases, loading, insets.top]);
+
+  // A verification answer changes the case's score, severity and tally: update it in place.
+  const onVerified = (caseId: number, result: VerifyResult) =>
+    setCases((current) =>
+      current.map((item) =>
+        item.id === caseId
+          ? {
+              ...item,
+              verification: result.verification,
+              confidence_score: result.confidence_score,
+              possibly_invalid: result.possibly_invalid,
+              severity: result.severity,
+            }
+          : item
+      )
+    );
 
   const onMapMessage = (message: RescueMapMessage) => {
     if (message.type === "ready") setMapReady(true);
@@ -318,6 +343,15 @@ export default function ExploreScreen() {
                 </View>
               </View>
             </Pressable>
+            {selected.verification && (
+              <VerifyCasePanel
+                key={selected.id}
+                compact
+                caseId={selected.id}
+                verification={selected.verification}
+                onVerified={(result) => onVerified(selected.id, result)}
+              />
+            )}
             <Pressable
               accessibilityRole="button"
               onPress={() => router.push(`/cases/${selected.id}` as Href)}

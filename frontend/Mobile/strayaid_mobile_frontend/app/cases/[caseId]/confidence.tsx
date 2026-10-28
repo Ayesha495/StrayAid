@@ -15,7 +15,7 @@ import { colors, fonts } from "../../../theme/tokens";
 
 // Stitch screen 11: Animal detection confidence. Explains a case's AI score using the same
 // formula as the backend (rescue/utils/scoring.py):
-// (50% photos + 30% reported severity + 20% number of reports) x response-time factor.
+// (50% photos + 30% community verification + 20% number of reports) x response-time factor.
 
 const RING = 176;
 const RADIUS = 90;
@@ -29,10 +29,10 @@ const TIERS = [
 ];
 
 const SEVERITY: Record<Severity, { label: string; color: string; background: string; border: string }> = {
-  low: { label: "Low Severity", color: "#1A7558", background: "#E8F7F2", border: "rgba(53,169,130,0.25)" },
-  medium: { label: "Medium Severity", color: "#8A5A12", background: "#FEF7ED", border: "rgba(244,184,96,0.3)" },
-  high: { label: "High Severity", color: "#DC2626", background: "#FEF1F0", border: "rgba(244,124,108,0.2)" },
-  critical: { label: "Critical Severity", color: "#B42318", background: "#FDECEC", border: "rgba(180,35,24,0.25)" },
+  low: { label: "Low Urgency", color: "#1A7558", background: "#E8F7F2", border: "rgba(53,169,130,0.25)" },
+  medium: { label: "Medium Urgency", color: "#8A5A12", background: "#FEF7ED", border: "rgba(244,184,96,0.3)" },
+  high: { label: "High Urgency", color: "#DC2626", background: "#FEF1F0", border: "rgba(244,124,108,0.2)" },
+  critical: { label: "Critical Urgency", color: "#B42318", background: "#FDECEC", border: "rgba(180,35,24,0.25)" },
 };
 
 // "Visual Canine Identification", as in the design.
@@ -198,7 +198,7 @@ export default function ConfidenceScreen() {
   const explain = () =>
     Alert.alert(
       "How this score works",
-      "50% comes from the animal detector checking the photos, 30% from the severity the reporter chose, and 20% from how many people reported the same animal. More reports and photos make it stronger.\n\nIf no organization responds, the score starts falling 6 hours after the latest report, down to half after 3 days. A new report restarts that clock, and it stops once an organization accepts the case.\n\nThe score helps rescuers see which reports to check first. It never rejects a report, and it doesn't judge the animal's condition.",
+      "50% comes from the animal detector checking the photos, 30% from people nearby verifying the report (“Is this animal still there?”), and 20% from how many people reported the same animal. Confirmations raise the score and “couldn't find it” answers lower it; answers from within 1 km count most.\n\nIf no organization responds, the score starts falling 6 hours after the latest sighting, down to half after 3 days. A new report or confirmation restarts that clock, and it stops once an organization accepts the case.\n\nThe score helps rescuers see which reports to check first. It never rejects a report, and it doesn't judge the animal's condition.",
     );
 
   const send = async (reason: AIFeedbackReason) => {
@@ -272,7 +272,7 @@ export default function ConfidenceScreen() {
             )}
             <Text style={styles.disclaimer}>
               {score != null
-                ? "This score is an estimate based on the uploaded images, reported severity, related reports and how long the case has waited for a response. It does not determine the animal's condition."
+                ? "This score is an estimate based on the uploaded images, verification by people nearby, related reports and how long the case has waited for a response. It does not determine the animal's condition."
                 : "The photo hasn't been checked by the animal detector yet. Rescuers can still see and respond to this report."}
             </Text>
           </View>
@@ -289,7 +289,7 @@ export default function ConfidenceScreen() {
                     <Text style={styles.match}>{percent(ai.animal_confidence)}% Match</Text>
                   </View>
                   <View style={styles.severityRow}>
-                    <Text style={styles.severityLabel}>Severity:</Text>
+                    <Text style={styles.severityLabel}>Urgency:</Text>
                     <View style={[styles.severityBadge, { backgroundColor: severity.background, borderColor: severity.border }]}>
                       <View style={[styles.severityDot, { backgroundColor: severity.color }]} />
                       <Text style={[styles.severityText, { color: severity.color }]}>{severity.label}</Text>
@@ -318,9 +318,13 @@ export default function ConfidenceScreen() {
                 color={colors.primary}
               />
               <FactorRow
-                label={`Reported Severity (${capitalize(item.severity)})`}
-                value={percent(ai.severity_weight)}
-                color={colors.primary}
+                label={
+                  ai.confirmations + ai.disputes > 0
+                    ? `Community Verification (${ai.confirmations} confirmed, ${ai.disputes} not found)`
+                    : "Community Verification (no answers yet)"
+                }
+                value={percent(ai.community_weight)}
+                color={ai.community_weight >= 0.6 ? colors.primary : ai.community_weight <= 0.4 ? colors.critical : colors.info}
               />
               <FactorRow
                 label={`Related Reports (${ai.report_count})`}
