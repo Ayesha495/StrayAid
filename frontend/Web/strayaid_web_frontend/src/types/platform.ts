@@ -45,7 +45,6 @@ export interface Report {
   created_at: string;
   user_email?: string;
   user?: number;
-  severity?: Severity;
   ai_animal_confidence?: number | null;
   ai_animal_label?: string;
   ai_box?: number[] | null;
