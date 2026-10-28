@@ -15,7 +15,7 @@ const CONTACTS_KEY = "strayaid.rescueContacts";
 export type QueuedReport = {
   id: string;
   saved_at: string;
-  draft: Pick<ReportDraft, "photo" | "location" | "address" | "description" | "severity" | "keepUpdated">;
+  draft: Pick<ReportDraft, "photo" | "location" | "address" | "description" | "keepUpdated">;
 };
 
 export type RescueContact = { id: number; name: string; phone: string; city: string; is_available: boolean; is_verified?: boolean };
@@ -82,7 +82,6 @@ export function flushQueue(): Promise<{ sent: number; left: number }> {
           form.append("description", draft.description);
           form.append("latitude", draft.location.latitude.toString());
           form.append("longitude", draft.location.longitude.toString());
-          form.append("severity", draft.severity);
           form.append("keep_updated", draft.keepUpdated ? "true" : "false");
           if (draft.address) form.append("area", draft.address);
           await appendFile(form, "image", draft.photo);

@@ -7,7 +7,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { keepMeUpdated } from "../../services/mobileContentService";
 import { registerForPushNotifications, sendPushTokenToBackend } from "../../services/notificationService";
-import type { Severity } from "../../services/reportDraft";
 import { colors, fonts } from "../../theme/tokens";
 
 // Stitch screen 9: Report submitted.
@@ -17,16 +16,8 @@ type Params = {
   caseId: string;
   reference: string;
   area: string;
-  severity: Severity;
   confidence: string;
   keepUpdated: string;
-};
-
-const SEVERITY_CHIP: Record<Severity, { label: string; color: string; background: string }> = {
-  low: { label: "Low severity", color: "#1A7558", background: "#E8F7F2" },
-  medium: { label: "Medium severity", color: "#8A5A12", background: "#FEF6EB" },
-  high: { label: "High severity", color: colors.critical, background: "#FEF0EE" },
-  critical: { label: "Critical severity", color: "#B42318", background: "#FDECEC" },
 };
 
 function SuccessBadge() {
@@ -69,7 +60,6 @@ function backToFeed() {
 
 export default function ReportSuccessScreen() {
   const params = useLocalSearchParams<Params>();
-  const severity = SEVERITY_CHIP[params.severity] ?? SEVERITY_CHIP.medium;
   const confidence = params.confidence ? Number(params.confidence) : null;
   const [updates, setUpdates] = useState<"idle" | "saving" | "on">("idle");
   const [updatesError, setUpdatesError] = useState<string | null>(null);
@@ -134,9 +124,10 @@ export default function ReportSuccessScreen() {
           </View>
           <View style={styles.divider} />
           <View style={styles.chips}>
-            <View style={[styles.chip, { backgroundColor: severity.background }]}>
-              <MaterialIcons name="star-outline" size={15} color={severity.color} />
-              <Text style={[styles.chipText, { color: severity.color }]}>{severity.label}</Text>
+            {/* New reports wait for people nearby to confirm them on the map. */}
+            <View style={[styles.chip, styles.verifyChip]}>
+              <MaterialIcons name="groups" size={15} color="#1D5FA8" />
+              <Text style={[styles.chipText, styles.verifyChipText]}>Awaiting community verification</Text>
             </View>
             {/* Only shown once the image detector has scored the case. */}
             {confidence != null && (
@@ -148,7 +139,10 @@ export default function ReportSuccessScreen() {
           </View>
         </View>
 
-        <Text style={styles.message}>Your report has been sent to rescue organizations nearby.</Text>
+        <Text style={styles.message}>
+          Your report has been sent to rescue organizations nearby. People in the area can now confirm it, which raises
+          its confidence.
+        </Text>
       </View>
 
       <View style={styles.footer}>
@@ -286,6 +280,8 @@ const styles = StyleSheet.create({
   },
   chipText: { fontFamily: fonts.bodyBold, fontSize: 12, lineHeight: 16 },
   aiChip: { backgroundColor: "#E8F5F1" },
+  verifyChip: { backgroundColor: "#EAF2FC" },
+  verifyChipText: { color: "#1D5FA8" },
   aiChipText: { color: colors.primary },
   message: {
     maxWidth: 260,
