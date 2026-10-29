@@ -113,8 +113,8 @@ class OrganizationViewSet(
                 "animals_count": Animal.objects.filter(organization=organization).count(),
                 "posts_count": Post.objects.filter(organization=organization).count(),
             },
-            "recent_cases": CaseSerializer(organization_cases[:5], many=True).data,
-            "nearby_cases": CaseSerializer(nearby_cases, many=True).data,
+            "recent_cases": CaseSerializer(organization_cases[:5], many=True, context={"request": request}).data,
+            "nearby_cases": CaseSerializer(nearby_cases, many=True, context={"request": request}).data,
         }
         return Response(data)
 

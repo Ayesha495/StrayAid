@@ -62,6 +62,16 @@ class AnimalSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id", "organization", "case_id", "created_at"]
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        # A microchip number identifies the animal to vets and registries; only its own team sees it.
+        viewer = getattr(self.context.get("request"), "user", None)
+        own = bool(viewer and viewer.is_authenticated and instance.organization and instance.organization.user_id == viewer.id)
+        data["microchipped"] = bool(instance.microchip_id)
+        if not own:
+            data.pop("microchip_id", None)
+        return data
+
     def get_photos(self, obj):
         """The animal's own photo, then photos from its organization's posts about it."""
         request = self.context.get("request")

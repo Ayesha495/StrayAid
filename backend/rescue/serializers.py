@@ -12,6 +12,17 @@ class ReportSerializer(serializers.ModelSerializer):
         model = Report
         fields = '__all__'
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        # Rescue teams need the reporter's contact to coordinate. A reporter (e.g. on "My
+        # reports") only sees their own details, never the other people who reported the case.
+        viewer = getattr(self.context.get("request"), "user", None)
+        is_team = bool(viewer and viewer.is_authenticated and getattr(viewer, "role", "") == "organization")
+        if not is_team and not (viewer and viewer.is_authenticated and viewer.id == instance.user_id):
+            data.pop("user_email", None)
+            data.pop("user", None)
+        return data
+
 class CaseSerializer(serializers.ModelSerializer):
     # Nested reports let client apps render a case detail view in one request.
     reports = ReportSerializer(many = True, read_only = True)

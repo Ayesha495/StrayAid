@@ -36,3 +36,16 @@ class OrganizationSerializer(serializers.ModelSerializer):
             "is_verified",
         ]
         read_only_fields = ["id", "user", "user_email", "user_username", "is_verified"]
+
+    # The account behind a team (its login email, username and user id) is only for the team
+    # itself. Everyone else, including other teams, gets the public profile: it is embedded in
+    # every public animal, post and case, so it must not carry login details.
+    PRIVATE_FIELDS = ("user", "user_email", "user_username")
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        viewer = getattr(self.context.get("request"), "user", None)
+        if not (viewer and viewer.is_authenticated and viewer.id == instance.user_id):
+            for field in self.PRIVATE_FIELDS:
+                data.pop(field, None)
+        return data

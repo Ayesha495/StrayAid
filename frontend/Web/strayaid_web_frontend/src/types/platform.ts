@@ -88,6 +88,8 @@ export interface Animal {
   age?: number | null;
   color?: string;
   microchip_id?: string;
+  // Public yes/no; the number itself is only sent to the animal's own team.
+  microchipped?: boolean;
   description: string;
   medical_info: string;
   donation_info: DonationInfo | null;

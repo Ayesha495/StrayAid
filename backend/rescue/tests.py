@@ -1250,3 +1250,28 @@ class CaseVerificationTests(MediaEnabledAPITestCase):
         self.case.reports.update(created_at=timezone.now() - timedelta(hours=39))
         self.assertEqual(self.client.get(f"/api/cases/public/{self.case.id}/").data["confidence_score"], 50)
         self.assertEqual(self.verify(self.people[0], "confirmed").data["confidence_score"], 72)
+
+
+class ReporterPrivacyTests(APITestCase):
+    """Reporters on the same case never see each other's emails; rescue teams do."""
+
+    def test_report_email_is_only_shown_to_its_reporter_and_to_teams(self):
+        from rest_framework.test import APIRequestFactory
+
+        from .serializers import ReportSerializer
+
+        first = User.objects.create_user(email="first@example.com", username="first", password="x")
+        second = User.objects.create_user(email="second@example.com", username="second", password="x")
+        team = User.objects.create_user(email="team@example.com", username="team", password="x", role="organization")
+        case = Case.objects.create(description="Dog", latitude=33.7, longitude=73.0, reported_by=first)
+        report = Report.objects.create(case=case, user=first, image="reports/x.jpg", description="Dog", latitude=33.7, longitude=73.0)
+
+        def seen_by(user):
+            request = APIRequestFactory().get("/")
+            request.user = user
+            return ReportSerializer(report, context={"request": request}).data
+
+        self.assertEqual(seen_by(first)["user_email"], "first@example.com")
+        self.assertEqual(seen_by(team)["user_email"], "first@example.com")
+        self.assertNotIn("user_email", seen_by(second))
+        self.assertNotIn("user", seen_by(second))

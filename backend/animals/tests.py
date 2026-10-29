@@ -459,3 +459,90 @@ class SponsorTests(MediaEnabledAPITestCase):
         self.animal.status = Animal.STATUS_ADOPTED
         self.animal.save()
         self.assertEqual(self.pledge().status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class AccessControlTests(MediaEnabledAPITestCase):
+    """Teams can look at each other's public pages, but never at private data or actions."""
+
+    def setUp(self):
+        self.org_user = User.objects.create_user(email="team-a@example.com", username="team-a", password="x", role="organization")
+        self.other_user = User.objects.create_user(email="team-b@example.com", username="team-b", password="x", role="organization")
+        self.organization = Organization.objects.create(user=self.org_user, name="Team A", city="Islamabad")
+        self.other_organization = Organization.objects.create(user=self.other_user, name="Team B", city="Islamabad")
+        reporter = User.objects.create_user(email="r@example.com", username="r", password="x")
+        self.case = Case.objects.create(description="Dog", latitude=33.7, longitude=73.0, reported_by=reporter, organization=self.organization)
+        self.other_case = Case.objects.create(description="Cat", latitude=33.7, longitude=73.0, reported_by=reporter, organization=self.other_organization)
+        self.animal = Animal.objects.create(case=self.case, organization=self.organization, name="Rex", species="Dog",
+                                            microchip_id="900123", status=Animal.STATUS_ADOPTABLE)
+
+    def test_public_pages_hide_the_team_login_and_microchip(self):
+        for viewer in (None, self.other_user):
+            self.client.force_authenticate(user=viewer)
+            organization = self.client.get(f"/api/organizations/{self.organization.id}/").data
+            animal = self.client.get(f"/api/animals/{self.animal.id}/").data
+            self.assertNotIn("user_email", organization)
+            self.assertNotIn("user", organization)
+            self.assertNotIn("user_email", animal["organization"])
+            self.assertNotIn("microchip_id", animal)
+
+        self.client.force_authenticate(user=self.org_user)
+        self.assertEqual(self.client.get(f"/api/organizations/{self.organization.id}/").data["user_email"], "team-a@example.com")
+        self.assertEqual(self.client.get(f"/api/animals/{self.animal.id}/").data["microchip_id"], "900123")
+
+    def test_another_team_cannot_change_or_relink_animals(self):
+        self.client.force_authenticate(user=self.other_user)
+        response = self.client.patch(f"/api/animals/{self.animal.id}/", {"name": "Stolen"}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        self.client.force_authenticate(user=self.org_user)
+        response = self.client.patch(f"/api/animals/{self.animal.id}/", {"case": self.other_case.id}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_another_team_cannot_open_a_claimed_case_by_id(self):
+        self.client.force_authenticate(user=self.other_user)
+        self.assertEqual(self.client.get(f"/api/cases/{self.case.id}/").status_code, status.HTTP_404_NOT_FOUND)
+        self.client.force_authenticate(user=self.org_user)
+        self.assertEqual(self.client.get(f"/api/cases/{self.case.id}/").status_code, status.HTTP_200_OK)
+
+    def test_another_team_cannot_see_or_decide_applications(self):
+        from .models import AdoptionApplication
+
+        adopter = User.objects.create_user(email="a@example.com", username="a", password="x")
+        application = AdoptionApplication.objects.create(animal=self.animal, applicant=adopter, full_name="Hira", phone="1", home_type="house")
+        self.client.force_authenticate(user=self.other_user)
+        self.assertEqual(self.client.get("/api/animals/applications/").data, [])
+        response = self.client.post(f"/api/animals/applications/{application.id}/decide/", {"status": "approved"})
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
+class AdoptedAnimalApplicationsTests(MediaEnabledAPITestCase):
+    """Once an animal has a home, its applications leave the team's review list."""
+
+    def setUp(self):
+        from .models import AdoptionApplication
+
+        self.org_user = User.objects.create_user(email="o@example.com", username="o", password="x", role="organization")
+        organization = Organization.objects.create(user=self.org_user, name="Safe Paws", city="Islamabad")
+        reporter = User.objects.create_user(email="r@example.com", username="r", password="x")
+        case = Case.objects.create(description="Cat", latitude=33.7, longitude=73.0, reported_by=reporter, organization=organization)
+        self.animal = Animal.objects.create(case=case, organization=organization, name="Luna", species="Cat", status=Animal.STATUS_ADOPTABLE)
+        self.adopter = User.objects.create_user(email="a@example.com", username="a", password="x")
+        self.application = AdoptionApplication.objects.create(animal=self.animal, applicant=self.adopter, full_name="Hira", phone="1", home_type="house")
+
+    def test_marking_adopted_closes_pending_applications_and_hides_them(self):
+        self.client.force_authenticate(user=self.org_user)
+        self.client.patch(f"/api/animals/{self.animal.id}/", {"status": Animal.STATUS_ADOPTED}, format="json")
+        self.application.refresh_from_db()
+        self.assertEqual(self.application.status, "rejected")
+        self.assertEqual(self.client.get("/api/animals/applications/").data, [])
+
+        # The applicant still has their own record.
+        self.client.force_authenticate(user=self.adopter)
+        self.assertEqual(len(self.client.get("/api/animals/applications/").data), 1)
+
+    def test_approving_keeps_the_adopter_approved(self):
+        self.client.force_authenticate(user=self.org_user)
+        self.client.post(f"/api/animals/applications/{self.application.id}/decide/", {"status": "approved"})
+        self.application.refresh_from_db()
+        self.assertEqual(self.application.status, "approved")
+        self.assertEqual(self.client.get("/api/animals/applications/").data, [])

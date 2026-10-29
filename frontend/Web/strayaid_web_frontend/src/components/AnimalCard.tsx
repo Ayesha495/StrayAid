@@ -59,7 +59,7 @@ function AnimalCard({ animal, onStatusChange, footer, compact = false }: AnimalC
           {[
             animal.breed || animal.species || "Breed unknown",
             `${daysInCare(animal.created_at)} days in care`,
-            animal.microchip_id ? "Microchipped" : null,
+            animal.microchipped || animal.microchip_id ? "Microchipped" : null,
           ].filter(Boolean).join(" · ")}
         </p>
         {compact ? null : <p className="am-animal-desc">{animal.description || "No public description yet."}</p>}

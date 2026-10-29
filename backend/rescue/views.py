@@ -368,6 +368,15 @@ class CaseViewSet(viewsets.ReadOnlyModelViewSet):
         serializer = self.get_serializer(visible_cases, many=True, context={"request": request})
         return Response(serializer.data)
 
+    def retrieve(self, request, *args, **kwargs):
+        # A team opens its own cases, or unclaimed ones inside its service area. Typing
+        # another case's id in the URL doesn't reveal it (its reporters' contact details).
+        case = self.get_object()
+        organization = request.user.organization_profile
+        if case.organization_id != organization.id and not case_is_within_organization_radius(case, organization):
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        return Response(self.get_serializer(case, context={"request": request}).data)
+
     @action(detail=False, methods=["get"], url_path="nearby")
     def nearby(self, request):
         refresh_unanswered_scores_if_due()

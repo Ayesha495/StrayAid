@@ -38,6 +38,27 @@ def sync_case_with_animal(animal):
         case.save(update_fields=["status", "updated_at"])
 
 
+def close_open_applications(animal, keep=None):
+    """Once an animal is adopted, every other pending application is turned down and its
+    applicant told, so nothing is left waiting on an animal that already has a home."""
+    from notifications.services import notify_users
+
+    now = timezone.now()
+    others = animal.adoption_applications.filter(status="pending")
+    if keep is not None:
+        others = others.exclude(pk=keep.pk)
+    for other in list(others):
+        other.status = "rejected"
+        other.decided_at = now
+        other.save(update_fields=["status", "decided_at"])
+        notify_users(
+            [other.applicant_id],
+            title="Adoption",
+            body=f"**{animal.name}** has found a home with another family. Thank you for offering yours.",
+            data={"type": "adoption_decision", "application_id": other.id, "animal_id": animal.id, "status": "rejected"},
+        )
+
+
 class AnimalViewSet(viewsets.ModelViewSet):
     queryset = Animal.objects.select_related("case", "organization", "organization__user")
     serializer_class = AnimalSerializer
@@ -76,9 +97,14 @@ class AnimalViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         if serializer.instance.organization_id != self.request.user.organization_profile.id:
             raise serializers.ValidationError({"detail": "You can only update your own animals."})
+        case = serializer.validated_data.get("case")
+        if case is not None and case.organization_id != self.request.user.organization_profile.id:
+            raise serializers.ValidationError({"case": "You can only link animals to your own cases."})
         animal = serializer.save(organization=self.request.user.organization_profile)
         # Updating an animal can reopen or close the linked rescue workflow.
         sync_case_with_animal(animal)
+        if animal.status == Animal.STATUS_ADOPTED:
+            close_open_applications(animal)
 
     @action(detail=False, methods=["get"], permission_classes=[AllowAny], url_path="public")
     def public(self, request):
@@ -178,6 +204,10 @@ class ApplicationViewSet(viewsets.GenericViewSet):
 
     def list(self, request):
         queryset = self.get_queryset()
+        if getattr(request.user, "organization_profile", None):
+            # A team's review list is about animals still looking for a home; adopted animals'
+            # applications are finished business (the adopter still sees theirs in My Applications).
+            queryset = queryset.exclude(animal__status=Animal.STATUS_ADOPTED)
         if request.query_params.get("status"):
             queryset = queryset.filter(status=request.query_params["status"])
         return Response(self.get_serializer(queryset, many=True).data)
@@ -241,17 +271,7 @@ class ApplicationViewSet(viewsets.GenericViewSet):
         if decision == "approved":
             # The animal is adopted: the other pending applicants are turned down and told,
             # and its reporters and followers hear the news from the animal's own update.
-            others = list(animal.adoption_applications.filter(status="pending").exclude(pk=application.pk))
-            for other in others:
-                other.status = "rejected"
-                other.decided_at = application.decided_at
-                other.save(update_fields=["status", "decided_at"])
-                notify_users(
-                    [other.applicant_id],
-                    title="Adoption",
-                    body=f"**{animal.name}** has found a home with another family. Thank you for offering yours.",
-                    data={"type": "adoption_decision", "application_id": other.id, "animal_id": animal.id, "status": "rejected"},
-                )
+            close_open_applications(animal, keep=application)
             if animal.status != Animal.STATUS_ADOPTED:
                 animal.status = Animal.STATUS_ADOPTED
                 animal._skip_notify_user_ids = {application.applicant_id}
