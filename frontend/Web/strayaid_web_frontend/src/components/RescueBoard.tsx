@@ -7,6 +7,9 @@ import CasesMap from "./CasesMap";
 import { byScore } from "../utils/cases";
 import { formatRelativeTime } from "../utils/time";
 import { formatDuration } from "../utils/format";
+// The board's columns and map shell live in Portal.css; import it here so /cases is styled
+// even when it's the first page opened (not only after visiting the dashboard).
+import "../styles/Portal.css";
 import "../styles/CasesWorkflow.css";
 
 type RescueBoardProps = {

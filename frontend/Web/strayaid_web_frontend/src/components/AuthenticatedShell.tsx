@@ -3,6 +3,7 @@ import AppSidebar from "./AppSidebar";
 import DashboardTopbar from "./DashboardTopbar";
 import MenuToggleIcon from "./MenuToggleIcon";
 import LiveAlerts from "../layout/LiveAlerts";
+import AppFooter from "../layout/AppFooter";
 import "./DashboardLayout.css";
 
 type AuthenticatedShellProps = {
@@ -60,6 +61,7 @@ function AuthenticatedShell({ children }: AuthenticatedShellProps) {
         ) : null}
         <DashboardTopbar />
         <div className="dashboard-content-body">{children}</div>
+        <AppFooter />
       </main>
     </div>
   );

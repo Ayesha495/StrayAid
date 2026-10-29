@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { BadgeCheck, Check, Eye, Landmark, Mail, MapPinned, Phone, ShieldAlert, SquareUserRound, Upload, UploadCloud } from "lucide-react";
+import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Check, UploadCloud } from "lucide-react";
 import AuthenticatedShell from "../components/AuthenticatedShell";
 import LocationPicker from "../components/LocationPicker";
 import { syncCurrentUser, useCurrentUser } from "../services/authService";
-import { createOrganizationProfile, getOrganizationProfile, updateOrganizationProfile } from "../services/platformService";
+import { createOrganizationProfile, getOrganizationProfile } from "../services/platformService";
 import "../styles/Portal.css";
 import "../styles/Registration.css";
-import "../styles/Profile.css";
 
 const initialForm = {
   name: "",
@@ -56,46 +55,18 @@ function OrganizationRegistration() {
   const navigate = useNavigate();
   const currentUser = useCurrentUser();
   const [form, setForm] = useState(initialForm);
-  const [originalForm, setOriginalForm] = useState<FormState | null>(null);
   const [hasProfile, setHasProfile] = useState(false);
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [existingImage, setExistingImage] = useState<string | null>(null);
-  const [orgId, setOrgId] = useState<number | null>(null);
-  const [isVerified, setIsVerified] = useState(false);
   const [step, setStep] = useState(0);
   const [stepError, setStepError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [confirmedDetails, setConfirmedDetails] = useState(false);
 
   useEffect(() => {
+    // Only checks whether this account already has a team (then it's sent to Edit profile).
     getOrganizationProfile()
-      .then((profile) => {
-        const loadedForm: FormState = {
-          name: profile.name,
-          description: profile.description,
-          image: null,
-          latitude: profile.latitude,
-          longitude: profile.longitude,
-          address: profile.address,
-          city: profile.city ?? "",
-          capacity: profile.capacity ?? 0,
-          radius: profile.radius ?? 0,
-          phone_number: profile.phone_number,
-          contact_email: profile.contact_email,
-          bank_name: profile.bank_name ?? "",
-          bank_account_title: profile.bank_account_title ?? "",
-          bank_account_number: profile.bank_account_number ?? "",
-          tax_id: profile.tax_id ?? "",
-          payment_notes: profile.payment_notes ?? "",
-          supply_goal_pkr: profile.supply_goal_pkr ?? 100000,
-        };
-        setForm(loadedForm);
-        setOriginalForm(loadedForm);
-        setExistingImage(profile.image ?? null);
-        setOrgId(profile.id);
-        setIsVerified(Boolean(profile.is_verified));
-        setHasProfile(true);
-      })
+      .then(() => setHasProfile(true))
       .catch(() => setHasProfile(false))
       .finally(() => setProfileLoaded(true));
   }, []);
@@ -111,15 +82,6 @@ function OrganizationRegistration() {
     setImagePreviewUrl(url);
     return () => URL.revokeObjectURL(url);
   }, [form.image]);
-
-  const handleDiscard = () => {
-    if (originalForm) {
-      setForm(originalForm);
-    }
-    setStepError(null);
-  };
-
-  const isDirty = originalForm ? JSON.stringify({ ...form, image: null }) !== JSON.stringify({ ...originalForm, image: null }) || form.image !== null : false;
 
   const buildPayload = () => {
     const formData = new FormData();
@@ -191,25 +153,11 @@ function OrganizationRegistration() {
     try {
       const payload = buildPayload();
 
-      if (hasProfile) {
-        const profile = await updateOrganizationProfile(payload);
-        await syncCurrentUser();
-        setExistingImage(profile.image ?? null);
-        setIsVerified(Boolean(profile.is_verified));
-        setForm((current) => {
-          const next = { ...current, image: null };
-          setOriginalForm(next);
-          return next;
-        });
-        alert("Organization profile updated");
-      } else {
-        const profile = await createOrganizationProfile(payload);
-        await syncCurrentUser();
-        setExistingImage(profile.image ?? null);
-        alert("Organization profile created");
-        setHasProfile(true);
-        navigate("/dashboard", { replace: true });
-      }
+      const profile = await createOrganizationProfile(payload);
+      await syncCurrentUser();
+      setExistingImage(profile.image ?? null);
+      alert("Organization profile created");
+      navigate("/dashboard", { replace: true });
     } catch (error) {
       console.error(error);
       const message =
@@ -395,222 +343,12 @@ function OrganizationRegistration() {
     </div>
   );
 
-  const initials = (form.name || "Org").trim().split(/\s+/).slice(0, 2).map((word) => word.charAt(0).toUpperCase()).join("") || "OR";
-
-  const editContent = (
-    <div className="portal-page profile-page">
-      <div className="portal-header">
-        <div>
-          <h1 className="profile-title-row">
-            Organization Profile
-            {isVerified ? <span className="badge badge-green profile-verified-pill"><BadgeCheck size={12} /> Verified</span> : null}
-          </h1>
-          <p>Update your rescue's details, service area, bank details and public profile.</p>
-        </div>
-        <div className="profile-header-actions">
-          {orgId ? (
-            <Link className="secondary-btn" to={`/organizations/${orgId}`} target="_blank" rel="noreferrer">
-              <Eye size={16} /> Preview Public Hub
-            </Link>
-          ) : null}
-          <button type="button" className="primary-btn" onClick={submitProfile} disabled={submitting}>
-            <Check size={16} /> {submitting ? "Saving..." : "Save Changes"}
-          </button>
-        </div>
-      </div>
-
-      <form className="profile-form" onSubmit={handleFormSubmit}>
-        <section className="panel-card profile-section">
-          <div className="profile-section-heading">
-            <span className="profile-section-icon"><SquareUserRound size={16} /></span>
-            <div>
-              <h2>Basic Rescue Identity &amp; Public Presence</h2>
-              <p className="meta-line">This info is prominently displayed on animal adoption cards, public alerts, and rescue reports.</p>
-            </div>
-          </div>
-
-          <div className="profile-field-grid">
-            <label className="profile-field">
-              <span className="profile-field-label">Organization Legal / Operating Name <span className="profile-required">*</span></span>
-              <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
-              <span className="profile-field-hint">Registered non-profit or community rescue team title.</span>
-            </label>
-            <div className="profile-field">
-              <span className="profile-field-label">Organization Badge</span>
-              <div className="profile-badge-upload">
-                <span className="profile-badge-preview">{initials}</span>
-                <label className="btn btn-secondary upload-btn">
-                  <Upload size={16} aria-hidden="true" /> {form.image ? form.image.name : "Choose an image"}
-                  <input className="sr-only" type="file" accept="image/*" onChange={(e) => setForm({ ...form, image: e.target.files?.[0] ?? null })} />
-                </label>
-              </div>
-              <span className="profile-field-hint">Preview generated from your organization name. PNG or JPG, under 2MB.</span>
-            </div>
-          </div>
-
-          <div className="profile-cover-block">
-            <div className="profile-field-label-row">
-              <span className="profile-field-label">Current Public Cover Image</span>
-            </div>
-            {existingImage || imagePreviewUrl ? (
-              <div className="profile-cover-image">
-                <img src={imagePreviewUrl ?? existingImage ?? ""} alt={form.name || "Organization"} />
-                <span className="profile-cover-tag">Public Cover</span>
-                <label className="profile-cover-change">
-                  Change File
-                  <input type="file" accept="image/*" onChange={(e) => setForm({ ...form, image: e.target.files?.[0] ?? null })} hidden />
-                </label>
-              </div>
-            ) : (
-              <label className="profile-cover-empty">
-                <UploadCloud size={20} />
-                <span>Upload a cover image</span>
-                <input type="file" accept="image/*" onChange={(e) => setForm({ ...form, image: e.target.files?.[0] ?? null })} hidden />
-              </label>
-            )}
-            <span className="profile-field-hint">Displayed at the top of your public donation campaigns &amp; rescue cases.</span>
-          </div>
-
-          <label className="profile-field">
-            <span className="profile-field-label">About &amp; Mission Statement</span>
-            <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-            <span className="profile-field-hint">Brief summary of your organization shown on case detail pages and community inquiries.</span>
-          </label>
-        </section>
-
-        <section className="panel-card profile-section">
-          <div className="profile-section-heading">
-            <span className="profile-section-icon"><MapPinned size={16} /></span>
-            <div>
-              <h2>Organization Location &amp; Dispatch Coverage</h2>
-              <p className="meta-line">Pin your rescue facility on the map or sync with your GPS coordinates.</p>
-            </div>
-          </div>
-
-          <LocationPicker
-            hideHeader
-            latitude={form.latitude}
-            longitude={form.longitude}
-            address={form.address}
-            onLocationChange={({ latitude, longitude }) => setForm((current) => ({ ...current, latitude, longitude }))}
-            onAddressChange={(address) => setForm((current) => ({ ...current, address }))}
-          />
-
-          <div className="profile-field-grid profile-field-grid-3">
-            <label className="profile-field">
-              <span className="profile-field-label">Operating City</span>
-              <input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
-            </label>
-            <label className="profile-field">
-              <span className="profile-field-label">Shelter Intake Capacity</span>
-              <div className="profile-input-suffix">
-                <input type="number" min="0" value={form.capacity} onChange={(e) => setForm({ ...form, capacity: Number(e.target.value) || 0 })} />
-                <span>kennels/slots</span>
-              </div>
-            </label>
-            <label className="profile-field">
-              <span className="profile-field-label">Service Radius (km)</span>
-              <div className="profile-input-suffix">
-                <input type="number" min="0" step="0.1" value={form.radius} onChange={(e) => setForm({ ...form, radius: Number(e.target.value) || 0 })} />
-                <span>kilometers</span>
-              </div>
-            </label>
-          </div>
-
-          <div className="profile-field-grid">
-            <label className="profile-field">
-              <span className="profile-field-label">Rescue Hotline / Phone Number <span className="profile-required">*</span></span>
-              <div className="profile-input-icon">
-                <Phone size={15} />
-                <input value={form.phone_number} onChange={(e) => setForm({ ...form, phone_number: e.target.value })} required />
-              </div>
-              <span className="profile-field-hint">Urgent dispatcher contact line for emergency incident calls.</span>
-            </label>
-            <label className="profile-field">
-              <span className="profile-field-label">Official Contact Email <span className="profile-required">*</span></span>
-              <div className="profile-input-icon">
-                <Mail size={15} />
-                <input type="email" value={form.contact_email} onChange={(e) => setForm({ ...form, contact_email: e.target.value })} required />
-              </div>
-              <span className="profile-field-hint">Verification badges and official receipts are dispatched here.</span>
-            </label>
-          </div>
-        </section>
-
-        <section className="panel-card profile-section">
-          <div className="profile-section-heading">
-            <span className="profile-section-icon"><Landmark size={16} /></span>
-            <div>
-              <h2>Donation &amp; Direct Sponsorship Channel</h2>
-              <p className="meta-line">These bank details appear on your animals' pages so people can sponsor them. StrayAid doesn't check them, so make sure they're right.</p>
-            </div>
-          </div>
-
-          <div className="profile-notice">
-            <ShieldAlert size={18} />
-            <div>
-              <strong>Security &amp; Audit Compliance Notice</strong>
-              <p>To prevent fraud in animal charity sponsorships, updates to account numbers undergo review before syncing with public donation panels.</p>
-            </div>
-          </div>
-
-          <div className="profile-field-grid">
-            <label className="profile-field">
-              <span className="profile-field-label">Bank / Provider Name</span>
-              <input placeholder="e.g. Standard Chartered / Meezan Bank" value={form.bank_name} onChange={(e) => setForm({ ...form, bank_name: e.target.value })} />
-            </label>
-            <label className="profile-field">
-              <span className="profile-field-label">Account Name / Title</span>
-              <input placeholder="e.g. Rescue Op Animal Welfare Trust" value={form.bank_account_title} onChange={(e) => setForm({ ...form, bank_account_title: e.target.value })} />
-            </label>
-            <label className="profile-field">
-              <span className="profile-field-label">Account Number / IBAN</span>
-              <input placeholder="PK00 XXXX 0000 0000 0000 0000" value={form.bank_account_number} onChange={(e) => setForm({ ...form, bank_account_number: e.target.value })} />
-            </label>
-          </div>
-
-          <div className="profile-field-grid">
-            <label className="profile-field">
-              <span className="profile-field-label">Non-Profit Tax ID / Registration # <span className="profile-optional">(Optional)</span></span>
-              <input placeholder="REG-NGO-2023-889" value={form.tax_id} onChange={(e) => setForm({ ...form, tax_id: e.target.value })} />
-              <span className="profile-field-hint">Enables the tax-deductible donation badge on animal profiles.</span>
-            </label>
-            <label className="profile-field">
-              <span className="profile-field-label">Payment Reference Notes <span className="profile-optional">(Optional)</span></span>
-              <input placeholder="Mention 'Animal ID' in bank transfer remarks" value={form.payment_notes} onChange={(e) => setForm({ ...form, payment_notes: e.target.value })} />
-              <span className="profile-field-hint">Instruction displayed under the donor modal.</span>
-            </label>
-            <label className="profile-field">
-              <span className="profile-field-label">Monthly Medical Supply Goal (Rs)</span>
-              <input type="number" min="0" step="1000" value={form.supply_goal_pkr} onChange={(e) => setForm({ ...form, supply_goal_pkr: Number(e.target.value) })} />
-              <span className="profile-field-hint">Shown on your public page as this month's fundraising target for medicine, bandages and food.</span>
-            </label>
-          </div>
-        </section>
-
-        {stepError ? <p className="wizard-step-error" role="alert">{stepError}</p> : null}
-
-        <div className="profile-save-bar">
-          <span className="profile-save-status">
-            <span className={`profile-save-dot${isDirty ? " is-dirty" : ""}`} />
-            {isDirty ? "You have unsaved changes." : "Your profile is up to date."}
-          </span>
-          <div className="profile-save-actions">
-            <button type="button" className="secondary-btn" onClick={handleDiscard} disabled={!isDirty}>Discard Changes</button>
-            <button type="submit" className="primary-btn" disabled={submitting}>
-              <UploadCloud size={16} /> {submitting ? "Saving..." : "Update Profile"}
-            </button>
-          </div>
-        </div>
-      </form>
-    </div>
-  );
-
   let pageContent = wizardContent;
   if (!profileLoaded) {
     pageContent = <div className="empty-state">Loading your organization profile...</div>;
   } else if (hasProfile) {
-    pageContent = editContent;
+    // Teams that already exist edit their profile from the menu on their public page.
+    return <Navigate to="/organization/edit" replace />;
   }
 
   if (currentUser) {

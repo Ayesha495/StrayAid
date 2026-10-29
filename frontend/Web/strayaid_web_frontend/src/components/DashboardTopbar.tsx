@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
 import { useCurrentUser } from "../services/authService";
 import { MessagesPanel, NotificationsPanel } from "../layout/TopbarPanels";
+import { useShell } from "../layout/ShellContext";
 
 const BREADCRUMBS: Array<{ prefix: string; label: string }> = [
   { prefix: "/dashboard/workflow", label: "Rescue workflow" },
@@ -12,7 +13,8 @@ const BREADCRUMBS: Array<{ prefix: string; label: string }> = [
   { prefix: "/animals", label: "Rescued animals" },
   { prefix: "/org/feed", label: "Community posts" },
   { prefix: "/feed", label: "Community posts" },
-  { prefix: "/organization/register", label: "Organization profile" },
+  { prefix: "/organization/register", label: "Register your team" },
+  { prefix: "/organization/edit", label: "Edit profile" },
   { prefix: "/applications", label: "Applications" },
   { prefix: "/funds", label: "Funds" },
   { prefix: "/messages", label: "Messages" },
@@ -29,6 +31,7 @@ function DashboardTopbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const currentUser = useCurrentUser();
+  const { organization } = useShell();
   const [query, setQuery] = useState("");
 
   const initial = (currentUser?.username || "U").trim().charAt(0).toUpperCase();
@@ -64,9 +67,9 @@ function DashboardTopbar() {
         <MessagesPanel buttonClassName="dashboard-icon-btn" />
         <NotificationsPanel buttonClassName="dashboard-icon-btn" />
         <Link
-          to={currentUser?.role === "organization" ? "/organization/register" : "/settings"}
+          to={isOrganization ? (organization ? `/organizations/${organization.id}` : "/organization/register") : "/settings"}
           className="dashboard-avatar"
-          title={currentUser?.role === "organization" ? "Organization Profile" : "Settings"}
+          title={isOrganization ? "Your public profile" : "Settings"}
         >
           {initial}
         </Link>

@@ -351,7 +351,7 @@ function AnimalDetail() {
             </div>
             {posts.data ? (
               posts.data.length ? (
-                <UpdateGrid posts={posts.data} />
+                <UpdateGrid posts={posts.data} compact />
               ) : (
                 <div className="card"><EmptyState title="No updates yet" message={`Follow ${data.name} to hear when the rescue team posts.`} /></div>
               )

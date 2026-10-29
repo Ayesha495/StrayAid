@@ -1,11 +1,11 @@
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useState, type ComponentType } from "react";
+import type { ComponentType } from "react";
 import {
   LayoutDashboard, ClipboardList, PawPrint, Newspaper, LogOut, FileText, Wallet, MessageSquare,
   Building2, Heart, HandHeart, Settings, ArrowRight,
 } from "lucide-react";
 import { clearSession, useCurrentUser } from "../services/authService";
-import { getOrganizationProfile } from "../services/platformService";
+import { useShell } from "../layout/ShellContext";
 import { LogoMark } from "../ui/Logo";
 import { ScrollArea } from "@/components/vendor/scroll-area";
 import MenuToggleIcon from "./MenuToggleIcon";
@@ -35,6 +35,7 @@ const ORG_GROUPS: Group[] = [
     items: [
       { to: "/feed", label: "Community posts", icon: Newspaper },
       { to: "/messages", label: "Messages", icon: MessageSquare },
+      { to: "/settings", label: "Settings", icon: Settings },
     ],
   },
 ];
@@ -69,16 +70,11 @@ function AppSidebar({ isCollapsed, isMobile, onToggle }: AppSidebarProps) {
   const { pathname } = useLocation();
   const currentUser = useCurrentUser();
   const isOrganization = currentUser?.role === "organization";
-  const [organizationName, setOrganizationName] = useState<string | null>(null);
+  const { organization } = useShell();
 
-  useEffect(() => {
-    if (!isOrganization) return;
-    getOrganizationProfile()
-      .then((profile) => setOrganizationName(profile.name))
-      .catch(() => setOrganizationName(null));
-  }, [isOrganization]);
-
-  const displayName = isOrganization ? (organizationName || "Organization account") : (currentUser?.username || "Your account");
+  const displayName = isOrganization ? (organization?.name || "Organization account") : (currentUser?.username || "Your account");
+  // A team's account link opens its public page (edit lives in that page's menu).
+  const accountLink = isOrganization ? (organization ? `/organizations/${organization.id}` : "/organization/register") : "/settings";
   const groups = isOrganization ? ORG_GROUPS : MEMBER_GROUPS;
   const initial = displayName.trim().charAt(0).toUpperCase() || "S";
 
@@ -146,7 +142,7 @@ function AppSidebar({ isCollapsed, isMobile, onToggle }: AppSidebarProps) {
 
       <div className="sb-foot">
         <Link
-          to={isOrganization ? "/organization/register" : "/settings"}
+          to={accountLink}
           className="sb-account"
           title={displayName}
           onClick={handleLinkClick}

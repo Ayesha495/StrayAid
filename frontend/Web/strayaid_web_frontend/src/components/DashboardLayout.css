@@ -225,8 +225,10 @@
 
 /* ---------- The content sheet ---------- */
 .dashboard-content {
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
-  padding: 0 32px 40px;
+  padding: 0 32px 0;
   background: #fff;
 }
 
@@ -239,7 +241,37 @@
   }
 }
 
-.dashboard-content-body { padding-top: 28px; }
+.dashboard-content-body { flex: 1; padding-top: 28px; padding-bottom: 40px; }
+
+/* Slim footer at the bottom of the white sheet, under every signed-in page. */
+.app-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 24px;
+  margin: 0 -32px;
+  padding: 18px 32px;
+  border-top: 1px solid var(--line, #e6e8ec);
+  color: var(--navy-500, #6b7280);
+  font-size: 13px;
+}
+
+.app-footer-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--navy-900, #111827);
+  font-weight: 600;
+}
+
+.app-footer-links { display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.app-footer-links a { color: inherit; text-decoration: none; }
+.app-footer-links a:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; border-radius: 2px; }
+.app-footer-copy { margin-left: auto; }
+
+@media (hover: hover) and (pointer: fine) {
+  .app-footer-links a:hover { color: var(--green-700, #1f7a4d); text-decoration: underline; text-underline-offset: 3px; }
+}
 
 .dashboard-topbar {
   position: sticky;
@@ -340,8 +372,10 @@
 
 @media (max-width: 900px) {
   .dashboard-shell.sidebar-open .dashboard-sidebar { box-shadow: 16px 0 40px -12px rgba(0, 0, 0, 0.35); }
-  .dashboard-content { padding: 0 16px 28px; }
-  .dashboard-content-body { padding-top: 20px; }
+  .dashboard-content { padding: 0 16px; }
+  .dashboard-content-body { padding-top: 20px; padding-bottom: 28px; }
+  .app-footer { margin: 0 -16px; padding: 16px; }
+  .app-footer-copy { margin-left: 0; }
 
   /* Phones: menu button, page name and icons on one row; search on its own row below. */
   .dashboard-topbar {

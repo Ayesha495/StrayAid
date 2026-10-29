@@ -4,27 +4,37 @@ import { Heart, MessageCircle } from "lucide-react";
 import Modal from "../ui/Modal";
 import PostCard from "./feed/PostCard";
 import type { Post } from "../types/platform";
+import { formatRelativeTime } from "../utils/time";
 import "./UpdateGrid.css";
 import "../pages/PostFeed.css";
 
 /** Posts as an Instagram-style photo grid. Opening one shows the full post with comments,
- *  in a dialog, or on its own page when `hrefFor` gives each post a link. */
-function UpdateGrid({ posts, hrefFor }: { posts: Post[]; hrefFor?: (post: Post) => string }) {
+ *  in a dialog, or on its own page when `hrefFor` gives each post a link. `compact` makes
+ *  smaller, square-cornered tiles with a caption (used on animal profiles). */
+function UpdateGrid({ posts, hrefFor, compact = false }: { posts: Post[]; hrefFor?: (post: Post) => string; compact?: boolean }) {
   const [open, setOpen] = useState<Post | null>(null);
 
   const tileContent = (post: Post) => (
     <>
-      {post.image ? <img src={post.image} alt="" loading="lazy" /> : <span className="update-tile-text">{post.title}</span>}
-      <span className="update-tile-overlay" aria-hidden="true">
-        <span><Heart size={16} fill="currentColor" /> {post.like_count ?? 0}</span>
-        <span><MessageCircle size={16} fill="currentColor" /> {post.comment_count ?? 0}</span>
+      <span className="update-tile-media">
+        {post.image ? <img src={post.image} alt="" loading="lazy" /> : <span className="update-tile-text">{post.title}</span>}
+        <span className="update-tile-overlay" aria-hidden="true">
+          <span><Heart size={16} fill="currentColor" /> {post.like_count ?? 0}</span>
+          <span><MessageCircle size={16} fill="currentColor" /> {post.comment_count ?? 0}</span>
+        </span>
       </span>
+      {compact ? (
+        <span className="update-tile-caption">
+          <span className="update-tile-title">{post.title}</span>
+          <span className="update-tile-date">{formatRelativeTime(post.created_at)}</span>
+        </span>
+      ) : null}
     </>
   );
 
   return (
     <>
-      <div className="update-grid">
+      <div className={`update-grid${compact ? " is-compact" : ""}`}>
         {posts.map((post) =>
           hrefFor ? (
             <Link key={post.id} to={hrefFor(post)} className="update-tile" aria-label={`Open update: ${post.title}`}>

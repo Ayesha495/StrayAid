@@ -311,3 +311,19 @@
 .org-stats > div:nth-child(2) :is(strong, dd) { color: var(--tone-amber-ink); }
 .org-stats > div:nth-child(3) :is(strong, dd) { color: var(--tone-purple-ink); }
 .org-stats > div:nth-child(4) :is(strong, dd) { color: var(--tone-blue-ink); }
+
+/* The owner's kebab menu on their own page. */
+.org-owner-menu {
+  right: 0;
+  left: auto;
+  width: 190px;
+  padding: 4px;
+}
+
+.org-owner-menu .shell-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  text-decoration: none;
+}

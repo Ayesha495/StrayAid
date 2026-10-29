@@ -1,8 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { motion } from "motion/react";
 import {
-  ArrowRight,
   BadgeCheck,
   Bell,
   BellRing,
@@ -15,8 +14,11 @@ import {
   PawPrint,
   Phone,
   PhoneCall,
+  MoreVertical,
+  PencilLine,
+  LayoutDashboard,
+  Link2,
   Ruler,
-  Settings,
   Share2,
   Stethoscope,
   Truck,
@@ -59,6 +61,40 @@ const reveal = {
 
 /** How far an animal's care is from funded, for "Needs your help most". */
 const fundingGap = (animal: Animal) => (animal.funding_goal_pkr ?? 0) - (animal.raised_pkr ?? 0);
+
+/** The owner's options on their own page, behind a kebab button. */
+function OwnerMenu({ onShare }: { onShare: () => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const close = (event: MouseEvent | KeyboardEvent) => {
+      if (event instanceof KeyboardEvent ? event.key === "Escape" : !ref.current?.contains(event.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", close);
+    document.addEventListener("keydown", close);
+    return () => {
+      document.removeEventListener("mousedown", close);
+      document.removeEventListener("keydown", close);
+    };
+  }, [open]);
+
+  return (
+    <div className="panel-anchor" ref={ref}>
+      <button type="button" className="sa-icon-btn org-share" aria-label="Profile options" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(!open)}>
+        <MoreVertical size={18} />
+      </button>
+      {open ? (
+        <div className="dropdown org-owner-menu" role="menu">
+          <Link to="/organization/edit" role="menuitem" className="shell-menu-item"><PencilLine size={15} /> Edit profile</Link>
+          <Link to="/dashboard" role="menuitem" className="shell-menu-item"><LayoutDashboard size={15} /> Open dashboard</Link>
+          <button type="button" role="menuitem" className="shell-menu-item" onClick={() => { setOpen(false); onShare(); }}><Link2 size={15} /> Share page</button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 /** A rescue organization's public page: who they are, their animals, and how to help. */
 function OrganizationPublicProfile() {
@@ -174,8 +210,8 @@ function OrganizationPublicProfile() {
           <div className="org-actions">
             {own ? (
               <>
-                <Link to="/organization/register" className="btn btn-secondary"><Settings size={16} /> Edit profile</Link>
-                <Link to="/dashboard" className="btn btn-primary">Open dashboard <ArrowRight size={16} /></Link>
+                <span className="chip chip-slate">This is how supporters see your page</span>
+                <OwnerMenu onShare={share} />
               </>
             ) : (
               <>

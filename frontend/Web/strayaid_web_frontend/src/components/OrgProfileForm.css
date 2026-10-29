@@ -1,24 +1,70 @@
 .org-form {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
 }
 
-.org-form .card-header p { margin-top: 2px; }
+/* Settings layout: each group's purpose on the left, its fields on the right, hairlines between. */
+.org-form-section {
+  display: grid;
+  grid-template-columns: minmax(180px, 260px) minmax(0, 1fr);
+  gap: var(--space-6, 24px) 40px;
+  padding: 28px 0;
+  border-top: 1px solid var(--line, #e6e8ec);
+}
+
+.org-form-section:first-of-type { border-top: 0; padding-top: 8px; }
+
+.org-form-intro h2 {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.org-form-intro p {
+  margin: 0;
+  color: var(--color-text-muted, #5b6270);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.org-form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.org-form-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.org-logo-field {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.org-logo-field .animal-photo-preview {
+  flex: none;
+  width: 72px;
+  height: 72px;
+}
 
 .org-location-map {
   position: relative;
   z-index: 0;
-  height: 280px;
+  height: 260px;
   overflow: hidden;
   border: 1px solid var(--color-border);
-  border-radius: 16px;
+  border-radius: 8px;
   cursor: crosshair;
 }
 
 .org-form input[type="range"] { accent-color: var(--color-primary); }
 
-/* A solid bar that stays in reach while scrolling a long form. */
+/* Stays in reach at the bottom of a long form and says whether anything is unsaved. */
 .org-form-actions {
   position: sticky;
   bottom: 12px;
@@ -27,12 +73,32 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
+  margin-top: 8px;
   padding: 10px 10px 10px 16px;
   border: 1px solid #e6e8ec;
-  border-radius: 12px;
+  border-radius: 8px;
   background: #fff;
   box-shadow: 0 8px 24px rgba(18, 21, 28, 0.08);
 }
 
-.org-form-actions .btn-lg { height: 42px; }
+.org-form-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-text-muted, #5b6270);
+  font-size: 13px;
+}
 
+.org-form-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-primary, #1f7a4d);
+}
+
+.org-form-dot.is-dirty { background: var(--amber-500, #d99a1e); }
+
+@media (max-width: 760px) {
+  .org-form-section { grid-template-columns: 1fr; gap: 16px; }
+  .org-form-pair { grid-template-columns: 1fr; }
+}

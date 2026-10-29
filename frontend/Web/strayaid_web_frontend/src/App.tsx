@@ -35,6 +35,7 @@ const MyReports = lazy(() => import("./pages/MyReports"));
 const Following = lazy(() => import("./pages/Following"));
 const MyApplications = lazy(() => import("./pages/MyApplications"));
 const Settings = lazy(() => import("./pages/Settings"));
+const OrganizationEdit = lazy(() => import("./pages/OrganizationEdit"));
 const LegalPage = lazy(() => import("./pages/LegalPage"));
 
 function App() {
@@ -75,6 +76,7 @@ function App() {
                 <Route path="/following" element={<Following />} />
                 <Route path="/my-applications" element={<MyApplications />} />
                 <Route path="/settings" element={<Settings />} />
+                <Route path="/organization/edit" element={<OrganizationEdit />} />
               </Route>
             </Route>
 

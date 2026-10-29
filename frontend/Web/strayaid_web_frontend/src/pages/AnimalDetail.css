@@ -218,7 +218,9 @@
 
 
 .animal-health {
-  border-left: 4px solid var(--blue-500);
+  border-left: 3px solid var(--blue-500);
+  /* The no-card redesign drops .card-pad padding, so keep text off the accent rule. */
+  padding: 4px 0 4px 16px !important;
 }
 
 .animal-health h2 svg { color: var(--blue-700); }

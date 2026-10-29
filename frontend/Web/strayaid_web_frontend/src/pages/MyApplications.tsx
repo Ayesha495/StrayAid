@@ -99,7 +99,7 @@ function MyApplications() {
                     <span className="small muted">{formatDate(item.created_at)}{item.monthly ? " · monthly" : ""}</span>
                   </div>
                   <span className="fund-amount">{formatPkr(item.amount_pkr)}</span>
-                  <StatusChip kind="review" value={item.status} />
+                  <StatusChip kind="payment" value={item.status} />
                 </li>
               ))}
             </ul>
@@ -115,7 +115,7 @@ function MyApplications() {
                   <span className="small muted">Medical supplies · {formatDate(item.created_at)}</span>
                 </div>
                 <span className="fund-amount">{formatPkr(item.amount_pkr)}</span>
-                <StatusChip kind="review" value={item.status} />
+                <StatusChip kind="payment" value={item.status} />
               </li>
             ))}
           </ul>

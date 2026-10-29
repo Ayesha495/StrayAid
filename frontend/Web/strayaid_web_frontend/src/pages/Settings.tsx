@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Building2, Camera, LogOut, Trash2 } from "lucide-react";
 import { changePassword, getMyProfile, updateMyProfile } from "../services/accountService";
 import { clearSession, syncCurrentUser } from "../services/authService";
@@ -8,7 +8,6 @@ import { useShell } from "../layout/ShellContext";
 import { useToast } from "../ui/Toast";
 import Avatar from "../ui/Avatar";
 import { ErrorState, LoadingRows } from "../ui/States";
-import OrgProfileForm from "../components/OrgProfileForm";
 import DeleteAccountDialog from "../components/DeleteAccountDialog";
 import { formatDate } from "../utils/format";
 import { errorMessage } from "../utils/errors";
@@ -170,54 +169,40 @@ function AccountSettings() {
 }
 
 function Settings() {
-  const toast = useToast();
-  const { isOrganization, organization, setOrganization } = useShell();
-  const [params, setParams] = useSearchParams();
-  const tab = isOrganization && params.get("tab") !== "account" ? "organization" : "account";
+  const { isOrganization, organization } = useShell();
 
   return (
     <div className="page" style={{ maxWidth: 880 }}>
       <div className="page-header">
         <div>
           <h1>Settings</h1>
-          <p>{isOrganization ? "Your organization's public profile and your login." : "Your profile and login."}</p>
+          <p>Your login and account details.</p>
         </div>
       </div>
 
       {isOrganization ? (
-        <div className="tabs" role="tablist" style={{ marginBottom: 16 }}>
-          <button type="button" role="tab" className="tab" aria-selected={tab === "organization"} onClick={() => setParams({}, { replace: true })}>Organization</button>
-          <button type="button" role="tab" className="tab" aria-selected={tab === "account"} onClick={() => setParams({ tab: "account" }, { replace: true })}>Account</button>
+        <div className="card card-pad row" style={{ marginBottom: 16, gap: 16, flexWrap: "wrap" }}>
+          <Building2 size={22} color="var(--green-700)" />
+          <span style={{ flex: 1, minWidth: 200 }}>
+            <strong>Organization profile</strong>
+            <span className="small muted" style={{ display: "block" }}>Your team's logo, contact details, service area and bank details.</span>
+          </span>
+          {organization ? <Link to={`/organizations/${organization.id}`} className="btn btn-secondary">View page</Link> : null}
+          <Link to="/organization/edit" className="btn btn-primary">Edit profile</Link>
         </div>
       ) : null}
 
-      {tab === "organization" ? (
-        organization ? (
-          <OrgProfileForm
-            organization={organization}
-            onSaved={(saved) => {
-              setOrganization(saved);
-              toast({ title: "Organization profile saved" });
-            }}
-          />
-        ) : (
-          <LoadingRows rows={3} height={160} />
-        )
-      ) : (
-        <>
-          <AccountSettings />
-          {!isOrganization ? (
-            <div className="card card-pad row" style={{ marginTop: 16, gap: 16, flexWrap: "wrap" }}>
-              <Building2 size={22} color="var(--green-700)" />
-              <span style={{ flex: 1, minWidth: 200 }}>
-                <strong>Run a rescue or shelter?</strong>
-                <span className="small muted" style={{ display: "block" }}>Register your organization to accept cases and manage animals.</span>
-              </span>
-              <Link to="/organization/register" className="btn btn-primary">Register organization</Link>
-            </div>
-          ) : null}
-        </>
-      )}
+      <AccountSettings />
+      {!isOrganization ? (
+        <div className="card card-pad row" style={{ marginTop: 16, gap: 16, flexWrap: "wrap" }}>
+          <Building2 size={22} color="var(--green-700)" />
+          <span style={{ flex: 1, minWidth: 200 }}>
+            <strong>Run a rescue or shelter?</strong>
+            <span className="small muted" style={{ display: "block" }}>Register your organization to accept cases and manage animals.</span>
+          </span>
+          <Link to="/organization/register" className="btn btn-primary">Register organization</Link>
+        </div>
+      ) : null}
     </div>
   );
 }
