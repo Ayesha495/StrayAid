@@ -3,14 +3,27 @@ import { Image } from "expo-image";
 import { Href, router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  ActivityIndicator,
+  FlatList,
+  Keyboard,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import VerifyCasePanel from "../../../components/case/VerifyCasePanel";
 import RescueMap, { RescueMapHandle, RescueMapMessage } from "../../../components/map/RescueMap";
 import type { MapCase } from "../../../components/map/rescueMapHtml";
 import type { VerifyResult } from "../../../services/caseService";
-import { getMapCases, TrendingCase } from "../../../services/homeService";
+import { getMapCases, searchCases, TrendingCase } from "../../../services/homeService";
 import { findAddress, getCurrentLocation, hasLocationPermission } from "../../../services/locationService";
 import type { LatLng } from "../../../services/reportDraft";
 import { colors, fonts } from "../../../theme/tokens";
@@ -41,6 +54,9 @@ const SEVERITY_CHIP = {
 const FALLBACK = { lat: 33.6844, lng: 73.0479 };
 // The map opens framing the person and the open cases within this distance.
 const FRAME_KM = 5;
+// The cards under the map: one fills the screen, with a sliver of the next showing.
+const CARD_SIDE_SPACE = 48;
+const CARD_GAP = 10;
 
 const matchesFilter = (item: TrendingCase, filter: Filter) => {
   const verification = item.verification?.status ?? "unverified";
@@ -57,11 +73,16 @@ const matchesQuery = (item: TrendingCase, query: string) => {
 
 export default function ExploreScreen() {
   const insets = useSafeAreaInsets();
+  const { width: screenWidth } = useWindowDimensions();
+  const cardWidth = screenWidth - CARD_SIDE_SPACE;
+  const carousel = useRef<FlatList<TrendingCase>>(null);
   // "Find … on the rescue map" from the Search screen.
   const { place } = useLocalSearchParams<{ place?: string }>();
   const map = useRef<RescueMapHandle>(null);
   const [mapReady, setMapReady] = useState(false);
   const [cases, setCases] = useState<TrendingCase[]>([]);
+  // Server results for a search: any case anywhere, shown instead of the nearby ones.
+  const [results, setResults] = useState<TrendingCase[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<Filter>("all");
@@ -102,11 +123,17 @@ export default function ExploreScreen() {
   );
 
   const visible = useMemo(
-    () => cases.filter((item) => matchesFilter(item, filter) && matchesQuery(item, query)),
-    [cases, filter, query]
+    () => (results ?? cases).filter((item) => matchesFilter(item, filter) && (!!results || matchesQuery(item, query))),
+    [cases, results, filter, query]
   );
   // The most urgent visible case is shown until the person picks another pin.
   const selected = visible.find((item) => item.id === selectedId) ?? visible[0] ?? null;
+  const selectedIndex = selected ? visible.indexOf(selected) : -1;
+
+  // A pin tapped on the map brings its card into view.
+  useEffect(() => {
+    if (selectedIndex >= 0) carousel.current?.scrollToOffset({ offset: selectedIndex * (cardWidth + CARD_GAP), animated: true });
+  }, [selectedIndex, cardWidth]);
 
   // Keep the map in step with the list.
   useEffect(() => {
@@ -156,7 +183,8 @@ export default function ExploreScreen() {
 
   // A verification answer changes the case's score, severity and tally: update it in place.
   const onVerified = (caseId: number, result: VerifyResult) =>
-    setCases((current) =>
+  {
+    const update = (current: TrendingCase[]) =>
       current.map((item) =>
         item.id === caseId
           ? {
@@ -167,8 +195,10 @@ export default function ExploreScreen() {
               severity: result.severity,
             }
           : item
-      )
-    );
+      );
+    setCases(update);
+    setResults((current) => current && update(current));
+  };
 
   const onMapMessage = (message: RescueMapMessage) => {
     if (message.type === "ready") setMapReady(true);
@@ -180,9 +210,16 @@ export default function ExploreScreen() {
     map.current?.post({ type: "select", id: item.id, pan: true });
   };
 
+  // Swiping the cards moves the map to the case now in front.
+  const onSwiped = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const item = visible[Math.round(event.nativeEvent.contentOffset.x / (cardWidth + CARD_GAP))];
+    if (item && item.id !== selected?.id) choose(item);
+  };
+
   const recenter = async () => {
     setLocating(true);
     setNotice(null);
+    setResults(null);
     try {
       const location = await getCurrentLocation();
       setMe(location);
@@ -196,12 +233,25 @@ export default function ExploreScreen() {
     }
   };
 
-  // Matching cases are filtered as you type; if none match, the text is treated as a place.
+  // Cases are searched everywhere by address, animal or reference; if none match, the text is
+  // treated as a place to move the map to.
   const search = async (typed?: string) => {
     Keyboard.dismiss();
     setNotice(null);
     const text = (typed ?? query).trim();
     if (!text) return;
+    try {
+      const found = (await searchCases(text)).filter((item) => matchesFilter(item, filter));
+      if (found.length) {
+        setResults(found);
+        setSelectedId(found[0].id);
+        map.current?.post({ type: "fit", points: found.map((item) => ({ lat: item.latitude, lng: item.longitude })), top: insets.top + 150, bottom: 250 });
+        setNotice(`${found.length} ${found.length === 1 ? "case" : "cases"} found for "${text}".`);
+        return;
+      }
+    } catch {
+      // No connection to search with: what's already on the map is still filtered below.
+    }
     const matches = cases.filter((item) => matchesFilter(item, filter) && matchesQuery(item, text));
     if (matches.length) {
       choose(matches[0]);
@@ -219,7 +269,6 @@ export default function ExploreScreen() {
     }
   };
 
-  const distance = selected && me ? formatDistance(distanceKm(me, selected)) : null;
   const chip = selected ? SEVERITY_CHIP[selected.severity] ?? SEVERITY_CHIP.medium : null;
 
   return (
@@ -236,17 +285,27 @@ export default function ExploreScreen() {
             value={query}
             onChangeText={(value) => {
               setQuery(value);
+              setResults(null);
               setNotice(null);
             }}
             onSubmitEditing={() => search()}
-            placeholder="Search nearby cases"
+            placeholder="Search an address or case"
             placeholderTextColor="#9CA3AF"
             returnKeyType="search"
             autoCorrect={false}
-            accessibilityLabel="Search nearby cases or a place"
+            accessibilityLabel="Search cases by address, or a place"
           />
           {!!query && (
-            <Pressable accessibilityRole="button" accessibilityLabel="Clear search" onPress={() => setQuery("")} hitSlop={8}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Clear search"
+              onPress={() => {
+                setQuery("");
+                setResults(null);
+                setNotice(null);
+              }}
+              hitSlop={8}
+            >
               <MaterialIcons name="close" size={18} color="#9CA3AF" />
             </Pressable>
           )}
@@ -303,65 +362,94 @@ export default function ExploreScreen() {
 
       <View style={styles.bottom} pointerEvents="box-none">
         {selected && chip ? (
-          <View style={styles.card}>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={`${selected.title}. Open case`}
-              onPress={() => router.push(`/cases/${selected.id}` as Href)}
-              style={styles.cardRow}
-            >
-              <View style={styles.thumb}>
-                {selected.image ? (
-                  <Image source={{ uri: selected.image }} style={StyleSheet.absoluteFill} contentFit="cover" transition={150} />
-                ) : (
-                  <MaterialIcons name="pets" size={28} color="#CBD5E1" />
-                )}
-              </View>
-              <View style={styles.cardBody}>
-                <View style={styles.cardTitleRow}>
-                  <Text style={styles.cardTitle} numberOfLines={1}>
-                    {selected.title}
-                  </Text>
-                  <Feather name="chevron-right" size={17} color="#9CA3AF" />
-                </View>
-                <View style={styles.cardChips}>
-                  <View style={[styles.chip, { backgroundColor: chip.background }]}>
-                    <View style={[styles.chipDot, { backgroundColor: chip.color }]} />
-                    <Text style={[styles.chipText, { color: chip.color }]}>{chip.label}</Text>
-                  </View>
-                  {selected.confidence_score != null && (
-                    <View style={[styles.chip, { backgroundColor: "#EBF7F2" }]}>
-                      <Text style={[styles.chipText, { color: colors.primary }]}>{selected.confidence_score}% confidence</Text>
-                    </View>
-                  )}
-                </View>
-                <View style={styles.cardMeta}>
-                  <Feather name="map-pin" size={13} color="#9CA3AF" />
-                  <Text style={styles.cardMetaText} numberOfLines={1}>
-                    {distance ? `${distance} away` : selected.area || selected.status_label}
-                  </Text>
-                </View>
-              </View>
-            </Pressable>
-            {selected.verification && (
-              <VerifyCasePanel
-                key={selected.id}
-                compact
-                caseId={selected.id}
-                verification={selected.verification}
-                onVerified={(result) => onVerified(selected.id, result)}
-              />
+          <>
+            {visible.length > 1 && (
+              <Text style={styles.position} accessibilityLiveRegion="polite">
+                {selectedIndex + 1} of {visible.length} • Swipe for more
+              </Text>
             )}
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => router.push(`/cases/${selected.id}` as Href)}
-              style={({ pressed }) => [styles.viewCase, pressed && styles.viewCasePressed]}
-            >
-              <Text style={styles.viewCaseText}>View Case</Text>
-            </Pressable>
-          </View>
+            <FlatList
+              ref={carousel}
+              horizontal
+              data={visible}
+              keyExtractor={(item) => String(item.id)}
+              showsHorizontalScrollIndicator={false}
+              snapToInterval={cardWidth + CARD_GAP}
+              decelerationRate="fast"
+              disableIntervalMomentum
+              onMomentumScrollEnd={onSwiped}
+              getItemLayout={(_, index) => ({ length: cardWidth + CARD_GAP, offset: (cardWidth + CARD_GAP) * index, index })}
+              initialNumToRender={3}
+              windowSize={3}
+              contentContainerStyle={styles.cards}
+              keyboardShouldPersistTaps="handled"
+              renderItem={({ item }) => {
+                const itemChip = SEVERITY_CHIP[item.severity] ?? SEVERITY_CHIP.medium;
+                const away = me ? formatDistance(distanceKm(me, item)) : null;
+                return (
+                  <View style={[styles.card, { width: cardWidth, marginRight: CARD_GAP }]}>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={`${item.title}. Open case`}
+                      onPress={() => router.push(`/cases/${item.id}` as Href)}
+                      style={styles.cardRow}
+                    >
+                      <View style={styles.thumb}>
+                        {item.image ? (
+                          <Image source={{ uri: item.image }} style={StyleSheet.absoluteFill} contentFit="cover" transition={150} />
+                        ) : (
+                          <MaterialIcons name="pets" size={28} color="#CBD5E1" />
+                        )}
+                      </View>
+                      <View style={styles.cardBody}>
+                        <View style={styles.cardTitleRow}>
+                          <Text style={styles.cardTitle} numberOfLines={1}>
+                            {item.title}
+                          </Text>
+                          <Feather name="chevron-right" size={17} color="#9CA3AF" />
+                        </View>
+                        <View style={styles.cardChips}>
+                          <View style={[styles.chip, { backgroundColor: itemChip.background }]}>
+                            <View style={[styles.chipDot, { backgroundColor: itemChip.color }]} />
+                            <Text style={[styles.chipText, { color: itemChip.color }]}>{itemChip.label}</Text>
+                          </View>
+                          {item.confidence_score != null && (
+                            <View style={[styles.chip, { backgroundColor: "#EBF7F2" }]}>
+                              <Text style={[styles.chipText, { color: colors.primary }]}>{item.confidence_score}% confidence</Text>
+                            </View>
+                          )}
+                        </View>
+                        <View style={styles.cardMeta}>
+                          <Feather name="map-pin" size={13} color="#9CA3AF" />
+                          <Text style={styles.cardMetaText} numberOfLines={1}>
+                            {[item.area || item.status_label, away && `${away} away`].filter(Boolean).join(" • ")}
+                          </Text>
+                        </View>
+                      </View>
+                    </Pressable>
+                    {item.verification && (
+                      <VerifyCasePanel
+                        compact
+                        caseId={item.id}
+                        verification={item.verification}
+                        onVerified={(result) => onVerified(item.id, result)}
+                      />
+                    )}
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={`View case: ${item.title}`}
+                      onPress={() => router.push(`/cases/${item.id}` as Href)}
+                      style={({ pressed }) => [styles.viewCase, pressed && styles.viewCasePressed]}
+                    >
+                      <Text style={styles.viewCaseText}>View Case</Text>
+                    </Pressable>
+                  </View>
+                );
+              }}
+            />
+          </>
         ) : (
-          <View style={[styles.card, styles.emptyCard]}>
+          <View style={[styles.card, styles.emptyCard, styles.emptySpace]}>
             {loading ? (
               <ActivityIndicator color={colors.primary} />
             ) : (
@@ -458,7 +546,21 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   pressed: { opacity: 0.8 },
-  bottom: { position: "absolute", left: 0, right: 0, bottom: 0, paddingHorizontal: 16, paddingBottom: 12 },
+  bottom: { position: "absolute", left: 0, right: 0, bottom: 0, paddingBottom: 12 },
+  cards: { paddingHorizontal: 16, alignItems: "flex-end" },
+  position: {
+    alignSelf: "center",
+    overflow: "hidden",
+    marginBottom: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 999,
+    backgroundColor: "rgba(255,255,255,0.95)",
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 11,
+    lineHeight: 15,
+    color: colors.ink,
+  },
   card: {
     padding: 14,
     borderRadius: 24,
@@ -506,5 +608,6 @@ const styles = StyleSheet.create({
   viewCasePressed: { backgroundColor: "#165242", transform: [{ scale: 0.99 }] },
   viewCaseText: { fontFamily: fonts.displayBold, fontSize: 14, letterSpacing: 0.35, color: colors.onPrimary },
   emptyCard: { flexDirection: "row", alignItems: "center", gap: 10, minHeight: 64 },
+  emptySpace: { marginHorizontal: 16 },
   emptyText: { flex: 1, fontFamily: fonts.bodyMedium, fontSize: 13, lineHeight: 18, color: colors.ink },
 });

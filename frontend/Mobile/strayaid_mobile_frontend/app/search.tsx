@@ -8,8 +8,9 @@ import { ActivityIndicator, Alert, Pressable, ScrollView, Share, StyleSheet, Tex
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { BrandTitle } from "../components/brand/BrandHeader";
+import NearbyCaseCarousel from "../components/case/NearbyCaseCarousel";
 import { useSession } from "../hooks/useSession";
-import { getMapCases, TrendingCase } from "../services/homeService";
+import { getMapCases, searchCases, TrendingCase } from "../services/homeService";
 import { getCurrentLocation, hasLocationPermission } from "../services/locationService";
 import {
   DirectoryOrganization,
@@ -50,6 +51,7 @@ const C = {
 const RECENT_KEY = "strayaid.recentSearches";
 const NEAR_KM = 5;
 const RECENT_HOURS = 48;
+const SEARCH_DELAY_MS = 300;
 
 type Species = "all" | "dog" | "cat" | "bird" | "other";
 type Quick = "near" | "critical" | "adoptable" | "recent";
@@ -97,6 +99,8 @@ export default function SearchScreen() {
   const [recent, setRecent] = useState<string[]>([]);
   const [animals, setAnimals] = useState<MobileAnimal[] | null>(null);
   const [cases, setCases] = useState<TrendingCase[]>([]);
+  // What the server found for the typed text: every case, not only open ones nearby.
+  const [foundCases, setFoundCases] = useState<{ text: string; cases: TrendingCase[] } | null>(null);
   const [organizations, setOrganizations] = useState<DirectoryOrganization[]>([]);
   const [followed, setFollowed] = useState<number[]>([]);
   const [me, setMe] = useState<LatLng | null>(null);
@@ -167,6 +171,20 @@ export default function SearchScreen() {
 
   const text = query.trim().toLowerCase();
 
+  useEffect(() => {
+    if (text.length < 2) return;
+    let current = true;
+    const timer = setTimeout(() => {
+      searchCases(text)
+        .then((found) => current && setFoundCases({ text, cases: found }))
+        .catch(() => null);
+    }, SEARCH_DELAY_MS);
+    return () => {
+      current = false;
+      clearTimeout(timer);
+    };
+  }, [text]);
+
   const shownAnimals = useMemo(() => {
     let rows = (animals ?? []).filter((animal) => species === "all" || speciesOf(animal.species) === species);
     if (text) {
@@ -189,14 +207,22 @@ export default function SearchScreen() {
   }, [animals, species, text, quick, animalDistance, byDistance, me]);
 
   const shownCases = useMemo(() => {
-    let rows = cases.filter((item) => species === "all" || speciesOf(item.species || item.title) === species);
-    if (text) rows = rows.filter((item) => [item.title, item.area, item.species].some((value) => (value || "").toLowerCase().includes(text)));
+    // Until the server answers (or if it can't), the cases already on the phone are searched.
+    const found = foundCases?.text === text ? foundCases.cases : null;
+    let rows = (found ?? cases).filter((item) => species === "all" || !!text || speciesOf(item.species || item.title) === species);
+    if (text && !found) rows = rows.filter((item) => [item.title, item.area, item.species].some((value) => (value || "").toLowerCase().includes(text)));
     if (quick.includes("critical")) rows = rows.filter((item) => item.severity === "critical" || item.severity === "high");
     if (quick.includes("recent")) rows = rows.filter((item) => hoursSince(item.created_at) <= RECENT_HOURS);
     if (quick.includes("near") && me) rows = rows.filter((item) => distanceKm(me, item) <= NEAR_KM);
     if (quick.includes("adoptable")) rows = [];
     return rows;
-  }, [cases, species, text, quick, me]);
+  }, [cases, foundCases, species, text, quick, me]);
+
+  // The swipeable strip of reports around the person, closest first.
+  const nearbyCases = useMemo(
+    () => (me ? [...cases].sort((a, b) => distanceKm(me, a) - distanceKm(me, b)) : cases).slice(0, 12),
+    [cases, me]
+  );
 
   const shownOrganizations = useMemo(
     () =>
@@ -265,12 +291,12 @@ export default function SearchScreen() {
               value={query}
               onChangeText={setQuery}
               onSubmitEditing={() => remember(query)}
-              placeholder="Search animals, cases or shelters"
+              placeholder="Search an address, animal or shelter"
               placeholderTextColor="rgba(63,73,69,0.6)"
               style={styles.searchInput}
               returnKeyType="search"
               autoFocus
-              accessibilityLabel="Search animals, cases or shelters"
+              accessibilityLabel="Search by address, animal, case or shelter"
             />
             {!!query && (
               <Pressable accessibilityRole="button" accessibilityLabel="Clear search" onPress={() => setQuery("")} hitSlop={8} style={styles.clear}>
@@ -442,10 +468,17 @@ export default function SearchScreen() {
               </View>
             )}
 
+            {!searching && nearbyCases.length > 0 && (
+              <>
+                <SectionHead title={me ? "Reported Near You" : "Reported Cases"} count={`${nearbyCases.length} Open`} />
+                <NearbyCaseCarousel cases={nearbyCases} me={me} onOpen={(item) => open(`/cases/${item.id}` as Href)} />
+              </>
+            )}
+
             {searching && shownCases.length > 0 && (
               <>
-                <SectionHead title="Rescue Cases" count={`${shownCases.length} Open`} />
-                {shownCases.slice(0, 6).map((item) => (
+                <SectionHead title="Rescue Cases" count={`${shownCases.length} Found`} />
+                {shownCases.map((item) => (
                   <Pressable key={item.id} accessibilityRole="button" onPress={() => open(`/cases/${item.id}` as Href)} style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
                     <View style={styles.rowImage}>
                       {item.image ? <Image source={{ uri: item.image }} style={StyleSheet.absoluteFill} contentFit="cover" /> : <MaterialIcons name="pets" size={26} color="#BEC9C3" />}
@@ -459,7 +492,7 @@ export default function SearchScreen() {
                         {me && <Text style={styles.rowDistance}>{formatDistance(distanceKm(me, item))}</Text>}
                       </View>
                       <Text style={styles.rowMeta} numberOfLines={1}>
-                        {[item.area, `${item.report_count} ${item.report_count === 1 ? "report" : "reports"}`].filter(Boolean).join(" • ")}
+                        {[item.area || "Address not given", item.animal?.name, `${item.report_count} ${item.report_count === 1 ? "report" : "reports"}`].filter(Boolean).join(" • ")}
                       </Text>
                       <View style={styles.rowBottom}>
                         <View style={[styles.infoChip, item.severity === "critical" || item.severity === "high" ? styles.infoRed : styles.infoMint]}>
@@ -485,7 +518,9 @@ export default function SearchScreen() {
               />
             </View>
             {shownAnimals.length === 0 && (
-              <Text style={styles.empty}>{text ? `No animals match “${query.trim()}”.` : "No animals match these filters."}</Text>
+              <Text style={styles.empty}>
+                {text ? `No animals match “${query.trim()}”.${shownCases.length ? "" : " Try the street, sector or area it was reported in."}` : "No animals match these filters."}
+              </Text>
             )}
             {shownAnimals.slice(0, searching ? 30 : 8).map((animal) => {
               const distance = animalDistance(animal);

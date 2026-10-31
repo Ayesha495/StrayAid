@@ -359,15 +359,17 @@ export default function AnimalProfileScreen() {
                 <Text style={styles.statLabel}>{animal.sponsor_count === 1 ? "Sponsor" : "Sponsors"}</Text>
               </View>
             </View>
-            <View style={styles.stat}>
-              <View style={[styles.statIcon, { backgroundColor: "#ECFDF5" }]}>
-                <MaterialIcons name="description" size={20} color={colors.primary} />
+            {!adopted && (
+              <View style={styles.stat}>
+                <View style={[styles.statIcon, { backgroundColor: "#ECFDF5" }]}>
+                  <MaterialIcons name="description" size={20} color={colors.primary} />
+                </View>
+                <View>
+                  <Text style={styles.statValue}>{animal.application_count ?? 0}</Text>
+                  <Text style={styles.statLabel}>{animal.application_count === 1 ? "Application" : "Applications"}</Text>
+                </View>
               </View>
-              <View>
-                <Text style={styles.statValue}>{animal.application_count ?? 0}</Text>
-                <Text style={styles.statLabel}>{animal.application_count === 1 ? "Application" : "Applications"}</Text>
-              </View>
-            </View>
+            )}
           </View>
         </View>
 

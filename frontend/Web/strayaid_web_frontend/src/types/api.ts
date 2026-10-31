@@ -19,6 +19,18 @@ export interface UnreadCounts {
   messages: number;
 }
 
+/** One public search result: a case, with its animal if it has become one. */
+export interface CaseSearchResult {
+  id: number;
+  title: string;
+  area: string;
+  severity: string;
+  status: string;
+  status_label: string;
+  image: string | null;
+  animal: { id: number; name: string; status: string } | null;
+}
+
 /** The public case page payload, which also carries the AI score breakdown. */
 export interface PublicCase {
   id: number;

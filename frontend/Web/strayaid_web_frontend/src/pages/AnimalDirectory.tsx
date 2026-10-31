@@ -4,7 +4,9 @@ import { ArrowLeft, HandCoins, Heart, Home, PawPrint, Search } from "lucide-reac
 import AnimalTile from "../components/AnimalTile";
 import FilterTiles from "../ui/FilterTiles";
 import { EmptyState, LoadingRows } from "../ui/States";
+import { searchCases } from "../services/caseService";
 import { getPublicAnimals, getPublicOrganization } from "../services/platformService";
+import type { CaseSearchResult } from "../types/api";
 import type { Animal, Organization } from "../types/platform";
 import "./AnimalDirectory.css";
 
@@ -31,6 +33,7 @@ const gap = (animal: Animal) => Math.max(0, (animal.funding_goal_pkr ?? 0) - (an
 function AnimalDirectory() {
   const [params, setParams] = useSearchParams();
   const [animals, setAnimals] = useState<Animal[] | null>(null);
+  const [cases, setCases] = useState<{ text: string; found: CaseSearchResult[] } | null>(null);
   const [loadedOrganization, setOrganization] = useState<Organization | null>(null);
   const [visible, setVisible] = useState(PAGE_SIZE);
 
@@ -70,12 +73,26 @@ function AnimalDirectory() {
     const words = query.trim().toLowerCase();
     const list = bySpecies
       .filter(NEEDS[need])
-      .filter((animal) => !words || [animal.name, animal.breed, animal.species, animal.organization?.name].join(" ").toLowerCase().includes(words));
+      .filter((animal) => !words || [animal.name, animal.breed, animal.species, animal.organization?.name, animal.area].join(" ").toLowerCase().includes(words));
     // "Needs help most": the furthest from their care goal first, so a gift goes where it matters.
     return sort === "newest"
       ? [...list].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
       : [...list].sort((a, b) => gap(b) - gap(a));
   }, [bySpecies, need, query, sort]);
+
+  // Reported animals have no profile yet, so an address search also looks through the cases.
+  const words = query.trim();
+  useEffect(() => {
+    if (words.length < 2) return;
+    let current = true;
+    const timer = setTimeout(() => {
+      searchCases(words)
+        .then((found) => { if (current) setCases({ text: words, found }); })
+        .catch(() => null);
+    }, 300);
+    return () => { current = false; clearTimeout(timer); };
+  }, [words]);
+  const foundCases = cases?.text === words ? cases.found.filter((item) => !item.animal) : [];
 
   const count = (key: Need) => bySpecies.filter(NEEDS[key]).length;
 
@@ -91,7 +108,7 @@ function AnimalDirectory() {
         </div>
         <label className="input-with-icon directory-search">
           <Search size={16} />
-          <input className="input" type="search" placeholder="Search by name, breed or rescue team" value={query} onChange={(event) => setParam("q", event.target.value)} aria-label="Search animals" />
+          <input className="input" type="search" placeholder="Search by name, breed, team or address" value={query} onChange={(event) => setParam("q", event.target.value)} aria-label="Search animals" />
         </label>
       </header>
 
@@ -123,6 +140,22 @@ function AnimalDirectory() {
           </select>
         </label>
       </div>
+
+      {foundCases.length ? (
+        <section aria-label="Reported cases">
+          <p className="small muted">{foundCases.length} reported {foundCases.length === 1 ? "case" : "cases"} still being handled</p>
+          <ul className="directory-cases">
+            {foundCases.map((item) => (
+              <li key={item.id}>
+                <Link to={`/case/${item.id}`} className="card directory-case">
+                  <strong>{item.title}</strong>
+                  <span className="small muted">{[item.area, item.status_label].filter(Boolean).join(" · ")}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       {animals === null ? (
         <LoadingRows rows={3} height={220} />

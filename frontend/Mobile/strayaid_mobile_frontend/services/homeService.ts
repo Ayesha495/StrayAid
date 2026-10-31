@@ -28,6 +28,9 @@ export type TrendingCase = {
   report_count: number;
   created_at: string;
   verification: CaseVerification;
+  // Search results also say which animal the case became, if any.
+  animal?: { id: number; name: string; status: string } | null;
+  organization_name?: string | null;
 };
 
 export type Story = {
@@ -94,6 +97,12 @@ export async function getTrendingCases(limit = 3): Promise<TrendingCase[]> {
 export async function getMapCases(near?: { latitude: number; longitude: number }, radiusKm = 25): Promise<TrendingCase[]> {
   const query = near ? `?lat=${near.latitude}&lng=${near.longitude}&radius_km=${radiusKm}` : "";
   const cases = await getPublic<TrendingCase[]>(`/api/cases/map/${query}`);
+  return cases.map((item) => ({ ...item, image: resolveMediaUrl(item.image) }));
+}
+
+// Any case at all, however far away and whatever its status: by address, animal or reference.
+export async function searchCases(text: string): Promise<TrendingCase[]> {
+  const cases = await getPublic<TrendingCase[]>(`/api/cases/search/?q=${encodeURIComponent(text)}`);
   return cases.map((item) => ({ ...item, image: resolveMediaUrl(item.image) }));
 }
 

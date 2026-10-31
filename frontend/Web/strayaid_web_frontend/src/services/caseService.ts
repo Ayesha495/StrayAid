@@ -1,11 +1,15 @@
 import API, { PublicAPI } from "../api/axios";
-import type { CaseUpdate, PublicCase, PublicReport } from "../types/api";
+import type { CaseSearchResult, CaseUpdate, PublicCase, PublicReport } from "../types/api";
 import { getStoredUser } from "./authService";
 
 // Signed in, the case says whether you reported or follow it.
 const reader = () => (getStoredUser() ? API : PublicAPI);
 
 // The case page as everyone sees it, with the AI score breakdown.
+/** Any case, by the address it was reported at, its animal or its reference. */
+export const searchCases = async (text: string) =>
+  (await PublicAPI.get<CaseSearchResult[]>("/api/cases/search/", { params: { q: text } })).data;
+
 export const getPublicCase = async (caseId: string | number) =>
   (await reader().get<PublicCase>(`/api/cases/public/${caseId}/`)).data;
 

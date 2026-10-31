@@ -162,11 +162,13 @@ export default function OrganizationScreen() {
   }
 
   const inCare = animals.filter((animal) => animal.status !== "adopted");
+  const adopted = animals.filter((animal) => animal.status === "adopted");
   const groups: Record<Filter, MobileAnimal[]> = {
-    all: inCare,
+    // Everyone the team has helped, with those who found a home after the ones still here.
+    all: [...inCare, ...adopted],
     adoptable: animals.filter((animal) => animal.status === "adoptable"),
     treatment: animals.filter((animal) => animal.status === "recovering" || animal.status === "rescued"),
-    adopted: animals.filter((animal) => animal.status === "adopted"),
+    adopted,
   };
   const shown = showAll ? groups[filter] : groups[filter].slice(0, PREVIEW);
   const hasLocation = organization.latitude != null && organization.longitude != null;
@@ -251,14 +253,14 @@ export default function OrganizationScreen() {
       if (animal.my_application) return { label: "Applied", run: () => router.push("/applications" as Href) };
       return { label: "Adopt Me", run: () => requireAccount(() => router.push(`/animals/${animal.id}/adopt` as Href)) };
     }
-    if (animal.status === "adopted") return { label: "Story", run: () => router.push(`/animals/${animal.id}` as Href) };
+    if (animal.status === "adopted") return { label: "View", run: () => router.push(`/animals/${animal.id}` as Href) };
     return { label: animal.health === "under_treatment" ? "Send Aid" : "Sponsor", run: () => router.push(`/animals/${animal.id}/sponsor` as Href) };
   };
 
   const info = (animal: MobileAnimal) => {
     if (animal.status === "adoptable" && animal.application_count)
       return { icon: "assignment" as const, text: `${animal.application_count} ${animal.application_count === 1 ? "Application" : "Applications"} In`, tone: "blue" };
-    if (animal.status === "adopted") return { icon: "home" as const, text: "Forever home", tone: "green" };
+    if (animal.status === "adopted") return { icon: "home" as const, text: "Adopted", tone: "grey" };
     if (animal.health === "under_treatment") return { icon: "healing" as const, text: "In Treatment", tone: "red" };
     return { icon: "check-circle-outline" as const, text: HEALTH[animal.health ?? ""] ?? "In our care", tone: "green" };
   };
@@ -395,9 +397,9 @@ export default function OrganizationScreen() {
 
         <View style={styles.careHead}>
           <View>
-            <Text style={styles.sectionTitle}>Animals in Care</Text>
+            <Text style={styles.sectionTitle}>Our Animals</Text>
             <Text style={styles.careSub}>
-              {inCare.length} {inCare.length === 1 ? "animal" : "animals"} being cared for
+              {inCare.length} in care • {adopted.length} adopted
             </Text>
           </View>
           {groups[filter].length > PREVIEW && (
@@ -434,17 +436,18 @@ export default function OrganizationScreen() {
           const detail = info(animal);
           const cta = action(animal);
           const following = followedAnimals.includes(animal.id);
+          const isAdopted = animal.status === "adopted";
           return (
             <Pressable
               key={animal.id}
               accessibilityRole="button"
               accessibilityLabel={`${animal.name}, ${badge.label}`}
               onPress={() => router.push(`/animals/${animal.id}` as Href)}
-              style={({ pressed }) => [styles.animal, pressed && styles.pressed]}
+              style={({ pressed }) => [styles.animal, isAdopted && styles.animalAdopted, pressed && styles.pressed]}
             >
               <View style={styles.animalImage}>
                 {animal.image ? (
-                  <Image source={{ uri: animal.image }} style={StyleSheet.absoluteFill} contentFit="cover" />
+                  <Image source={{ uri: animal.image }} style={[StyleSheet.absoluteFill, isAdopted && styles.photoAdopted]} contentFit="cover" />
                 ) : (
                   <MaterialIcons name="pets" size={28} color="#BEC9C3" />
                 )}
@@ -474,14 +477,22 @@ export default function OrganizationScreen() {
                   </Pressable>
                 </View>
                 <View style={styles.animalBottom}>
-                  <View style={[styles.infoChip, detail.tone === "red" ? styles.infoRed : detail.tone === "blue" ? styles.infoBlue : styles.infoGreen]}>
+                  <View
+                    style={[
+                      styles.infoChip,
+                      detail.tone === "red" ? styles.infoRed : detail.tone === "blue" ? styles.infoBlue : detail.tone === "grey" ? styles.infoGrey : styles.infoGreen,
+                    ]}
+                  >
                     <MaterialIcons
                       name={detail.icon}
                       size={13}
-                      color={detail.tone === "red" ? C.urgent : detail.tone === "blue" ? C.soft : C.secondary}
+                      color={detail.tone === "red" ? C.urgent : detail.tone === "blue" || detail.tone === "grey" ? C.soft : C.secondary}
                     />
                     <Text
-                      style={[styles.infoText, detail.tone === "red" ? styles.infoTextRed : detail.tone === "blue" ? styles.infoTextBlue : styles.infoTextGreen]}
+                      style={[
+                        styles.infoText,
+                        detail.tone === "red" ? styles.infoTextRed : detail.tone === "blue" || detail.tone === "grey" ? styles.infoTextBlue : styles.infoTextGreen,
+                      ]}
                       numberOfLines={1}
                     >
                       {detail.text}
@@ -712,6 +723,9 @@ const styles = StyleSheet.create({
     gap: 14,
     ...cardShadow,
   },
+  animalAdopted: { backgroundColor: "#ECEEF1" },
+  photoAdopted: { opacity: 0.55, filter: [{ grayscale: 1 }] },
+  infoGrey: { backgroundColor: "#DDE1E6" },
   animalImage: { width: 96, height: 96, borderRadius: 8, overflow: "hidden", backgroundColor: C.container, alignItems: "center", justifyContent: "center" },
   animalBadge: {
     position: "absolute",

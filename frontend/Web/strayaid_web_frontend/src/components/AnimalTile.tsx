@@ -17,8 +17,10 @@ function AnimalTile({ animal, to = `/animals/${animal.id}`, actions, showOrganiz
     .filter(Boolean)
     .join(" · ");
 
+  const adopted = animal.status === "adopted";
+
   return (
-    <article className="card animal-tile">
+    <article className={`card animal-tile${adopted ? " is-adopted" : ""}`}>
       <Link to={to} className="animal-tile-photo">
         {animal.image ? <img src={animal.image} alt={animal.name} loading="lazy" /> : <PawPrint size={28} />}
         <span className="animal-tile-status"><StatusChip kind="animal" value={animal.status} /></span>
@@ -26,6 +28,7 @@ function AnimalTile({ animal, to = `/animals/${animal.id}`, actions, showOrganiz
       <div className="animal-tile-body">
         <Link to={to} className="animal-tile-name">{animal.name}</Link>
         <span className="small muted truncate">{details || "Details not added yet"}</span>
+        {adopted ? <span className="small muted">Adopted. This animal has found a home.</span> : null}
         {showOrganization && animal.organization ? <span className="small muted truncate">{animal.organization.name}</span> : null}
         {animal.funding_goal_pkr && animal.status !== "adopted" ? (
           <div className="animal-tile-sponsors">
