@@ -23,8 +23,14 @@ services:
         value: "0"
       - key: DATABASE_URL
         sync: false
+      # The owner's account, used only by migrations (docs/SECURITY.md).
+      - key: MIGRATION_DATABASE_URL
+        sync: false
       - key: DATABASE_SSLMODE
         value: require
+      # Set by the host's proxy, so clients can't forge it to dodge rate limits.
+      - key: CLIENT_IP_HEADER
+        value: HTTP_TRUE_CLIENT_IP
       - key: CORS_ALLOWED_ORIGINS
         sync: false
       - key: CSRF_TRUSTED_ORIGINS

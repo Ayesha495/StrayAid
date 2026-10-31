@@ -14,12 +14,48 @@ services:
       timeout: 5s
       retries: 5
 
+  # Shared rate-limit counters, so a limit holds across every backend server.
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "32mb", "--maxmemory-policy", "allkeys-lru"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Migrations run once, before the servers start, so replicas can't race each other.
+  migrate:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: "no"
+    command: ["python", "manage.py", "migrate", "--noinput"]
+    environment:
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
+      POSTGRES_DB: ${POSTGRES_DB:-strayaid_db}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_HOST: db
+      DEBUG: ${DEBUG:-0}
+    depends_on:
+      db:
+        condition: service_healthy
+
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     restart: unless-stopped
+    deploy:
+      replicas: ${BACKEND_REPLICAS:-2}
     environment:
+      RUN_MIGRATIONS: "0"
+      REDIS_URL: redis://redis:6379/0
+      # nginx is the one proxy in front of the app.
+      NUM_PROXIES: "1"
+      WEB_CONCURRENCY: ${WEB_CONCURRENCY:-1}
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
       POSTGRES_DB: ${POSTGRES_DB:-strayaid_db}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
@@ -35,13 +71,25 @@ services:
       EMAIL_HOST_USER: ${EMAIL_HOST_USER:-}
       EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD:-}
       DEBUG: ${DEBUG:-0}
-    ports:
-      - "${BACKEND_PORT:-8000}:8000"
     volumes:
       - media_data:/app/media
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  # The only way in to the backend: it spreads requests across the replicas above.
+  loadbalancer:
+    build:
+      context: ./deploy/nginx
+    restart: unless-stopped
+    ports:
+      - "${BACKEND_PORT:-8000}:80"
+    depends_on:
+      - backend
 
   frontend:
     build:

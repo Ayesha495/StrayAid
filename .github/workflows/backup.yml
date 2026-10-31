@@ -1,0 +1,38 @@
+name: Database backup
+
+# Neon's free plan only keeps a few hours of history, so a nightly dump goes to GitHub, encrypted
+# before it leaves the runner: the artifact is useless without BACKUP_PASSPHRASE. Turned on by
+# setting the repository variable BACKUP_ENABLED to "true" (see docs/SECURITY.md).
+
+on:
+  schedule:
+    - cron: "30 21 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    if: vars.BACKUP_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Install the Postgres client
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y || true
+          sudo apt-get install -y postgresql-client-17
+      - name: Dump and encrypt
+        env:
+          DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          /usr/lib/postgresql/17/bin/pg_dump --format=custom --no-owner "$DATABASE_URL" \
+            | gpg --batch --symmetric --cipher-algo AES256 --passphrase "$BACKUP_PASSPHRASE" --output strayaid.dump.gpg
+      - uses: actions/upload-artifact@v4
+        with:
+          name: strayaid-db-${{ github.run_id }}
+          path: strayaid.dump.gpg
+          retention-days: 14
+          if-no-files-found: error

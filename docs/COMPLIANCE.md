@@ -77,8 +77,8 @@ React site, "Mobile" the Expo app, "Backend" the Django API.
    rotating there.
 3. **Demo data on the live site would look like real activity.** If the viva needs the live
    site seeded, say on the site that it is demo data.
-4. **Uploaded files are public URLs.** Receipts and chat photos have unguessable names but no
-   access check. Serving them through an authenticated view is a follow-up.
+4. **Other uploads are public URLs.** Animal, report and avatar photos are public by design.
+   Receipts and chat photos now need a signed link that expires after 6 hours (`core/media.py`).
 5. **No in-app reporting of abusive content** (see PECA above).
 6. **Mobile build tooling advisories:** 12 npm advisories remain inside Expo's own build
    tools; they need an Expo SDK upgrade, not a patch.

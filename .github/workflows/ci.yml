@@ -57,6 +57,10 @@ jobs:
         run: python manage.py makemigrations --check --dry-run
       - name: Migrations apply to Postgres
         run: python manage.py migrate --noinput
+      - name: Security scan of our own code
+        run: bandit -q -r . -x ./venv,./media,./ai_models -ll
+      - name: Race conditions on real Postgres
+        run: python manage.py test core.test_concurrency --settings=config.test_settings_postgres --noinput
       - name: Tests with coverage
         run: |
           coverage run --source=. --omit="venv/*,*/migrations/*,*/tests.py,*/test_*.py,manage.py" manage.py test --settings=config.test_settings --noinput

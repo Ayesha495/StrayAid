@@ -69,6 +69,11 @@ libraries, an Expo SDK upgrade or a version bump); everything else arrives throu
 pipeline's over-the-air updates. Register the build's SHA-1 (`eas credentials -p android`)
 on the Android OAuth client for Google sign-in.
 
+### Security setup
+
+See [SECURITY.md](SECURITY.md): the least-privilege database role, encrypted backups and the
+audit log's retention job.
+
 ## After the first deploy, check
 
 - [ ] The pipeline's deploy jobs are green on the push to `main`.
