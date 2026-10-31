@@ -1,18 +1,25 @@
+import re
+
 from rest_framework import status, viewsets
-from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.decorators import action, api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db import transaction
 from django.db.models import Case as CaseWhen, Count, F, IntegerField, Q, Value, When
+from django.db.models.functions import Lower, Replace
 from django.utils import timezone
 
+from accounts.audit import record
 from animals.models import Animal
+from core.throttles import SearchRateThrottle
 from core.uploads import validate_image_upload
 from organizations.permissions import IsOrganizationUser
 
 from .models import AIFeedback, Case, CaseUpdate, CaseVerification, Report
 from .serializers import (
     CaseDetailSerializer,
+    CaseSearchSerializer,
     CaseSerializer,
     CaseUpdateSerializer,
     PublicReportSerializer,
@@ -28,6 +35,12 @@ from .utils.scoring import (
     refresh_unanswered_scores_if_due,
 )
 from .utils.location_utils import calculate_distance
+
+
+def clean_area(value):
+    """An address as people should see it: one line, no control characters, at most 100 long."""
+    text = "".join(character if character.isprintable() else " " for character in str(value or ""))
+    return " ".join(text.split())[:100]
 
 
 def organization_capacity_is_full(organization):
@@ -142,7 +155,7 @@ def report_case(request):
     longitude = request.data.get('longitude')
     image = request.FILES.get('image')
     # Readable place name picked on the phone (e.g. "F-7, Islamabad"); shown instead of coordinates.
-    area = (request.data.get('area') or '').strip()[:100]
+    area = clean_area(request.data.get('area'))
     # Reporters don't choose a severity (older app versions still send one; it's ignored):
     # people who verify the case on the map decide how urgent it is.
     # Multipart sends booleans as text; anything but an explicit "no" keeps updates on.
@@ -204,6 +217,7 @@ def report_case(request):
         description=description,
         latitude=latitude,
         longitude=longitude,
+        area=area,
         notify_reporter=notify_reporter,
         ai_animal_confidence=detection["confidence"],
         ai_animal_label=detection["label"],
@@ -323,6 +337,86 @@ def trending_cases(request):
     return Response(serializer.data)
 
 
+SEARCH_MAX_LENGTH = 100
+SEARCH_MAX_WORDS = 6
+SEARCH_DEFAULT_LIMIT = 30
+SEARCH_MAX_LIMIT = 50
+CASE_REFERENCE = re.compile(r"^(?:SA-\d{4}-)?0*(\d{1,12})$", re.IGNORECASE)
+OPEN_FIRST = CaseWhen(When(status__in=ACTIVE_RESCUE_STATUSES, then=Value(1)), default=Value(0), output_field=IntegerField())
+
+
+def _compact(text):
+    return re.sub(r"[^0-9a-z]", "", text.lower())
+
+
+def _compact_column(field):
+    """The column with spaces and punctuation gone, so "G11" finds "G-11/3"."""
+    column = Lower(field)
+    for mark in (" ", "-", "/", ",", "."):
+        column = Replace(column, Value(mark), Value(""))
+    return column
+
+
+def _case_matches(query):
+    """Every word must appear somewhere on the case, or a word must match an address with its
+    punctuation ignored. All of it goes through the ORM, so what people type is only ever a
+    bound value, never part of the SQL."""
+    matches = Q()
+    for word in query.split()[:SEARCH_MAX_WORDS]:
+        word_matches = (
+            Q(area__icontains=word)
+            | Q(reports__area__icontains=word)
+            | Q(title__icontains=word)
+            | Q(species__icontains=word)
+            | Q(description__icontains=word)
+            | Q(reports__description__icontains=word)
+            | Q(reports__ai_animal_label__icontains=word)
+            | Q(animal__name__icontains=word)
+            | Q(animal__breed__icontains=word)
+            | Q(animal__species__icontains=word)
+        )
+        compact = _compact(word)
+        if len(compact) >= 2:
+            word_matches |= Q(compact_area__contains=compact) | Q(compact_report_area__contains=compact)
+        matches &= word_matches
+    whole = _compact(query)
+    if len(whole) >= 2:
+        matches |= Q(compact_area__contains=whole) | Q(compact_report_area__contains=whole)
+    reference = CASE_REFERENCE.match(query.strip().lstrip("#"))
+    if reference:
+        matches |= Q(pk=int(reference.group(1)))
+    return matches
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+@throttle_classes([SearchRateThrottle])
+def search_cases(request):
+    """Find any case, whatever its status and however far away, by the address it was reported
+    at (the one thing most people know about a reported animal), or by the animal or reference.
+    Open cases come first. Public fields only: no reporter identity."""
+    query = " ".join(request.query_params.get("q", "").replace("\x00", "").split())[:SEARCH_MAX_LENGTH]
+    if len(query) < 2:
+        return Response([])
+    try:
+        limit = min(max(int(request.query_params.get("limit", SEARCH_DEFAULT_LIMIT)), 1), SEARCH_MAX_LIMIT)
+    except ValueError:
+        limit = SEARCH_DEFAULT_LIMIT
+    matching = (
+        Case.objects.annotate(compact_area=_compact_column("area"), compact_report_area=_compact_column("reports__area"))
+        .filter(_case_matches(query))
+        .values("pk")
+    )
+    queryset = (
+        Case.objects.filter(pk__in=matching)
+        .select_related("animal", "organization")
+        .annotate(open_first=OPEN_FIRST, severity_rank=SEVERITY_RANK, report_count=Count("reports", distinct=True))
+        .prefetch_related("reports", "verifications")
+        .order_by("-open_first", "-severity_rank", "-created_at")[:limit]
+    )
+    return Response(CaseSearchSerializer(queryset, many=True, context={"request": request}).data)
+
+
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def community_stats(request):
@@ -417,20 +511,24 @@ class CaseViewSet(viewsets.ReadOnlyModelViewSet):
         case = self.get_object()
         organization = request.user.organization_profile
 
-        if case.organization_id and case.organization_id != organization.id:
-            return Response({"detail": "This case is already assigned."}, status=status.HTTP_400_BAD_REQUEST)
+        with transaction.atomic():
+            # Two teams tapping Accept together: the second waits here, then sees it's taken.
+            taken_by = Case.objects.select_for_update().values_list("organization_id", flat=True).get(pk=case.pk)
+            if taken_by and taken_by != organization.id:
+                return Response({"detail": "This case is already assigned."}, status=status.HTTP_400_BAD_REQUEST)
 
-        if not case_is_within_organization_radius(case, organization):
-            return Response({"detail": "This case is outside your service radius."}, status=status.HTTP_400_BAD_REQUEST)
+            if not case_is_within_organization_radius(case, organization):
+                return Response({"detail": "This case is outside your service radius."}, status=status.HTTP_400_BAD_REQUEST)
 
-        if organization_capacity_is_full(organization):
-            return Response({"detail": "Organization animal capacity has been reached."}, status=status.HTTP_400_BAD_REQUEST)
+            if organization_capacity_is_full(organization):
+                return Response({"detail": "Organization animal capacity has been reached."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Accepting a case records both the owning organization and acting user.
-        case.organization = organization
-        case.assigned_to = request.user
-        case.status = "assigned"
-        case.save(update_fields=["organization", "assigned_to", "status", "updated_at"])
+            # Accepting a case records both the owning organization and acting user.
+            case.organization = organization
+            case.assigned_to = request.user
+            case.status = "assigned"
+            case.save(update_fields=["organization", "assigned_to", "status", "updated_at"])
+            record("case.accepted", request, case)
 
         serializer = self.get_serializer(case, context={"request": request})
         return Response(serializer.data)

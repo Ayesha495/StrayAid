@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.db.models import Sum
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -7,8 +8,10 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
+from accounts.audit import record
 from animals.models import Animal, Sponsorship
 from animals.serializers import AnimalSerializer
+from core.media import media_url
 from posts.models import Post
 from rescue.models import Case
 from rescue.serializers import CaseSerializer
@@ -35,6 +38,25 @@ class OrganizationViewSet(
         if self.action in ["create", "me", "donate"]:
             return [IsAuthenticated()]
         return [IsAuthenticated(), IsOrganizationUser()]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Anyone may read a profile; only its own team may change it. Without this, one team
+        # could point another team's bank details at its own account.
+        if self.action in ["update", "partial_update"]:
+            return queryset.filter(user=self.request.user)
+        return queryset
+
+    def _save_profile(self, serializer):
+        bank_fields = ("bank_name", "bank_account_title", "bank_account_number")
+        before = [getattr(serializer.instance, field) for field in bank_fields]
+        organization = serializer.save()
+        if before != [getattr(organization, field) for field in bank_fields]:
+            record("organization.bank_details_changed", self.request, organization)
+        return organization
+
+    def perform_update(self, serializer):
+        self._save_profile(serializer)
 
     def _ensure_organization_role(self):
         if self.request.user.role != "organization":
@@ -80,7 +102,7 @@ class OrganizationViewSet(
 
         serializer = self.get_serializer(organization, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        self._save_profile(serializer)
         return Response(serializer.data)
 
     @action(detail=False, methods=["get"], url_path="dashboard")
@@ -229,7 +251,7 @@ def donation_row(donation, request):
         "donor_name": donor.get_full_name() or donor.username,
         "organization": {"id": donation.organization_id, "name": donation.organization.name},
         "amount_pkr": donation.amount_pkr,
-        "receipt": request.build_absolute_uri(donation.receipt.url) if donation.receipt else None,
+        "receipt": media_url(request, donation.receipt),
         "status": donation.status,
         "created_at": donation.created_at,
     }
@@ -243,7 +265,7 @@ def donations(request):
     organization = getattr(request.user, "organization_profile", None)
     queryset = ShelterDonation.objects.select_related("donor", "organization")
     queryset = queryset.filter(organization=organization) if organization else queryset.filter(donor=request.user)
-    if request.query_params.get("status"):
+    if request.query_params.get("status") in dict(ShelterDonation.STATUS_CHOICES):
         queryset = queryset.filter(status=request.query_params["status"])
     return Response([donation_row(donation, request) for donation in queryset])
 
@@ -256,10 +278,13 @@ def review_donation(request, donation_id):
     if donation.organization.user_id != request.user.id:
         return Response({"detail": "Only the organization can check its receipts."}, status=status.HTTP_403_FORBIDDEN)
     decision = request.data.get("status")
-    if decision not in ("confirmed", "rejected") or donation.status != "pending":
-        return Response({"detail": "Choose confirmed or rejected for a pending gift."}, status=status.HTTP_400_BAD_REQUEST)
-    donation.status = decision
-    donation.save(update_fields=["status"])
+    with transaction.atomic():
+        current = ShelterDonation.objects.select_for_update().get(pk=donation.pk)
+        if decision not in ("confirmed", "rejected") or current.status != "pending":
+            return Response({"detail": "Choose confirmed or rejected for a pending gift."}, status=status.HTTP_400_BAD_REQUEST)
+        donation.status = decision
+        donation.save(update_fields=["status"])
+        record(f"donation.{decision}", request, donation)
 
     from notifications.services import notify_users
 

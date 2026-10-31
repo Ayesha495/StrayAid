@@ -727,10 +727,11 @@ class CasePageTests(MediaEnabledAPITestCase):
         self.assertNotIn("latitude", data)
         self.assertNotIn("r@example.com", str(data))
 
-    def test_reports_show_first_name_only(self):
+    def test_reports_show_no_name(self):
         response = self.client.get(f"/api/cases/public/{self.case.id}/reports/")
 
-        self.assertEqual(response.data[0]["reporter"], "Hira")
+        self.assertEqual(response.data[0]["reporter"], "A StrayAid reporter")
+        self.assertNotIn("Hira", str(response.data))
         self.assertNotIn("r@example.com", str(response.data))
 
     def test_reporter_switch_controls_own_report_updates(self):
@@ -1255,7 +1256,7 @@ class CaseVerificationTests(MediaEnabledAPITestCase):
 class ReporterPrivacyTests(APITestCase):
     """Reporters on the same case never see each other's emails; rescue teams do."""
 
-    def test_report_email_is_only_shown_to_its_reporter_and_to_teams(self):
+    def test_report_email_is_only_shown_to_its_reporter_and_the_team_handling_it(self):
         from rest_framework.test import APIRequestFactory
 
         from .serializers import ReportSerializer
@@ -1263,7 +1264,8 @@ class ReporterPrivacyTests(APITestCase):
         first = User.objects.create_user(email="first@example.com", username="first", password="x")
         second = User.objects.create_user(email="second@example.com", username="second", password="x")
         team = User.objects.create_user(email="team@example.com", username="team", password="x", role="organization")
-        case = Case.objects.create(description="Dog", latitude=33.7, longitude=73.0, reported_by=first)
+        organization = Organization.objects.create(user=team, name="Team")
+        case = Case.objects.create(description="Dog", latitude=33.7, longitude=73.0, reported_by=first, organization=organization)
         report = Report.objects.create(case=case, user=first, image="reports/x.jpg", description="Dog", latitude=33.7, longitude=73.0)
 
         def seen_by(user):

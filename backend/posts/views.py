@@ -71,6 +71,8 @@ class PostViewSet(viewsets.ModelViewSet):
 
         animal_id = self.request.query_params.get("animal")
         if animal_id:
+            if not animal_id.isdecimal():
+                raise serializers.ValidationError({"animal": "Unknown animal."})
             queryset = queryset.filter(animal_id=animal_id)
         # Private management views should stay scoped to the signed-in organization.
         if self.action not in PUBLIC_ACTIONS + MEMBER_ACTIONS:
@@ -108,6 +110,8 @@ class PostViewSet(viewsets.ModelViewSet):
         animal_id = request.query_params.get("animal_id")
         queryset = self.get_queryset()
         if animal_id:
+            if not animal_id.isdecimal():
+                raise serializers.ValidationError({"animal_id": "Unknown animal."})
             queryset = queryset.filter(animal_id=animal_id)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)

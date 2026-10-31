@@ -171,16 +171,33 @@ MAX_UPLOAD_BYTES = int(os.getenv("MAX_UPLOAD_BYTES", 10 * 1024 * 1024))
 DATA_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
 FILE_UPLOAD_PERMISSIONS = 0o644
 
+# Rate limits are counted in the cache, so every server behind a load balancer has to share
+# one. A single process (the free host) can keep its own in memory.
+REDIS_URL = os.getenv("REDIS_URL", "")
+if REDIS_URL:
+    CACHES = {"default": {"BACKEND": "django.core.cache.backends.redis.RedisCache", "LOCATION": REDIS_URL}}
+
+# Which request header the host fills in with the caller's real address (see core/throttles.py).
+# Render's proxy sets True-Client-IP. Without this every visitor would look like the proxy and
+# share one rate limit, so it's on by default there even if the variable never reaches the host.
+CLIENT_IP_HEADER = os.getenv("CLIENT_IP_HEADER") or ("HTTP_TRUE_CLIENT_IP" if os.getenv("RENDER") else "")
+
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework_simplejwt.authentication.JWTAuthentication",),
+    # Closed unless a view says otherwise: a forgotten permission means a refusal, not a leak.
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
+    "DEFAULT_RENDERER_CLASSES": ("rest_framework.renderers.JSONRenderer",),
+    # Proxies in front of the app; None would trust whatever a client wrote in X-Forwarded-For.
+    "NUM_PROXIES": int(os.getenv("NUM_PROXIES", "0")),
     "DEFAULT_THROTTLE_CLASSES": (
-        "rest_framework.throttling.AnonRateThrottle",
-        "rest_framework.throttling.UserRateThrottle",
+        "core.throttles.AnonymousRateThrottle",
+        "core.throttles.SignedInRateThrottle",
     ),
     "DEFAULT_THROTTLE_RATES": {
         "anon": os.getenv("THROTTLE_ANON", "300/minute"),
         "user": os.getenv("THROTTLE_USER", "1200/minute"),
         "auth": "10/minute",
+        "search": os.getenv("THROTTLE_SEARCH", "60/minute"),
         "password_reset": "10/hour",
     },
 }

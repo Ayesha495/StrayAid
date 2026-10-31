@@ -1,8 +1,8 @@
 from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path, re_path
-from django.views.static import serve
 
+from core.media import serve_media
 from core.views import health
 
 urlpatterns = [
@@ -22,4 +22,4 @@ urlpatterns = [
 
 if settings.SERVE_MEDIA:
     media_prefix = settings.MEDIA_URL.lstrip("/")
-    urlpatterns += [re_path(rf"^{media_prefix}(?P<path>.*)$", serve, {"document_root": settings.MEDIA_ROOT})]
+    urlpatterns += [re_path(rf"^{media_prefix}(?P<path>.*)$", serve_media)]

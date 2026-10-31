@@ -112,6 +112,15 @@ class AdoptionApplication(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+        # The rules live in the database too, so no code path or race can break them.
+        constraints = [
+            models.UniqueConstraint(fields=["animal"], condition=models.Q(status="approved"), name="one_approved_application_per_animal"),
+            models.UniqueConstraint(
+                fields=["animal", "applicant"],
+                condition=models.Q(status__in=["pending", "approved"]),
+                name="one_active_application_per_person",
+            ),
+        ]
 
     def __str__(self):
         return f"{self.full_name} wants to adopt {self.animal.name} ({self.status})"
@@ -133,6 +142,7 @@ class Sponsorship(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+        constraints = [models.CheckConstraint(condition=models.Q(amount_pkr__gt=0), name="sponsorship_amount_positive")]
 
     def __str__(self):
         return f"PKR {self.amount_pkr} for {self.animal.name} ({self.status})"

@@ -448,7 +448,8 @@ class SponsorTests(MediaEnabledAPITestCase):
         response = self.client.post(f"/api/animals/sponsorships/{pledge_id}/review/", {"status": "confirmed"})
         self.assertEqual(response.data["status"], "confirmed")
         profile = self.client.get(f"/api/animals/{self.animal.id}/").data
-        self.assertEqual((profile["sponsor_count"], profile["sponsor_initials"]), (1, ["SA"]))
+        # One sponsor is counted but not shown: initials would identify who gave the total.
+        self.assertEqual((profile["sponsor_count"], profile["sponsor_initials"]), (1, []))
 
     def test_receipt_amount_and_animal_are_checked(self):
         self.client.force_authenticate(user=self.sponsor)

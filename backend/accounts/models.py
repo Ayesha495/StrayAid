@@ -35,6 +35,25 @@ class User(AbstractUser):
     REQUIRED_FIELDS = ["username"]
 
 
+class AuditEvent(models.Model):
+    """One line of the audit trail (see accounts/audit.py). The app's database role can add
+    these but not change or delete them (deploy/least_privilege.sql)."""
+
+    action = models.CharField(max_length=60, db_index=True)
+    actor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="audit_events")
+    object_type = models.CharField(max_length=60, blank=True)
+    object_id = models.BigIntegerField(null=True, blank=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    details = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.action} on {self.object_type}:{self.object_id}"
+
+
 class PasswordResetCode(models.Model):
     # A short-lived 6-digit code emailed to someone who forgot their password.
     # Only a hash is stored, and a code dies after a few wrong guesses.

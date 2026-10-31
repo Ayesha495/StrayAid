@@ -17,7 +17,10 @@ class ReportSerializer(serializers.ModelSerializer):
         # Rescue teams need the reporter's contact to coordinate. A reporter (e.g. on "My
         # reports") only sees their own details, never the other people who reported the case.
         viewer = getattr(self.context.get("request"), "user", None)
-        is_team = bool(viewer and viewer.is_authenticated and getattr(viewer, "role", "") == "organization")
+        # Only the team that took the case on: anyone can register a team, so the role alone
+        # would hand reporters' emails to whoever signed up.
+        handling = instance.case.organization
+        is_team = bool(viewer and viewer.is_authenticated and handling and handling.user_id == viewer.id)
         if not is_team and not (viewer and viewer.is_authenticated and viewer.id == instance.user_id):
             data.pop("user_email", None)
             data.pop("user", None)
@@ -152,6 +155,20 @@ def _absolute(request, file_field):
     return request.build_absolute_uri(file_field.url) if request else file_field.url
 
 
+class CaseSearchSerializer(TrendingCaseSerializer):
+    """A search result: the public card plus the animal, if the case has one yet."""
+
+    animal = serializers.SerializerMethodField()
+    organization_name = serializers.CharField(source="organization.name", read_only=True, default=None)
+
+    class Meta(TrendingCaseSerializer.Meta):
+        fields = TrendingCaseSerializer.Meta.fields + ["animal", "organization_name"]
+
+    def get_animal(self, obj):
+        animal = getattr(obj, "animal", None)
+        return {"id": animal.id, "name": animal.name, "status": animal.status} if animal else None
+
+
 class CaseDetailSerializer(TrendingCaseSerializer):
     """Public case page (Stitch 10). Like the trending card: area instead of exact coordinates
     and no reporter identities. `keep_updated` / `is_reporter` describe the signed-in viewer."""
@@ -271,7 +288,7 @@ class CaseUpdateSerializer(serializers.ModelSerializer):
 
 
 class PublicReportSerializer(serializers.ModelSerializer):
-    """A report on a public case page: first name only, never the email."""
+    """A report on a public case page: no name or email, only whether it's the viewer's own."""
 
     image = serializers.SerializerMethodField()
     reporter = serializers.SerializerMethodField()
@@ -285,7 +302,8 @@ class PublicReportSerializer(serializers.ModelSerializer):
         return _absolute(self.context.get("request"), obj.image)
 
     def get_reporter(self, obj):
-        return obj.user.first_name or "A StrayAid reporter"
+        # A name beside a place and a time says where someone was. Nobody needs that publicly.
+        return "A StrayAid reporter"
 
     def get_is_mine(self, obj):
         user = getattr(self.context.get("request"), "user", None)

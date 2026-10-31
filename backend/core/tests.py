@@ -33,7 +33,7 @@ SETTING_NAMES = [
     "DEBUG", "SECRET_KEY", "ALLOWED_HOSTS", "CORS_ALLOWED_ORIGINS", "CORS_ALLOW_ALL_ORIGINS",
     "CORS_ALLOW_CREDENTIALS", "CSRF_TRUSTED_ORIGINS", "SECURE_SSL_REDIRECT", "SESSION_COOKIE_SECURE",
     "CSRF_COOKIE_SECURE", "SECURE_HSTS_SECONDS", "SECURE_PROXY_SSL_HEADER", "X_FRAME_OPTIONS",
-    "GOOGLE_OAUTH_CLIENT_IDS", "DATABASES", "INSTALLED_APPS", "SERVE_MEDIA",
+    "GOOGLE_OAUTH_CLIENT_IDS", "DATABASES", "INSTALLED_APPS", "SERVE_MEDIA", "CLIENT_IP_HEADER",
 ]
 
 
@@ -137,6 +137,11 @@ class ProductionSettingsTests(SimpleTestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         database = values["DATABASES"]["default"]
         self.assertEqual((database["NAME"], database["USER"], database["PASSWORD"], database["HOST"]), ("stray", "u", "p", "db"))
+
+    def test_render_uses_its_own_client_address_header_by_default(self):
+        result, values = load_settings({**PRODUCTION_ENV, "RENDER": "true"})
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(values["CLIENT_IP_HEADER"], "HTTP_TRUE_CLIENT_IP")
 
     def test_google_client_ids_come_from_the_environment(self):
         result, values = load_settings({**PRODUCTION_ENV, "GOOGLE_OAUTH_CLIENT_IDS": " web-id , android-id ,"})

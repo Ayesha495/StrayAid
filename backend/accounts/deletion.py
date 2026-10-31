@@ -17,6 +17,7 @@ def delete_account(user):
     for model in (PushToken, AnimalFollow, CaseFollow, OrganizationFollow, Notification, PostLike, CommentLike, SavedPost, StoryView):
         model.objects.filter(user=user).delete()
     user.password_reset_codes.all().delete()
+    user.audit_events.update(ip_address=None)
 
     applications = AdoptionApplication.objects.filter(applicant=user)
     applications.filter(status="pending").update(status="withdrawn", decided_at=timezone.now())

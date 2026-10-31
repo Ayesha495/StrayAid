@@ -2,8 +2,10 @@ from rest_framework import serializers, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from django.db import IntegrityError, transaction
 from django.utils import timezone
 
+from accounts.audit import record
 from organizations.permissions import IsOrganizationUser
 from rescue.models import Case
 
@@ -44,7 +46,7 @@ def close_open_applications(animal, keep=None):
     from notifications.services import notify_users
 
     now = timezone.now()
-    others = animal.adoption_applications.filter(status="pending")
+    others = animal.adoption_applications.select_for_update().filter(status="pending")
     if keep is not None:
         others = others.exclude(pk=keep.pk)
     for other in list(others):
@@ -56,6 +58,24 @@ def close_open_applications(animal, keep=None):
             title="Adoption",
             body=f"**{animal.name}** has found a home with another family. Thank you for offering yours.",
             data={"type": "adoption_decision", "application_id": other.id, "animal_id": animal.id, "status": "rejected"},
+        )
+
+
+def end_adoption(animal, request):
+    """An adopted animal came back (the home didn't work out). Its approval ends here, which
+    keeps "one approved application per animal" true when it is adopted again."""
+    from notifications.services import notify_users
+
+    for application in animal.adoption_applications.select_for_update().filter(status="approved"):
+        application.status = "withdrawn"
+        application.decided_at = timezone.now()
+        application.save(update_fields=["status", "decided_at"])
+        record("adoption.ended", request, application)
+        notify_users(
+            [application.applicant_id],
+            title="Adoption",
+            body=f"The adoption of **{animal.name}** has been closed by the rescue team.",
+            data={"type": "adoption_decision", "application_id": application.id, "animal_id": animal.id, "status": "withdrawn"},
         )
 
 
@@ -100,11 +120,19 @@ class AnimalViewSet(viewsets.ModelViewSet):
         case = serializer.validated_data.get("case")
         if case is not None and case.organization_id != self.request.user.organization_profile.id:
             raise serializers.ValidationError({"case": "You can only link animals to your own cases."})
-        animal = serializer.save(organization=self.request.user.organization_profile)
-        # Updating an animal can reopen or close the linked rescue workflow.
-        sync_case_with_animal(animal)
-        if animal.status == Animal.STATUS_ADOPTED:
-            close_open_applications(animal)
+        with transaction.atomic():
+            # The same lock the adoption decision takes, so a status edit can't slip between
+            # an approval's check and its write.
+            previous_status = Animal.objects.select_for_update().values_list("status", flat=True).get(pk=serializer.instance.pk)
+            animal = serializer.save(organization=self.request.user.organization_profile)
+            # Updating an animal can reopen or close the linked rescue workflow.
+            sync_case_with_animal(animal)
+            if animal.status == Animal.STATUS_ADOPTED:
+                close_open_applications(animal)
+            elif previous_status == Animal.STATUS_ADOPTED:
+                end_adoption(animal, self.request)
+            if animal.status != previous_status:
+                record("animal.status_changed", self.request, animal, status_from=previous_status, status_to=animal.status)
 
     @action(detail=False, methods=["get"], permission_classes=[AllowAny], url_path="public")
     def public(self, request):
@@ -113,8 +141,12 @@ class AnimalViewSet(viewsets.ModelViewSet):
         status_filter = request.query_params.get("status")
         organization_id = request.query_params.get("organization_id")
         if status_filter:
+            if status_filter not in dict(Animal.STATUS_CHOICES):
+                return Response({"detail": "Unknown status."}, status=400)
             queryset = queryset.filter(status=status_filter)
         if organization_id:
+            if not organization_id.isdecimal():
+                return Response({"detail": "Unknown organization."}, status=400)
             queryset = queryset.filter(organization_id=organization_id)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
@@ -123,16 +155,22 @@ class AnimalViewSet(viewsets.ModelViewSet):
     def apply(self, request, pk=None):
         """Send an adoption application (Stitch 14)."""
         animal = self.get_object()
-        if animal.status != Animal.STATUS_ADOPTABLE:
-            return Response({"detail": f"{animal.name} isn't up for adoption right now."}, status=400)
         if animal.organization and animal.organization.user_id == request.user.id:
             return Response({"detail": "Organizations can't apply to adopt their own animals."}, status=400)
-        if animal.adoption_applications.filter(applicant=request.user, status__in=AdoptionApplication.ACTIVE_STATUSES).exists():
-            return Response({"detail": f"You've already applied to adopt {animal.name}."}, status=400)
-
-        serializer = AdoptionApplicationSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        application = serializer.save(animal=animal, applicant=request.user)
+        already_applied = {"detail": f"You've already applied to adopt {animal.name}."}
+        try:
+            with transaction.atomic():
+                # Checked under the animal's lock, so an application can't land just after an approval.
+                status_now = Animal.objects.select_for_update().values_list("status", flat=True).get(pk=animal.pk)
+                if status_now != Animal.STATUS_ADOPTABLE:
+                    return Response({"detail": f"{animal.name} isn't up for adoption right now."}, status=400)
+                if animal.adoption_applications.filter(applicant=request.user, status__in=AdoptionApplication.ACTIVE_STATUSES).exists():
+                    return Response(already_applied, status=400)
+                serializer = AdoptionApplicationSerializer(data=request.data)
+                serializer.is_valid(raise_exception=True)
+                application = serializer.save(animal=animal, applicant=request.user)
+        except IntegrityError:
+            return Response(already_applied, status=400)
 
         if animal.organization:
             from notifications.services import notify_users
@@ -208,7 +246,7 @@ class ApplicationViewSet(viewsets.GenericViewSet):
             # A team's review list is about animals still looking for a home; adopted animals'
             # applications are finished business (the adopter still sees theirs in My Applications).
             queryset = queryset.exclude(animal__status=Animal.STATUS_ADOPTED)
-        if request.query_params.get("status"):
+        if request.query_params.get("status") in dict(AdoptionApplication.STATUS_CHOICES):
             queryset = queryset.filter(status=request.query_params["status"])
         return Response(self.get_serializer(queryset, many=True).data)
 
@@ -220,11 +258,13 @@ class ApplicationViewSet(viewsets.GenericViewSet):
         application = self.get_object()
         if application.applicant_id != request.user.id:
             return Response({"detail": "Only the person who applied can withdraw."}, status=403)
-        if application.status not in AdoptionApplication.ACTIVE_STATUSES:
-            return Response({"detail": "This application is already closed."}, status=400)
-        application.status = "withdrawn"
-        application.decided_at = timezone.now()
-        application.save(update_fields=["status", "decided_at"])
+        with transaction.atomic():
+            current = AdoptionApplication.objects.select_for_update().get(pk=application.pk)
+            if current.status not in AdoptionApplication.ACTIVE_STATUSES:
+                return Response({"detail": "This application is already closed."}, status=400)
+            application.status = "withdrawn"
+            application.decided_at = timezone.now()
+            application.save(update_fields=["status", "decided_at"])
 
         from notifications.services import notify_users
 
@@ -247,11 +287,34 @@ class ApplicationViewSet(viewsets.GenericViewSet):
         decision = request.data.get("status")
         if decision not in ("approved", "rejected"):
             return Response({"detail": "Choose approved or rejected."}, status=400)
-        if application.status != "pending":
-            return Response({"detail": "Only pending applications can be decided."}, status=400)
-        application.status = decision
-        application.decided_at = timezone.now()
-        application.save(update_fields=["status", "decided_at"])
+        taken = {"detail": f"{animal.name} already has an approved application."}
+        try:
+            # Two people approving at once (or a double tap) queue on the animal's row: the
+            # second re-reads everything after the first has finished and is refused.
+            with transaction.atomic():
+                locked_animal = Animal.objects.select_for_update().get(pk=animal.pk)
+                current = AdoptionApplication.objects.select_for_update().get(pk=application.pk)
+                if current.status != "pending":
+                    return Response({"detail": "Only pending applications can be decided."}, status=400)
+                if decision == "approved" and (
+                    locked_animal.status == Animal.STATUS_ADOPTED
+                    or locked_animal.adoption_applications.filter(status="approved").exists()
+                ):
+                    return Response(taken, status=400)
+                application.status = decision
+                application.decided_at = timezone.now()
+                application.save(update_fields=["status", "decided_at"])
+                if decision == "approved":
+                    # The animal is adopted: the other pending applicants are turned down and
+                    # told, and its reporters and followers hear from the animal's own update.
+                    close_open_applications(locked_animal, keep=application)
+                    locked_animal.status = Animal.STATUS_ADOPTED
+                    locked_animal._skip_notify_user_ids = {application.applicant_id}
+                    locked_animal.save(update_fields=["status", "updated_at"])
+                    sync_case_with_animal(locked_animal)
+                record(f"adoption.{decision}", request, application, animal_id=animal.id)
+        except IntegrityError:
+            return Response(taken, status=400)
 
         from notifications.services import notify_users
 
@@ -267,16 +330,6 @@ class ApplicationViewSet(viewsets.GenericViewSet):
             body=body,
             data={"type": "adoption_decision", "application_id": application.id, "animal_id": animal.id, "status": decision},
         )
-
-        if decision == "approved":
-            # The animal is adopted: the other pending applicants are turned down and told,
-            # and its reporters and followers hear the news from the animal's own update.
-            close_open_applications(animal, keep=application)
-            if animal.status != Animal.STATUS_ADOPTED:
-                animal.status = Animal.STATUS_ADOPTED
-                animal._skip_notify_user_ids = {application.applicant_id}
-                animal.save(update_fields=["status", "updated_at"])
-                sync_case_with_animal(animal)
         return Response(self.get_serializer(application).data)
 
 
@@ -305,10 +358,13 @@ class SponsorshipViewSet(viewsets.GenericViewSet):
         decision = request.data.get("status")
         if decision not in ("confirmed", "rejected"):
             return Response({"detail": "Choose confirmed or rejected."}, status=400)
-        if pledge.status != "pending":
-            return Response({"detail": "This pledge has already been checked."}, status=400)
-        pledge.status = decision
-        pledge.save(update_fields=["status"])
+        with transaction.atomic():
+            current = Sponsorship.objects.select_for_update().get(pk=pledge.pk)
+            if current.status != "pending":
+                return Response({"detail": "This pledge has already been checked."}, status=400)
+            pledge.status = decision
+            pledge.save(update_fields=["status"])
+            record(f"sponsorship.{decision}", request, pledge, amount_pkr=pledge.amount_pkr)
 
         from notifications.services import notify_users
 

@@ -22,6 +22,7 @@ from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.db.models import Q
+from django.db.models import OuterRef, Subquery
 from django.utils import timezone
 
 from accounts.models import User
@@ -952,6 +953,9 @@ class Command(BaseCommand):
         # After the notifications rebuild, which would otherwise wipe the ones it adds.
         self.seed_ducky_paws()
 
+        # Reports keep their own address, so address search finds them like real ones.
+        addresses = Case.objects.filter(pk=OuterRef("case_id")).values("area")[:1]
+        Report.objects.filter(area="").update(area=Subquery(addresses))
         self.stdout.write(self.style.SUCCESS("Demo data ready."))
         if settings.DEBUG:
             self.stdout.write(f"Password for every demo account: {self.password}")

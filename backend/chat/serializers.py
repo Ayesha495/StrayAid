@@ -1,15 +1,13 @@
 from rest_framework import serializers
 
+from core.media import media_url
+
 from .models import Conversation, Message
 from .services import ACTIVE_WINDOW, display_name, organization_last_active
 
 OPEN_CASE_STATUSES = ["reported", "assigned", "in_progress"]
 
 
-def _media_url(request, file):
-    if not file:
-        return None
-    return request.build_absolute_uri(file.url) if request else file.url
 
 
 def _initials(name):
@@ -49,7 +47,7 @@ class ConversationSerializer(serializers.ModelSerializer):
 
     def get_avatar(self, obj):
         file = obj.member.avatar if self._org_side(obj) else obj.organization.image
-        return _media_url(self.context.get("request"), file)
+        return media_url(self.context.get("request"), file)
 
     def get_initials(self, obj):
         return _initials(self.get_title(obj))
@@ -139,7 +137,7 @@ class ConversationDetailSerializer(ConversationSerializer):
             "species": animal.species,
             "status": animal.status,
             "status_label": animal.get_status_display(),
-            "image": _media_url(self.context.get("request"), animal.image),
+            "image": media_url(self.context.get("request"), animal.image),
             "application_status": application.status if application else None,
         }
 
@@ -165,7 +163,7 @@ class MessageSerializer(serializers.ModelSerializer):
         return conversation.organization.name if obj.sender_id != conversation.member_id else display_name(obj.sender)
 
     def get_image(self, obj):
-        return _media_url(self.context.get("request"), obj.image)
+        return media_url(self.context.get("request"), obj.image)
 
 
 class NewMessageSerializer(serializers.Serializer):

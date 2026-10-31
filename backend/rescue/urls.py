@@ -15,6 +15,7 @@ from .views import (
     map_cases,
     my_reports,
     report_case,
+    search_cases,
     trending_cases,
 )
 
@@ -29,6 +30,7 @@ urlpatterns = [
     # Public endpoints for the home screen; listed before the router's detail routes.
     path('trending/', trending_cases),
     path('map/', map_cases),
+    path('search/', search_cases),
     path('stats/', community_stats),
     # Public case page (guests can read; keep-updated needs an account).
     path('public/<int:case_id>/', case_detail),

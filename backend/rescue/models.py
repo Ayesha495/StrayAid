@@ -68,6 +68,10 @@ class Case(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+        constraints = [
+            models.CheckConstraint(condition=models.Q(latitude__gte=-90, latitude__lte=90), name="case_latitude_in_range"),
+            models.CheckConstraint(condition=models.Q(longitude__gte=-180, longitude__lte=180), name="case_longitude_in_range"),
+        ]
 
     def __str__(self):
         return f"Case #{self.pk} - {self.status}"
@@ -86,6 +90,8 @@ class Report(models.Model):
     description =models.TextField()
     latitude = models.FloatField()
     longitude = models.FloatField()
+    # The address of this sighting, which can differ from the address that opened the case.
+    area = models.CharField(max_length=100, blank=True)
     # "Keep me updated" on the report form: push this reporter the case's status changes.
     notify_reporter = models.BooleanField(default=True)
     # Highest animal-class confidence from the image detector (0-1); null = not scored.

@@ -21,7 +21,7 @@ class Command(BaseCommand):
         partial = path.with_suffix(".part")
         self.stdout.write(f"Downloading {MODEL_URL} ...")
         try:
-            urllib.request.urlretrieve(MODEL_URL, partial)
+            urllib.request.urlretrieve(MODEL_URL, partial)  # nosec B310: a fixed https address, checksum-verified
         except OSError as error:
             raise CommandError(f"Download failed: {error}") from error
 

@@ -35,7 +35,7 @@ def send_push_notifications(tokens: list[str], title: str, body: str, data: dict
         method="POST",
     )
     try:
-        with urllib.request.urlopen(req, timeout=10) as resp:
+        with urllib.request.urlopen(req, timeout=10) as resp:  # nosec B310: the fixed https address above
             result = json.loads(resp.read().decode("utf-8"))
             logger.debug("Expo push result: %s", result)
     except Exception as exc:

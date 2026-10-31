@@ -1,8 +1,12 @@
 from django.db.models import Sum
 from rest_framework import serializers
 
+from core.media import media_url
+
 from .models import AdoptionApplication, Animal, Sponsorship
 from organizations.serializers import OrganizationSerializer
+
+MIN_PUBLIC_SPONSORS = 3
 
 
 class AnimalSerializer(serializers.ModelSerializer):
@@ -93,6 +97,9 @@ class AnimalSerializer(serializers.ModelSerializer):
         return obj.sponsorships.filter(status="confirmed").aggregate(total=Sum("amount_pkr"))["total"] or 0
 
     def get_application_count(self, obj):
+        # Once adopted, the applications are finished business and stop being shown.
+        if obj.status == Animal.STATUS_ADOPTED:
+            return 0
         return obj.adoption_applications.exclude(status="withdrawn").count()
 
     def get_ai_verified(self, obj):
@@ -113,7 +120,11 @@ class AnimalSerializer(serializers.ModelSerializer):
         return {"id": application.id, "status": application.status} if application else None
 
     def get_sponsor_initials(self, obj):
-        """Initials of up to three confirmed sponsors, for the little avatar stack."""
+        """Initials of up to three confirmed sponsors, for the little avatar stack. Below
+        MIN_PUBLIC_SPONSORS the crowd is too small: initials beside the total raised would
+        show what one identifiable person gave."""
+        if self.get_sponsor_count(obj) < MIN_PUBLIC_SPONSORS:
+            return []
         initials = []
         for sponsorship in obj.sponsorships.filter(status="confirmed").select_related("sponsor").order_by("-created_at"):
             person = sponsorship.sponsor
@@ -142,7 +153,7 @@ class AnimalSerializer(serializers.ModelSerializer):
         return {
             "message": f"To adopt {obj.name}, contact {organization.name} via",
             "phone": organization.phone,
-            "email": organization.email or organization.user.email,
+            "email": organization.email,
         }
 
     def get_donation_info(self, obj):
@@ -255,10 +266,7 @@ class SponsorshipSerializer(serializers.ModelSerializer):
         return obj.sponsor.get_full_name() or obj.sponsor.username
 
     def get_receipt(self, obj):
-        request = self.context.get("request")
-        if not obj.receipt:
-            return None
-        return request.build_absolute_uri(obj.receipt.url) if request else obj.receipt.url
+        return media_url(self.context.get("request"), obj.receipt)
 
 
 class NewSponsorshipSerializer(serializers.Serializer):

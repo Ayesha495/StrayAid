@@ -6,4 +6,7 @@ class IsOrganizationUser(BasePermission):
 
     def has_permission(self, request, view):
         user = request.user
-        return bool(user and user.is_authenticated and user.role == "organization")
+        # The role alone isn't enough: every organization view works on the team's own profile.
+        return bool(
+            user and user.is_authenticated and user.role == "organization" and getattr(user, "organization_profile", None)
+        )
