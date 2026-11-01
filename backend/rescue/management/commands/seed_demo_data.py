@@ -7,6 +7,7 @@ Ducky paws Rescue only: python manage.py seed_demo_data --only-ducky-paws
 Stories only (they last 24 hours): python manage.py seed_demo_data --stories
 
 Live server: DEMO_PASSWORD=<strong password> python manage.py seed_demo_data --production
+(on the real site, use the "Seed demo data" GitHub workflow: see docs/DEPLOYMENT.md)
 
 Safe to re-run: records are matched by stable keys and photos are only attached once.
 Timestamps are relative to "now", so stories stay inside their 24-hour window; re-run before a demo.
