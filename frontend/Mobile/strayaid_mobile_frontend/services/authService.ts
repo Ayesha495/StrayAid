@@ -118,10 +118,10 @@ export const confirmPasswordReset = async (email: string, code: string, newPassw
     return result.detail;
 };
 
-export const loginWithGoogleAccessToken = async (accessToken: string): Promise<TokenResponse> => {
+export const loginWithGoogleIdToken = async (idToken: string): Promise<TokenResponse> => {
     // The backend finishes Google verification and returns our normal JWT payload. The screens
     // show that continuing with Google accepts the terms (GoogleTermsNote).
-    const { res, result } = await postJson('/auth/google/', { access_token: accessToken, accept_terms: true });
+    const { res, result } = await postJson('/auth/google/', { id_token: idToken, accept_terms: true });
     if (res.ok) {
         await persistSession(result);
         return result;

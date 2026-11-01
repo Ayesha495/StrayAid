@@ -1,4 +1,4 @@
-import { deleteAccount, loginWithGoogleAccessToken, registerUser, SignUpError } from "../services/authService";
+import { deleteAccount, loginWithGoogleIdToken, registerUser, SignUpError } from "../services/authService";
 import { saveToken } from "../utils/tokenStorage";
 
 jest.mock("expo-router", () => ({ router: { replace: jest.fn(), push: jest.fn() } }));
@@ -48,18 +48,18 @@ describe("sign-up", () => {
 describe("Continue with Google", () => {
   it("tells the server the terms were accepted", async () => {
     fetchMock.mockReturnValue(reply(200, { access: "a", refresh: "r", user: { email: "g@x.pk" } }));
-    await loginWithGoogleAccessToken("ya29.token");
-    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({ access_token: "ya29.token", accept_terms: true });
+    await loginWithGoogleIdToken("ya29.token");
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({ id_token: "ya29.token", accept_terms: true });
   });
 
   it("shows the server's reason when Google sign-in is refused", async () => {
     fetchMock.mockReturnValue(reply(403, { detail: "This account has been deleted." }));
-    await expect(loginWithGoogleAccessToken("ya29.token")).rejects.toThrow("This account has been deleted.");
+    await expect(loginWithGoogleIdToken("ya29.token")).rejects.toThrow("This account has been deleted.");
   });
 
   it("explains a dropped connection", async () => {
     fetchMock.mockRejectedValue(new TypeError("Network request failed"));
-    await expect(loginWithGoogleAccessToken("ya29.token")).rejects.toThrow(/connection/);
+    await expect(loginWithGoogleIdToken("ya29.token")).rejects.toThrow(/connection/);
   });
 });
 

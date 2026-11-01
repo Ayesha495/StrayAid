@@ -2,7 +2,7 @@
   "expo": {
     "name": "StrayAid",
     "slug": "strayaid_mobile_frontend",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "strayaidmobilefrontend",
@@ -71,7 +71,8 @@
           "microphonePermission": "Allow StrayAid to use the microphone so you can dictate report descriptions.",
           "speechRecognitionPermission": "Allow StrayAid to convert your speech into the report description."
         }
-      ]
+      ],
+      "@react-native-google-signin/google-signin"
     ],
     "experiments": {
       "typedRoutes": true,
