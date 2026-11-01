@@ -1,10 +1,10 @@
-import Svg, { Ellipse, Path } from "react-native-svg";
+import Svg, { Circle, Ellipse, G, Path } from "react-native-svg";
 
 // The StrayAid mark: a map pin holding a paw and a first-aid cross, standing on an amber disc.
 // Every screen draws the logo through this component, so changing the artwork here updates
-// the whole app. "light" is for dark green backgrounds (splash, the sign-in tile), where the
-// green pin would disappear: the same shape as a white pin with a green paw.
-// The mark is taller than it is wide, so `size` sets its height.
+// the whole app. "light" is for dark backgrounds (splash, the sign-in tile), where the green
+// pin would disappear: the same mark centred on a white circle, and `size` is the circle's
+// width. Otherwise the mark is taller than it is wide, so `size` sets its height.
 
 type Props = {
   size?: number;
@@ -19,13 +19,27 @@ const ORANGE_DISC = {"cx":257.4,"cy":478.8,"rx":66.2,"ry":28.2};
 const GREEN = "#17594A";
 
 export default function LogoMark({ size = 80, tone = "color" }: Props) {
-  const light = tone === "light";
-  return (
-    <Svg width={size * 0.6} height={size} viewBox="102 0 307 512" accessibilityLabel="StrayAid logo">
+  const mark = (
+    <>
       <Ellipse {...ORANGE_DISC} fill="#FF852E" />
       <Ellipse {...AMBER_DISC} fill="#FFBD59" />
-      <Path d={PIN} fill={light ? "#FFFFFF" : GREEN} />
-      <Path d={PAW_AND_CROSS} fill={light ? GREEN : "#FFFFFF"} fillRule="evenodd" />
+      <Path d={PIN} fill={GREEN} />
+      <Path d={PAW_AND_CROSS} fill="#FFFFFF" fillRule="evenodd" />
+    </>
+  );
+
+  if (tone === "light") {
+    return (
+      <Svg width={size} height={size} viewBox="0 0 512 512" accessibilityLabel="StrayAid logo">
+        <Circle cx={256} cy={256} r={256} fill="#FFFFFF" />
+        <G transform="translate(51.2 51.2) scale(0.8)">{mark}</G>
+      </Svg>
+    );
+  }
+
+  return (
+    <Svg width={size * 0.6} height={size} viewBox="102 0 307 512" accessibilityLabel="StrayAid logo">
+      {mark}
     </Svg>
   );
 }

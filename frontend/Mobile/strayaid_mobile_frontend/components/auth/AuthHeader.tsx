@@ -34,7 +34,7 @@ export default function AuthHeader({ onBack = leaveAuth, inline }: Props) {
 
       <View style={[styles.brand, inline && styles.brandInline]} accessible accessibilityLabel="StrayAid">
         <View style={[styles.tile, inline && styles.tileInline]}>
-          <LogoMark size={inline ? 22 : 24} tone="light" />
+          <LogoMark size={inline ? 28 : 32} tone="light" />
         </View>
         <Text style={[styles.wordmark, inline && styles.wordmarkInline]}>StrayAid</Text>
       </View>

@@ -15,19 +15,32 @@ const GREEN = "#17594A";
 
 /**
  * The StrayAid mark: a map pin holding a paw and a first-aid cross, standing on an amber disc.
- * "light" is the version for dark green backgrounds such as the sidebar and footer, where the
- * green pin would disappear: the same shape as a white pin with a green paw.
- * The mark is taller than it is wide, so `size` sets its height.
+ * "light" is the version for dark backgrounds, where the green pin would disappear: the same
+ * mark centred on a white circle, and `size` is the circle's width. Otherwise the mark is
+ * taller than it is wide, so `size` sets its height.
  */
 export function LogoMark({ size = 30, tone = "color" }: { size?: number; tone?: "color" | "light" }) {
-  const light = tone === "light";
+  const mark = (
+    <>
+      <ellipse {...ORANGE_DISC} fill="#FF852E" />
+      <ellipse {...AMBER_DISC} fill="#FFBD59" />
+      <path d={PIN} fill={GREEN} />
+      <path d={PAW_AND_CROSS} fill="#fff" fillRule="evenodd" />
+    </>
+  );
+
+  if (tone === "light") {
+    return (
+      <svg className="logo-mark" width={size} height={size} viewBox="0 0 512 512" aria-hidden="true" focusable="false">
+        <circle cx="256" cy="256" r="256" fill="#fff" />
+        <g transform="translate(51.2 51.2) scale(0.8)">{mark}</g>
+      </svg>
+    );
+  }
 
   return (
     <svg className="logo-mark" width={size * 0.6} height={size} viewBox="102 0 307 512" aria-hidden="true" focusable="false">
-      <ellipse {...ORANGE_DISC} fill="#FF852E" />
-      <ellipse {...AMBER_DISC} fill="#FFBD59" />
-      <path d={PIN} fill={light ? "#fff" : GREEN} />
-      <path d={PAW_AND_CROSS} fill={light ? GREEN : "#fff"} fillRule="evenodd" />
+      {mark}
     </svg>
   );
 }
