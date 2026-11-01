@@ -6,6 +6,11 @@ name: Seed demo data
 # and "remove" once real users arrive.
 
 on:
+  # A change to this file runs it once, seeding everything.
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/seed-demo.yml
   workflow_dispatch:
     inputs:
       what:
@@ -43,5 +48,16 @@ jobs:
         run: DEBUG=1 python manage.py download_ai_model
       - name: Lay out the bundled photos as they are on the server
         run: mkdir -p media && cp -r demo_images/stitch media/demo
+      - name: Check the secrets
+        run: python deploy/check_seed_secrets.py
       - name: Seed
-        run: python manage.py seed_demo_data --production ${{ inputs.what != 'everything' && format('--{0}', inputs.what) || '' }}
+        env:
+          WHAT: ${{ inputs.what || 'everything' }}
+        run: |
+          option=""
+          if [ "$WHAT" != "everything" ]; then option="--$WHAT"; fi
+          set +e
+          python manage.py seed_demo_data --production $option 2>&1 | tee seed.log
+          code=${PIPESTATUS[0]}
+          if [ "$code" != "0" ]; then tail -n 3 seed.log | sed 's/^/::error title=Seeding stopped::/'; fi
+          exit "$code"
