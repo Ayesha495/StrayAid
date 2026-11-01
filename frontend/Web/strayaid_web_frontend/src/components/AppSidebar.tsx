@@ -92,7 +92,7 @@ function AppSidebar({ isCollapsed, isMobile, onToggle }: AppSidebarProps) {
     <aside className={`dashboard-sidebar${isCollapsed ? " is-collapsed" : ""}`} aria-label="Main menu">
       <div className="sb-head">
         <Link to={isOrganization ? "/dashboard" : "/feed"} className="sb-brand" onClick={handleLinkClick}>
-          <LogoMark size={24} />
+          <LogoMark size={26} tone="light" />
           <span>StrayAid</span>
         </Link>
         {isMobile ? (

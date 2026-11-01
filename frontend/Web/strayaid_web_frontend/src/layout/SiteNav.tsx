@@ -42,7 +42,7 @@ function SiteNav() {
   return (
     <header className="site-nav-wrap">
       <nav className="site-nav" aria-label="Main">
-        <Link to="/" className="site-brand" aria-label="StrayAid home"><LogoMark size={28} /> StrayAid</Link>
+        <Link to="/" className="site-brand" aria-label="StrayAid home"><LogoMark size={32} /> StrayAid</Link>
         <SpotlightNavbar
           key={location.pathname}
           items={LINKS}

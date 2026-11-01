@@ -9,7 +9,7 @@ const LEGAL_LINK_LABELS: Partial<Record<string, string>> = { donations: "Donatio
 function AppFooter() {
   return (
     <footer className="app-footer">
-      <span className="app-footer-brand"><LogoMark size={18} /> {SITE.name}</span>
+      <span className="app-footer-brand"><LogoMark size={22} /> {SITE.name}</span>
       <nav aria-label="Policies" className="app-footer-links">
         {LEGAL_DOC_ORDER.map((key) => (
           <Link key={key} to={`/legal/${key}`}>{LEGAL_LINK_LABELS[key] ?? LEGAL_DOCS[key].title}</Link>

@@ -29,7 +29,7 @@ function AuthLayout({ title, subtitle, children, image = "/landing/rickshaw.webp
       <aside className="auth-photo">
         <img src={image} alt={imageAlt} />
         <ProgressiveBlur position="bottom" height="48%" blurAmount="6px" backgroundColor="rgba(10, 20, 16, 0)" className="auth-photo-blur" />
-        <Link to="/" className="auth-brand" aria-label="StrayAid home"><LogoMark size={30} /> StrayAid</Link>
+        <Link to="/" className="auth-brand" aria-label="StrayAid home"><LogoMark size={32} tone="light" /> StrayAid</Link>
         {quote ? <div className="auth-quote">{quote}</div> : null}
       </aside>
 
