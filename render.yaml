@@ -43,6 +43,9 @@ services:
         sync: false
       - key: SERVE_MEDIA
         value: "1"
+      # Requests per minute, per client, on the public case search.
+      - key: THROTTLE_SEARCH
+        value: 60/minute
       - key: ADMIN_URL
         value: staff-panel/
       # One worker keeps the AI model inside the free plan's 512 MB.

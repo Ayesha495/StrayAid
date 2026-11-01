@@ -20,8 +20,12 @@ checks ─► deploy-database ─► deploy-backend ─┬─► deploy-web
 ```
 
 **How it really runs today:** the repository variable `BACKEND_URL` isn't set, so every deploy
-job above is skipped. Render and Vercel each deploy `main` by themselves when it is pushed, without
-waiting for the checks, and the app update is published by hand:
+job above is skipped, so a push to `main` doesn't deploy everything:
+
+- **Website:** Vercel deploys `main` by itself, without waiting for the checks.
+- **Backend:** Render only redeploys when `render.yaml` changes (a Blueprint sync). For any other
+  backend change, press Manual Deploy on Render's dashboard.
+- **App update:** published by hand:
 
 ```bash
 cd frontend/Mobile/strayaid_mobile_frontend
