@@ -10,7 +10,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.ayesha4956.strayaid_mobile_frontend",
+      "bundleIdentifier": "com.ayesha4956.strayaidmobilefrontend",
       "infoPlist": {
         "NSSpeechRecognitionUsageDescription": "Allow StrayAid to convert your speech into the report description.",
         "NSMicrophoneUsageDescription": "Allow StrayAid to use the microphone so you can dictate report descriptions."
