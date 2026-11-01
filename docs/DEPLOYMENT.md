@@ -19,9 +19,19 @@ checks ─► deploy-database ─► deploy-backend ─┬─► deploy-web
                                              └─► deploy-mobile (only if frontend/Mobile changed)
 ```
 
-Render and Vercel don't deploy `main` on their own (`autoDeployTrigger: "off"` in
-`render.yaml`, `git.deploymentEnabled.main: false` in `vercel.json`), so nothing reaches
-production without passing the checks. Other branches still get Vercel preview links.
+**How it really runs today:** the repository variable `BACKEND_URL` isn't set, so every deploy
+job above is skipped. Render and Vercel each deploy `main` by themselves when it is pushed, without
+waiting for the checks, and the app update is published by hand:
+
+```bash
+cd frontend/Mobile/strayaid_mobile_frontend
+EXPO_PUBLIC_API_URL=https://strayaid-api.onrender.com npx eas-cli@latest update --channel production --platform android --message "What changed"
+```
+
+(The Google client ids in `eas.json` must be exported too; `ci.yml` lists them.)
+
+To make the checks a real gate, set `BACKEND_URL`, `WEBSITE_URL` and the secrets below, turn off
+auto-deploy on Render, and set `git.deploymentEnabled.main` back to `false` in `vercel.json`.
 
 ## One-time setup
 
@@ -68,6 +78,20 @@ Share the download link from the build page. Build again after native changes (n
 libraries, an Expo SDK upgrade or a version bump); everything else arrives through the
 pipeline's over-the-air updates. Register the build's SHA-1 (`eas credentials -p android`)
 on the Android OAuth client for Google sign-in.
+
+### Demo data
+
+The live site can show the fake demo data, with a "Demo data" notice on every page. Demo photos
+ship inside the server image (`backend/demo_images`), because the free host wipes uploads.
+
+1. In GitHub, under Settings → Environments → `production`, add the secrets `DEMO_PASSWORD`
+   (12+ characters) and `PRODUCTION_DATABASE_URL` (Neon's direct connection string).
+2. Actions → **Seed demo data** → Run workflow → `everything`.
+3. Before a presentation, run it again with `stories`: demo stories only last 24 hours.
+
+Demo sign-ins use `@strayaid.local` addresses with `DEMO_PASSWORD`. Photos uploaded on the live site
+still vanish on the next redeploy. When real users arrive, `seed_demo_data --production --remove`
+deletes the demo accounts and everything they own, and the notice disappears with them.
 
 ### Security setup
 

@@ -76,7 +76,8 @@ about 512 MB for the AI model.
 ## Open items
 
 1. Switch production to the least-privilege role (below).
-2. Set the repository secrets and variable for backups, then do one test restore.
+2. Set `PRODUCTION_DATABASE_URL`, `BACKUP_PASSPHRASE` and the variable `BACKUP_ENABLED`, then
+   do one test restore.
 3. Schedule `purge_audit_log`, for example monthly.
 4. Confirm `CLIENT_IP_HEADER` on Render: after deploying, check that audit events show real
    client addresses rather than proxy ones.

@@ -25,7 +25,7 @@ jobs:
           sudo apt-get install -y postgresql-client-17
       - name: Dump and encrypt
         env:
-          DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
           BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
         run: |
           /usr/lib/postgresql/17/bin/pg_dump --format=custom --no-owner "$DATABASE_URL" \

@@ -22,7 +22,9 @@ RUN DEBUG=1 python manage.py download_ai_model \
     && DJANGO_SECRET_KEY=build-only python manage.py collectstatic --noinput
 
 # Run as an unprivileged user; only uploaded media needs to be writable.
-RUN useradd --create-home --uid 1000 strayaid && mkdir -p /app/media && chown -R strayaid /app/media
+# Demo photos live in the image, so they survive the free host's wiped disk.
+RUN useradd --create-home --uid 1000 strayaid && mkdir -p /app/media && cp -r demo_images/stitch /app/media/demo \
+    && chown -R strayaid /app/media
 USER strayaid
 
 EXPOSE 8000

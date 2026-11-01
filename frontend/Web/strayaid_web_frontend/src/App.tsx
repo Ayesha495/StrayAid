@@ -1,3 +1,4 @@
+import DemoNotice from "./components/DemoNotice";
 import { lazy, Suspense } from "react";
 import { BrowserRouter, Navigate, Routes, Route } from "react-router-dom";
 import { MotionConfig } from "motion/react";
@@ -45,6 +46,7 @@ function App() {
     <BrowserRouter>
       <ToastProvider>
         <ShellProvider>
+          <DemoNotice />
           <Suspense fallback={<div className="page-loading"><Spinner label="Loading page" /></div>}>
           <Routes>
             {/* Public routes */}

@@ -75,8 +75,8 @@ React site, "Mobile" the Expo app, "Backend" the Django API.
    gets a new key from the environment), but change the local Postgres password if it is
    used anywhere else. The Google client JSON had no client secret, so nothing needs
    rotating there.
-3. **Demo data on the live site would look like real activity.** If the viva needs the live
-   site seeded, say on the site that it is demo data.
+3. **Demo data on the live site could look like real activity.** The API reports when demo
+   accounts exist, and the website and app then show a "Demo data" notice.
 4. **Other uploads are public URLs.** Animal, report and avatar photos are public by design.
    Receipts and chat photos now need a signed link that expires after 6 hours (`core/media.py`).
 5. **No in-app reporting of abusive content** (see PECA above).

@@ -661,7 +661,7 @@ class PublicHomeEndpointTests(MediaEnabledAPITestCase):
         response = self.client.get("/api/cases/stats/")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, {"rescued_total": 1, "rescued_today": 1})
+        self.assertEqual(response.data, {"rescued_total": 1, "rescued_today": 1, "demo_data": False})
 
 
 class ConfidenceScoreTests(APITestCase):
@@ -783,7 +783,7 @@ class CasePageTests(MediaEnabledAPITestCase):
         self.assertEqual(self.client.get("/api/cases/public/999999/").status_code, status.HTTP_404_NOT_FOUND)
 
 
-STITCH_IMAGES = settings.DEMO_IMAGES_DIR / "stitch"
+STITCH_IMAGES = settings.DEMO_OWN_IMAGES_DIR
 MODEL_PRESENT = Path(settings.AI_MODEL_PATH).exists()
 
 

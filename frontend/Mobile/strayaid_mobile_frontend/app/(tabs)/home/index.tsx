@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import DemoNotice from "../../../components/DemoNotice";
 import { HomeHeader, HomeSearchBar, ReportAnimalButton } from "../../../components/home/HomeTop";
 import PostCard from "../../../components/home/PostCard";
 import StoriesRow from "../../../components/home/StoriesRow";
@@ -126,6 +127,7 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.screen} edges={["top"]}>
+      <DemoNotice />
       <StatusBar style="dark" />
       <HomeHeader
         hasUnread={unread.notifications > 0}

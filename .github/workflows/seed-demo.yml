@@ -1,0 +1,47 @@
+name: Seed demo data
+
+# Fills the live site with the fake demo data, from a GitHub runner so the seeding (which runs
+# the AI detector on every photo) can't strain the small live server. Run it from the Actions
+# tab. Safe to repeat. Demo stories last 24 hours, so choose "stories" before a presentation,
+# and "remove" once real users arrive.
+
+on:
+  workflow_dispatch:
+    inputs:
+      what:
+        description: Everything, only bring the demo stories back, or delete all demo data
+        type: choice
+        options: [everything, stories, remove]
+        default: everything
+
+permissions:
+  contents: read
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    environment: production
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      DEBUG: "0"
+      DJANGO_SECRET_KEY: only-used-by-this-one-off-job-to-start-django-${{ github.run_id }}-0123456789
+      ALLOWED_HOSTS: localhost
+      DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+      DATABASE_SSLMODE: require
+      DEMO_PASSWORD: ${{ secrets.DEMO_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - run: pip install -r requirements.txt
+      - name: Fetch the animal detector
+        run: DEBUG=1 python manage.py download_ai_model
+      - name: Lay out the bundled photos as they are on the server
+        run: mkdir -p media && cp -r demo_images/stitch media/demo
+      - name: Seed
+        run: python manage.py seed_demo_data --production ${{ inputs.what != 'everything' && format('--{0}', inputs.what) || '' }}

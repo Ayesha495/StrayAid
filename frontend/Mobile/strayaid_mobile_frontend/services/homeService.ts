@@ -66,6 +66,7 @@ export type StoryGroup = {
 export type CommunityStats = {
   rescued_total: number;
   rescued_today: number;
+  demo_data?: boolean;
 };
 
 async function parse<T>(response: Response): Promise<T> {

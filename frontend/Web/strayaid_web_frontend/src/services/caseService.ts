@@ -25,4 +25,4 @@ export const addCaseNote = async (caseId: string | number, message: string) =>
 
 /** Community numbers for the landing page. */
 export const getCommunityStats = async () =>
-  (await PublicAPI.get<{ rescued_total: number; rescued_today: number }>("/api/cases/stats/")).data;
+  (await PublicAPI.get<{ rescued_total: number; rescued_today: number; demo_data?: boolean }>("/api/cases/stats/")).data;

@@ -3,6 +3,10 @@ from django.db import models
 
 from core.uploads import UniqueUploadPath, validate_image_size
 
+# Every account made by seed_demo_data uses this address, which is how demo data is recognised.
+DEMO_EMAIL_DOMAIN = "@strayaid.local"
+
+
 class User(AbstractUser):
     # Email is the primary login identifier across web and mobile clients.
     email = models.EmailField(unique= True)

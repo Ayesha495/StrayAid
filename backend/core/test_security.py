@@ -307,6 +307,40 @@ class InputHandlingTests(TestCase):
         self.assertEqual(clean_area(" F-7\x00\n Islamabad "), "F-7 Islamabad")
 
 
+class DemoDataTests(TestCase):
+    def test_the_apps_are_told_when_demo_data_is_present(self):
+        self.assertFalse(client_for().get("/api/cases/stats/").data["demo_data"])
+        User.objects.create_user(username="demo", email="demo@strayaid.local", password="x")
+        self.assertTrue(client_for().get("/api/cases/stats/").data["demo_data"])
+
+    def test_demo_records_move_to_the_bundled_photos_and_real_uploads_stay(self):
+        from pathlib import Path
+        from tempfile import TemporaryDirectory
+
+        from django.conf import settings
+        from django.core.files.base import ContentFile
+
+        from rescue.management.commands.seed_demo_data import Command
+
+        source = sorted(settings.DEMO_OWN_IMAGES_DIR.iterdir())[0]
+        reporter = person("reporter")
+        with TemporaryDirectory() as folder, override_settings(MEDIA_ROOT=folder):
+            demo = make_case(reporter).reports.first()
+            demo.image.save("a.jpg", ContentFile(source.read_bytes()), save=True)
+            real = make_case(reporter).reports.first()
+            real_name = real.image.name
+            missing = make_case(reporter).reports.first()
+            Path(folder, missing.image.name).unlink()
+            missing_name = missing.image.name
+            Command().use_bundled_photos()
+            demo.refresh_from_db()
+            real.refresh_from_db()
+            missing.refresh_from_db()
+        self.assertEqual(demo.image.name, f"demo/{source.name}")
+        self.assertEqual(real.image.name, real_name)
+        self.assertEqual(missing.image.name, missing_name)
+
+
 class ClientIpTests(TestCase):
     def request(self, **headers):
         return APIRequestFactory().get("/", **headers)

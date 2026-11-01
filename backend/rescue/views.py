@@ -11,6 +11,7 @@ from django.db.models.functions import Lower, Replace
 from django.utils import timezone
 
 from accounts.audit import record
+from accounts.models import DEMO_EMAIL_DOMAIN, User as Account
 from animals.models import Animal
 from core.throttles import SearchRateThrottle
 from core.uploads import validate_image_upload
@@ -426,6 +427,8 @@ def community_stats(request):
         {
             "rescued_total": Animal.objects.count(),
             "rescued_today": Animal.objects.filter(created_at__date=today).count(),
+            # Tells the apps to say so: made-up rescues mustn't pass as real ones.
+            "demo_data": Account.objects.filter(email__endswith=DEMO_EMAIL_DOMAIN).exists(),
         }
     )
 

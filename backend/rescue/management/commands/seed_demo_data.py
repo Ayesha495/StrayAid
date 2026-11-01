@@ -2,6 +2,7 @@
 
 Run:   python manage.py seed_demo_data
 Fresh: python manage.py seed_demo_data --reset   (deletes every @strayaid.local demo account first)
+Remove it all: python manage.py seed_demo_data --remove   (deletes them and seeds nothing)
 Ducky paws Rescue only: python manage.py seed_demo_data --only-ducky-paws
 Stories only (they last 24 hours): python manage.py seed_demo_data --stories
 
@@ -13,19 +14,20 @@ Every demo account uses the DEMO_PASSWORD environment variable (demo12345 locall
 No admin account is made: use `python manage.py createsuperuser` for that.
 """
 
+import hashlib
 import os
 from datetime import timedelta
 from pathlib import Path
 
+from django.apps import apps
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
-from django.db.models import Q
-from django.db.models import OuterRef, Subquery
+from django.db.models import FileField, OuterRef, Q, Subquery
 from django.utils import timezone
 
-from accounts.models import User
+from accounts.models import DEMO_EMAIL_DOMAIN, User
 from animals.models import AdoptionApplication, Animal, Sponsorship
 from chat.models import Conversation, Message
 from notifications.models import AnimalFollow, CaseFollow, Notification, OrganizationFollow
@@ -35,8 +37,8 @@ from rescue.models import Case, CaseUpdate, Report
 from rescue.signals import STATUS_MESSAGES
 from rescue.utils.scoring import refresh_case_score, score_report
 
-STITCH_IMAGES = settings.DEMO_IMAGES_DIR / "stitch"
-DEMO_DOMAIN = "@strayaid.local"
+STITCH_IMAGES = settings.DEMO_OWN_IMAGES_DIR
+DEMO_DOMAIN = DEMO_EMAIL_DOMAIN
 LOCAL_DEMO_PASSWORD = "demo12345"
 
 
@@ -861,6 +863,11 @@ class Command(BaseCommand):
             help=f"Delete all {DEMO_DOMAIN} demo accounts (and everything they own) before seeding.",
         )
         parser.add_argument(
+            "--remove",
+            action="store_true",
+            help=f"Delete all {DEMO_DOMAIN} demo accounts (and everything they own) and seed nothing.",
+        )
+        parser.add_argument(
             "--stories",
             action="store_true",
             help="Only bring every demo story back inside its 24-hour window (and add any missing ones).",
@@ -880,6 +887,33 @@ class Command(BaseCommand):
         self.password = self.demo_password(options["production"])
         self.own_photos_only = not settings.DEBUG
         self.seed(options)
+        if self.own_photos_only:
+            self.use_bundled_photos()
+
+    def use_bundled_photos(self):
+        """Point demo records at the copies inside the server image (media/demo). The live host
+        wipes uploads on every restart, and this command may not even run on that machine, so
+        a photo saved the normal way would soon be a broken image."""
+        bundled = {hashlib.sha256(path.read_bytes()).hexdigest(): path.name for path in STITCH_IMAGES.iterdir()}
+        for model in apps.get_models():
+            for field in model._meta.concrete_fields:
+                if not isinstance(field, FileField):
+                    continue
+                rows = (
+                    model._default_manager.exclude(**{f"{field.name}__isnull": True})
+                    .exclude(**{field.name: ""})
+                    .exclude(**{f"{field.name}__startswith": "demo/"})
+                )
+                for row in rows:
+                    stored = getattr(row, field.name)
+                    # Real uploads only exist on the live server, so they are never touched here.
+                    if not stored.storage.exists(stored.name):
+                        continue
+                    with stored.storage.open(stored.name, "rb") as file:
+                        name = bundled.get(hashlib.sha256(file.read()).hexdigest())
+                    if name:
+                        model._default_manager.filter(pk=row.pk).update(**{field.name: f"demo/{name}"})
+                        stored.storage.delete(stored.name)
 
     def real_photo(self, relative, crop=None):
         """A photo from images/, optionally cropped to (left, top, right, bottom) fractions.
@@ -934,9 +968,11 @@ class Command(BaseCommand):
             self.seed_ducky_paws()
             return
 
-        if options["reset"]:
+        if options["reset"] or options["remove"]:
             deleted, _ = User.objects.filter(email__endswith=DEMO_DOMAIN).exclude(is_superuser=True).delete()
             self.stdout.write(self.style.WARNING(f"Reset: removed {deleted} demo records."))
+            if options["remove"]:
+                return
 
         organizations = self.seed_organizations()
         reporters = self.seed_reporters()

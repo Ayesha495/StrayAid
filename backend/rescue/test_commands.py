@@ -101,7 +101,7 @@ class SeedDemoDataTests(TempMediaTestCase):
 
         command = Command()
         command.own_photos_only = True
-        own = {path.read_bytes() for path in (settings.DEMO_IMAGES_DIR / "stitch").iterdir()}
+        own = {path.read_bytes() for path in settings.DEMO_OWN_IMAGES_DIR.iterdir()}
         for downloaded in ("organizations/images (3).jpg", "reports/gang-cats-Alaksa.webp"):
             self.assertIn(command.real_photo(downloaded, crop=(0, 0, 0.5, 0.5)).read(), own)
 

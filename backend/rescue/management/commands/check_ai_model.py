@@ -29,7 +29,7 @@ class Command(BaseCommand):
             raise CommandError("The model file exists but couldn't be loaded (see the warning above).")
         self.stdout.write(f"Loaded in {time.monotonic() - started:.1f}s\n")
 
-        samples = settings.DEMO_IMAGES_DIR / "stitch"
+        samples = settings.DEMO_OWN_IMAGES_DIR
         photos = [Path(photo) for photo in options["photos"]] or [samples / name for name in SAMPLES]
         for photo in photos:
             if not photo.exists():

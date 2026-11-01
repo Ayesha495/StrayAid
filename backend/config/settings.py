@@ -239,7 +239,10 @@ DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER or "StrayAi
 # Free ONNX animal detector, fetched with `python manage.py download_ai_model`.
 AI_MODEL_PATH = Path(os.getenv("AI_MODEL_PATH", BASE_DIR / "ai_models" / "ssd_mobilenet_v1_12.onnx"))
 
-# Photos used by seed_demo_data and the AI model check (the repository's images/ folder).
+# The team's own photos: they ship inside the server image, as media/demo (see the Dockerfile).
+DEMO_OWN_IMAGES_DIR = BASE_DIR / "demo_images" / "stitch"
+
+# Downloaded photos used only when seeding a local computer (the repository's images/ folder).
 DEMO_IMAGES_DIR = Path(os.getenv("DEMO_IMAGES_DIR", BASE_DIR.parent / "images"))
 
 ADMIN_URL = os.getenv("ADMIN_URL", "admin/")
