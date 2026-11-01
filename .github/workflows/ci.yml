@@ -63,8 +63,13 @@ jobs:
         run: python manage.py test core.test_concurrency --settings=config.test_settings_postgres --noinput
       - name: Tests with coverage
         run: |
-          coverage run --source=. --omit="venv/*,*/migrations/*,*/tests.py,*/test_*.py,manage.py" manage.py test --settings=config.test_settings --noinput
+          coverage run --source=. --omit="venv/*,*/migrations/*,*/tests.py,*/test_*.py,manage.py" manage.py test --settings=config.test_settings --noinput --testrunner=xmlrunner.extra.djangotestrunner.XMLTestRunner
           coverage report --fail-under=85
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: results-backend
+          path: backend/test-reports/backend.xml
 
   web:
     name: Web (React)
@@ -84,7 +89,15 @@ jobs:
         run: npm audit --omit=dev --audit-level=high
       - run: npm run lint
       - name: Tests (including accessibility and colour contrast)
-        run: npx jest --ci
+        run: npx jest --ci --reporters=default --reporters=jest-junit
+        env:
+          JEST_JUNIT_OUTPUT_FILE: test-reports/website.xml
+          JEST_JUNIT_SUITE_NAME: "Website: {title}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: results-website
+          path: frontend/Web/strayaid_web_frontend/test-reports/website.xml
       - name: Type check and production build
         run: npm run build
         env:
@@ -111,11 +124,48 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - name: Tests (including accessibility and colour contrast)
-        run: npx jest --ci
+        run: npx jest --ci --reporters=default --reporters=jest-junit
+        env:
+          JEST_JUNIT_OUTPUT_FILE: test-reports/mobile.xml
+          JEST_JUNIT_SUITE_NAME: "Mobile: {title}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: results-mobile
+          path: frontend/Mobile/strayaid_mobile_frontend/test-reports/mobile.xml
       - name: Known vulnerabilities in shipped dependencies
         # Remaining advisories sit in Expo's build tooling and need an Expo SDK upgrade.
         continue-on-error: true
         run: npm audit --omit=dev --audit-level=critical
+
+  test-report:
+    name: Test report (Allure)
+    needs: [backend, web, mobile]
+    if: always()
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: testing
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: testing/package-lock.json
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: results-*
+          merge-multiple: true
+          path: testing/results
+      - run: node tidy-results.mjs
+      - run: npx allure generate ./results
+      - uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: testing/report
+          retention-days: 30
 
   secrets:
     name: Secret scan

@@ -9,10 +9,11 @@ export default defineConfig({
     trace: "on-first-retry",
   },
   webServer: {
-    command: "npm run dev -- --host 127.0.0.1 --port 4173",
+    // The real production build: it's what people get, and it loads far faster than the dev server.
+    command: "npx vite build && npx vite preview --host 127.0.0.1 --port 4173",
     url: "http://127.0.0.1:4173",
     reuseExistingServer: true,
-    timeout: 120000,
+    timeout: 240000,
   },
   projects: [
     {

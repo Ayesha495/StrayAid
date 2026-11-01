@@ -43,3 +43,13 @@ playwright-report/
 .DS_Store
 Thumbs.db
 .neon
+
+# Generated test and load-test reports
+testing/results/
+testing/report/
+testing/history.jsonl
+testing/load/*.html
+testing/node_modules/
+backend/test-reports/
+frontend/*/*/test-reports/
+testing/load/load-report.html

@@ -28,6 +28,10 @@ CACHES = {"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
 PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 
+# Where testing/run-tests.sh collects results for the Allure report (JUnit XML).
+TEST_OUTPUT_DIR = os.getenv("TEST_REPORT_DIR", "test-reports")
+TEST_OUTPUT_FILE_NAME = os.getenv("TEST_REPORT_NAME", "backend.xml")
+
 # Score reports inside the request so tests see the result straight away.
 AI_SCORE_IN_BACKGROUND = False
 

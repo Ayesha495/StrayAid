@@ -1,0 +1,13 @@
+{
+  "name": "strayaid-test-reports",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "report": "bash ./run-tests.sh",
+    "open": "allure open ./report",
+    "load": "bash ./load/run.sh"
+  },
+  "devDependencies": {
+    "allure": "^3.22.1"
+  }
+}

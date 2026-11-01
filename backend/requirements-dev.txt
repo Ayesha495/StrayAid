@@ -2,3 +2,4 @@
 coverage==7.10.7
 pip-audit==2.9.0
 bandit==1.8.6
+unittest-xml-reporting==4.0.0

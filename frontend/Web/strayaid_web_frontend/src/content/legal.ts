@@ -12,7 +12,7 @@ export type LegalDoc = {
 
 export const LEGAL_DOC_ORDER: LegalDocKey[] = ["terms", "privacy", "cookies", "donations", "delete-account"];
 
-const UPDATED = "24 October 2026";
+const UPDATED = "1 November 2026";
 
 export const LEGAL_DOCS: Record<LegalDocKey, LegalDoc> = {
   terms: {
@@ -100,7 +100,7 @@ export const LEGAL_DOCS: Record<LegalDocKey, LegalDoc> = {
       {
         heading: "Services that help run StrayAid",
         body:
-          "Google, only if you choose Continue with Google. Expo, to deliver push notifications. OpenStreetMap, which provides the map pictures and so sees the address of the device loading them. Gmail, to send password reset codes. The hosting provider that runs our server and database. Photos are checked for animals on our own server, not by an outside AI service.",
+          "Google, only if you choose Continue with Google. Expo, to deliver push notifications. OpenStreetMap, which provides the map pictures and so sees the address of the device loading them. Gmail, to send password reset codes. The hosting provider that runs our server and database. On the website only, Vercel Web Analytics and Speed Insights count page visits and measure how fast pages load. They use no cookies and don't identify you, and the phone app doesn't use them. Photos are checked for animals on our own server, not by an outside AI service.",
       },
       {
         heading: "How long we keep it",
@@ -145,7 +145,7 @@ export const LEGAL_DOCS: Record<LegalDocKey, LegalDoc> = {
       {
         heading: "Why there is no cookie banner",
         body:
-          "A consent banner is needed for optional cookies such as analytics or advertising. StrayAid only stores what is needed to keep you signed in, so there is nothing optional to accept or refuse. If we ever add optional cookies, we'll ask first.",
+          "A consent banner is needed for optional cookies such as analytics or advertising. StrayAid only stores what is needed to keep you signed in, and the website's visit counts and speed measurements use no cookies, so there is nothing optional to accept or refuse. If we ever add optional cookies, we'll ask first.",
       },
       {
         heading: "The mobile app",
