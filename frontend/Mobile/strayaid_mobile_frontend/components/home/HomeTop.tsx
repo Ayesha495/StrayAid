@@ -20,7 +20,7 @@ export function HomeHeader({ onNotificationsPress, hasUnread, onMessagesPress, u
     <View style={styles.header}>
       <View style={styles.brand}>
         <View style={styles.logoBadge}>
-          <LogoMark size={22} color={colors.primary} />
+          <LogoMark size={24} />
         </View>
         <Text style={styles.wordmark}>StrayAid</Text>
       </View>

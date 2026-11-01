@@ -33,7 +33,7 @@
   font-weight: 800;
 }
 
-.site-brand svg { border-radius: 7px; box-shadow: 0 2px 6px rgba(18, 37, 29, 0.25); }
+.site-brand svg { flex-shrink: 0; }
 
 .site-spotlight { padding: 0 !important; }
 .site-nav .spotlight-nav {
@@ -102,7 +102,7 @@
 .site-nav-wrap { background: rgba(255, 255, 255, 0.88); box-shadow: none; backdrop-filter: blur(10px); }
 .site-nav { height: 60px; }
 .site-brand { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
-.site-brand svg { border-radius: 6px; box-shadow: none; }
+
 .site-nav .spotlight-nav { --spotlight-color: rgba(0, 0, 0, 0.05); --ambience-color: var(--navy-900); background: transparent; box-shadow: none; }
 .site-nav .spotlight-nav a { color: var(--navy-500); font-size: 14px; font-weight: 500; }
 .site-nav .spotlight-nav a:hover, .site-nav .spotlight-nav a.text-black { color: var(--navy-900); }

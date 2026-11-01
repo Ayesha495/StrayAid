@@ -54,7 +54,7 @@
   font-weight: 800;
 }
 
-.auth-brand svg { border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35); }
+.auth-brand svg { flex-shrink: 0; }
 
 .auth-quote {
   max-width: 34ch;

@@ -19,7 +19,7 @@ function SiteFooter() {
     <footer className="site-footer">
       <div className="site-footer-inner">
         <div className="site-footer-brand">
-          <span className="site-footer-logo"><LogoMark size={28} /> {SITE.name}</span>
+          <span className="site-footer-logo"><LogoMark size={36} tone="light" /> {SITE.name}</span>
           <p>Connecting people who spot injured strays with the rescue teams who can help, in {SITE.area}.</p>
           <p className="site-footer-about">{SITE.about}</p>
           {SITE.contactEmail ? (

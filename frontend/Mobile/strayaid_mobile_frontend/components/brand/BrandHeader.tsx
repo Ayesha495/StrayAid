@@ -8,7 +8,7 @@ export function BrandTitle({ title }: { title: string }) {
   return (
     <View style={styles.row} accessible accessibilityRole="header" accessibilityLabel={`StrayAid, ${title}`}>
       <View style={styles.badge}>
-        <LogoMark size={26} color={colors.primary} />
+        <LogoMark size={28} />
       </View>
       <View>
         <Text style={styles.eyebrow}>STRAYAID RESCUE</Text>
@@ -22,7 +22,7 @@ export function BrandTitle({ title }: { title: string }) {
 export function BrandBadge({ size = 64 }: { size?: number }) {
   return (
     <View style={[styles.circle, { width: size, height: size, borderRadius: size / 2 }]}>
-      <LogoMark size={size * 0.56} color={colors.primary} />
+      <LogoMark size={size * 0.6} />
     </View>
   );
 }
