@@ -51,10 +51,18 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#0B1114",
+          "backgroundColor": "#17594A",
           "dark": {
-            "backgroundColor": "#0B1114"
+            "image": "./assets/images/splash-icon.png",
+            "backgroundColor": "#17594A"
           }
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#17594A"
         }
       ],
       "expo-web-browser",

@@ -1,4 +1,5 @@
 import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
+import Constants from "expo-constants";
 import { Image } from "expo-image";
 import { Href, router, useFocusEffect } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -17,6 +18,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { BrandBadge } from "../../../components/brand/BrandHeader";
+import LogoMark from "../../../components/brand/Logo";
 import Toggle from "../../../components/ui/Toggle";
 import { useSession } from "../../../hooks/useSession";
 import { SessionExpiredError } from "../../../services/apiClient";
@@ -564,6 +566,13 @@ export default function ProfileScreen() {
             onPress={() => router.push("/profile/delete-account" as Href)}
           />
         </View>
+
+        <View style={styles.about} accessible accessibilityLabel={`About StrayAid, version ${Constants.expoConfig?.version ?? ""}`}>
+          <LogoMark size={44} />
+          <Text style={styles.aboutName}>StrayAid</Text>
+          <Text style={styles.aboutText}>Connecting people who spot stray animals in need with rescue teams nearby.</Text>
+          <Text style={styles.aboutMeta}>Version {Constants.expoConfig?.version} · A final-year project</Text>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -760,6 +769,10 @@ const styles = StyleSheet.create({
   headerRight: { flexDirection: "row", alignItems: "center", gap: 4 },
   headerButton: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center" },
   scroll: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 120, gap: 16 },
+  about: { alignItems: "center", gap: 4, paddingTop: 12 },
+  aboutName: { fontFamily: fonts.displayExtraBold, fontSize: 18, color: colors.primary, marginTop: 6 },
+  aboutText: { fontFamily: fonts.body, fontSize: 13, lineHeight: 19, color: colors.inkMuted, textAlign: "center", maxWidth: 260 },
+  aboutMeta: { fontFamily: fonts.body, fontSize: 12, color: colors.inkMuted },
   card: { padding: 16, gap: 12, borderRadius: 12, backgroundColor: colors.surface, ...shadow },
   who: { flexDirection: "row", alignItems: "flex-start", gap: 12 },
   avatar: {
