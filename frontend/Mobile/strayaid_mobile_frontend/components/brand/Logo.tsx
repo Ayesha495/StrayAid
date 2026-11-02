@@ -4,13 +4,11 @@ import Svg, { Circle, Ellipse, G, Path } from "react-native-svg";
 // Every screen draws the logo through this component, so changing the artwork here updates
 // the whole app. "light" is for dark backgrounds (splash, the sign-in tile), where the green
 // pin would disappear: the same mark centred on a white circle, and `size` is the circle's
-// width. "white" is the reversed mark for brand-green backgrounds (the native splash and the
-// app's own splash): a white pin with the paw and cross in green. Otherwise the mark is
-// taller than it is wide, so `size` sets its height.
+// width. Otherwise the mark is taller than it is wide, so `size` sets its height.
 
 type Props = {
   size?: number;
-  tone?: "color" | "light" | "white";
+  tone?: "color" | "light";
 };
 
 // The official artwork, traced from the design (assets/images/brand/strayaid-logo.svg).
@@ -21,13 +19,12 @@ const ORANGE_DISC = {"cx":257.4,"cy":478.8,"rx":66.2,"ry":28.2};
 const GREEN = "#17594A";
 
 export default function LogoMark({ size = 80, tone = "color" }: Props) {
-  const white = tone === "white";
   const mark = (
     <>
       <Ellipse {...ORANGE_DISC} fill="#FF852E" />
       <Ellipse {...AMBER_DISC} fill="#FFBD59" />
-      <Path d={PIN} fill={white ? "#FFFFFF" : GREEN} />
-      <Path d={PAW_AND_CROSS} fill={white ? GREEN : "#FFFFFF"} fillRule="evenodd" />
+      <Path d={PIN} fill={GREEN} />
+      <Path d={PAW_AND_CROSS} fill="#FFFFFF" fillRule="evenodd" />
     </>
   );
 
