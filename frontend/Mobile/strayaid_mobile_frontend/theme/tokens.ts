@@ -29,8 +29,8 @@ export const colors = {
   successSoft: "#E8F7F2",
 
   // Splash and photo overlays
-  // The brand green, so the native splash hands over to the app without a flash.
-  splashBase: "#17594A",
+  // The native splash's cream, so it hands over to the app without a flash.
+  splashBase: "#FBF9F8",
 };
 
 // Font family names registered in app/_layout.tsx.
