@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Activity, ArrowRight, Download, Folder, HeartHandshake, MapPin, PawPrint, Plus } from "lucide-react";
 import AnimalCard from "../components/AnimalCard";
+import { isInCare } from "../utils/animals";
 import ConcentricRingChart from "../components/ConcentricRingChart";
 import CasesTrendChart from "../components/CasesTrendChart";
 import CaseLocationModal from "../components/CaseLocationModal";
@@ -37,7 +38,7 @@ function Dashboard() {
   const [activityFilter, setActivityFilter] = useState<ActivityFilter>("all");
   const [mapCase, setMapCase] = useState<Case | null>(null);
 
-  const animalsUnderCare = animals.filter((animal) => animal.status !== "adopted");
+  const animalsUnderCare = animals.filter(isInCare);
   const visibleAnimals = animalsUnderCare.slice(0, animalPreviewCount);
 
   const loadCasesAndDashboard = () => {
@@ -352,7 +353,6 @@ function Dashboard() {
                   key={animal.id}
                   animal={animal}
                   compact
-                  footer={<Link className="am-public-link" to={`/animals/${animal.id}`}>View profile</Link>}
                 />
               ))}
             </div>

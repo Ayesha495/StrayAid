@@ -106,45 +106,6 @@
   -webkit-line-clamp: 2;
 }
 
-/* Recovering / Adoptable / Adopted: a small segmented control, the one boxed thing here. */
-.am-lifecycle-row {
-  display: flex;
-  margin-top: 4px;
-  padding: 2px;
-  border-radius: 6px;
-  background: var(--navy-50);
-  box-shadow: inset 0 0 0 1px var(--line);
-}
-
-.am-lifecycle-pill {
-  flex: 1;
-  padding: 5px 6px;
-  border: none;
-  border-radius: 5px;
-  background: transparent;
-  color: var(--navy-500);
-  font-size: 12px;
-  font-weight: 500;
-  text-align: center;
-  cursor: pointer;
-  transition: background-color 0.15s var(--ease-out), color 0.15s var(--ease-out), transform 0.1s var(--ease-out);
-}
-
-span.am-lifecycle-pill { cursor: default; }
-button.am-lifecycle-pill:active:not(:disabled) { transform: scale(0.97); }
-
-@media (hover: hover) and (pointer: fine) {
-  button.am-lifecycle-pill:hover:not(:disabled) { color: var(--navy-900); }
-}
-
-.am-lifecycle-pill.is-active {
-  background: #fff;
-  color: var(--navy-900);
-  box-shadow: 0 0 0 1px var(--line), 0 1px 2px rgba(0, 0, 0, 0.06);
-}
-
-.am-lifecycle-pill:disabled { cursor: default; }
-
 .am-public-link {
   display: inline-flex;
   align-items: center;
@@ -158,11 +119,19 @@ button.am-lifecycle-pill:active:not(:disabled) { transform: scale(0.97); }
 
 .am-public-link:hover { text-decoration: underline; text-underline-offset: 3px; }
 
-/* Compact (dashboard): one line of details. */
-.am-animal-card:not(:has(.am-lifecycle-row)) .am-animal-breed { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* One line of details. */
+.am-animal-card .am-animal-breed { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* Colour pass: the status is a tinted pill. */
 .am-status { height: 22px; padding: 0 8px; border-radius: 5px; background: var(--navy-50); }
 .am-status-amber { background: var(--amber-50); color: #a2610b; }
 .am-status-purple { background: #f1ecfd; color: #6a46c4; }
 .am-status-green { background: var(--green-50); color: var(--green-800); }
+
+/* The card opens the animal's record. */
+.am-animal-media { display: block; }
+.am-animal-link { color: inherit; text-decoration: none; }
+.am-animal-link:hover { color: var(--green-700); }
+.am-animal-link:focus-visible { outline: 2px solid var(--green-700); outline-offset: 2px; border-radius: 2px; }
+.am-animal-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.am-animal-tags:empty { display: none; }

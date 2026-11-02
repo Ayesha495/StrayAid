@@ -168,7 +168,7 @@ function RescueBoard({ cases, animals = [], heading = "Case Management", copy, o
             {previewItems(rescuedAnimals).length ? previewItems(rescuedAnimals).map((animal) => {
               const days = daysInCare(animal.created_at);
               return (
-                <Link className="status-card status-card-green" key={animal.id} to={`/animals/${animal.id}`}>
+                <Link className="status-card status-card-green" key={animal.id} to={`/animals/${animal.id}/manage`}>
                   <strong>{animal.name}</strong>
                   <p>{animal.description || "Animal profile ready for care updates."}</p>
                   <p className="status-card-meta">
@@ -186,7 +186,7 @@ function RescueBoard({ cases, animals = [], heading = "Case Management", copy, o
               <span className="stage-count">{adoptionAnimals.length}</span>
             </div>
             {previewItems(adoptionAnimals).length ? previewItems(adoptionAnimals).map((animal) => (
-              <Link className="status-card status-card-purple" key={animal.id} to={`/animals/${animal.id}`}>
+              <Link className="status-card status-card-purple" key={animal.id} to={`/animals/${animal.id}/manage`}>
                 <strong>{animal.name}</strong>
                 <p>{animal.description || "Ready for sponsors and adopters."}</p>
                 <p className="status-card-meta">Listed {formatRelativeTime(animal.created_at)}</p>

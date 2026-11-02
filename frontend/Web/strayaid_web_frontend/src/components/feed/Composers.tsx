@@ -31,10 +31,10 @@ function useImage(initial: string | null = null) {
 }
 
 /** Create or edit a feed post about one of the organization's animals. */
-export function PostComposer({ animals, post, onClose, onSaved }: { animals: Animal[]; post?: Post | null; onClose: () => void; onSaved: (post: Post, created: boolean) => void }) {
+export function PostComposer({ animals, post, initialCategory, onClose, onSaved }: { animals: Animal[]; post?: Post | null; initialCategory?: string; onClose: () => void; onSaved: (post: Post, created: boolean) => void }) {
   const editing = Boolean(post);
   const [animal, setAnimal] = useState(String(post?.animal?.id ?? animals[0]?.id ?? ""));
-  const [category, setCategory] = useState<string>(post?.category || "medical");
+  const [category, setCategory] = useState<string>(post?.category || initialCategory || "medical");
   const [title, setTitle] = useState(post?.title ?? "");
   const [content, setContent] = useState(post?.content ?? "");
   const image = useImage(post?.image ?? null);

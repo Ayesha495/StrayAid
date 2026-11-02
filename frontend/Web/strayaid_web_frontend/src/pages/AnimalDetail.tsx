@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { motion } from "motion/react";
 import {
@@ -21,13 +21,14 @@ import {
   Palette,
   PawPrint,
   Pencil,
+  Scissors,
   Share2,
   ShieldCheck,
   Syringe,
   Users,
   VenusAndMars,
 } from "lucide-react";
-import { getAnimal, getAnimalPosts, updateAnimal } from "../services/platformService";
+import { getAnimal, getAnimalPosts, getMedicalRecords, updateAnimal } from "../services/platformService";
 import { followAnimal, getFollowStatus, sponsorAnimal } from "../services/socialService";
 import { getCaseUpdates, getPublicCase } from "../services/caseService";
 import { startConversation } from "../services/chatService";
@@ -38,7 +39,9 @@ import { useToast } from "../ui/Toast";
 import Avatar from "../ui/Avatar";
 import StatusChip from "../ui/StatusChip";
 import { EmptyState, ErrorState, Skeleton } from "../ui/States";
+import AnimalFact from "../components/AnimalFact";
 import FundingMeter from "../components/FundingMeter";
+import GoalEditor from "../components/GoalEditor";
 import SectionNav from "../components/SectionNav";
 import UpdateGrid from "../components/UpdateGrid";
 import AdoptForm from "../components/support/AdoptForm";
@@ -47,14 +50,8 @@ import { displayNameOf, formatDate } from "../utils/format";
 import { formatRelativeTime } from "../utils/time";
 import { errorMessage } from "../utils/errors";
 import { statusLabel } from "../utils/statusStyles";
+import { HEALTH, LEFT_CARE, ageLabel, formatDay, medicalKind } from "../utils/animals";
 import "./AnimalDetail.css";
-
-const HEALTH: Record<string, { label: string; tone: string }> = {
-  healthy: { label: "Healthy", tone: "emerald" },
-  minor_issues: { label: "Minor issues", tone: "amber" },
-  under_treatment: { label: "Under treatment", tone: "blue" },
-  special_needs: { label: "Special needs", tone: "coral" },
-};
 
 const ADOPTION_STEPS = [
   { title: "Apply online", text: "A short form about your home and routine. About 5 minutes." },
@@ -69,59 +66,6 @@ const reveal = {
   transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] as const },
 };
 
-function Fact({ icon, label, value, tone }: { icon: ReactNode; label: string; value: ReactNode; tone: string }) {
-  return (
-    <div className="animal-fact">
-      <span className={`animal-fact-icon tone-${tone}`} aria-hidden="true">{icon}</span>
-      <span>
-        <span className="animal-fact-label">{label}</span>
-        <span className="animal-fact-value">{value}</span>
-      </span>
-    </div>
-  );
-}
-
-/** Lets the animal's organization set or change the care funding goal in place. */
-function GoalEditor({ goal, onSave }: { goal: number; onSave: (value: number) => Promise<void> }) {
-  const [editing, setEditing] = useState(false);
-  const [value, setValue] = useState(String(goal || ""));
-  const [saving, setSaving] = useState(false);
-  const input = useRef<HTMLInputElement>(null);
-
-  // Opening the editor moves the cursor into it, for keyboard and screen reader users alike.
-  useEffect(() => {
-    if (editing) input.current?.focus();
-  }, [editing]);
-
-  if (!editing) {
-    return (
-      <button type="button" className="btn btn-ghost btn-sm goal-edit" onClick={() => setEditing(true)}>
-        <Pencil size={14} aria-hidden="true" /> {goal ? "Edit care goal" : "Set a care goal"}
-      </button>
-    );
-  }
-  return (
-    <form
-      className="goal-form"
-      onSubmit={async (event) => {
-        event.preventDefault();
-        setSaving(true);
-        try {
-          await onSave(Math.max(0, Number(value) || 0));
-          setEditing(false);
-        } finally {
-          setSaving(false);
-        }
-      }}
-    >
-      <label className="sr-only" htmlFor="goal-input">Care funding goal in rupees</label>
-      <input id="goal-input" className="input" type="number" min={0} step={500} value={value} onChange={(event) => setValue(event.target.value)} placeholder="Rs" ref={input} />
-      <button type="submit" className="btn btn-primary btn-sm" disabled={saving}>Save</button>
-      <button type="button" className="btn btn-ghost btn-sm" onClick={() => setEditing(false)}>Cancel</button>
-    </form>
-  );
-}
-
 const daysSince = (iso: string) => Math.max(0, Math.floor((Date.now() - Date.parse(iso)) / 86_400_000));
 
 /** An animal's profile: who they are, how they're doing, and how people can help. */
@@ -133,6 +77,7 @@ function AnimalDetail() {
   const { user, isOrganization, organization: myOrganization } = useShell();
   const animal = useApi(() => getAnimal(animalId), `${animalId}:${user?.id ?? ""}`);
   const posts = useApi(() => getAnimalPosts(animalId), animalId);
+  const medical = useApi(() => getMedicalRecords(animalId), `${animalId}:${user?.id ?? ""}`);
   const follow = useApi(
     () => (user && !isOrganization ? getFollowStatus({ animal_id: Number(animalId) }) : Promise.resolve({ following_animal: false })),
     `${animalId}:${user?.id ?? ""}`,
@@ -169,8 +114,13 @@ function AnimalDetail() {
   const following = Boolean(follow.data?.following_animal);
   const adoptable = data.status === "adoptable";
   const adopted = data.status === "adopted";
+  // Released or passed away: the profile stays as a record but asks nobody for help.
+  const leftCare = LEFT_CARE.includes(data.status);
+  const closedRecord = leftCare && !adopted;
   const health = data.health ? HEALTH[data.health] : null;
-  const subtitle = [data.breed || data.species, data.age !== null && data.age !== undefined ? `${data.age} ${data.age === 1 ? "year" : "years"} old` : "", data.gender].filter(Boolean).join(" · ");
+  const age = ageLabel(data.age);
+  const subtitle = [data.breed || data.species, age ? (data.age ? `${age} old` : age) : "", data.gender].filter(Boolean).join(" · ");
+  const sharedHistory = (medical.data ?? []).filter((entry) => entry.is_public);
   // Status changes after the first report ("reported" is shown as the first step already).
   const storySteps = (history.data ?? []).filter((update) => update.status && update.status !== "reported").slice().reverse();
   const postCount = posts.data?.length ?? 0;
@@ -223,7 +173,7 @@ function AnimalDetail() {
           <FileText size={18} /> {waiting ? `Review ${waiting} application${waiting === 1 ? "" : "s"}` : `See ${applicants.length} application${applicants.length === 1 ? "" : "s"}`}
         </Link>
       ) : null}
-      <Link to="/animals" className="btn btn-secondary btn-lg btn-block"><Pencil size={18} /> Manage in Animals</Link>
+      <Link to={`/animals/${data.id}/manage`} className="btn btn-secondary btn-lg btn-block"><Pencil size={18} /> Manage {data.name}'s record</Link>
     </div>
   ) : !canSupport ? null : adoptable ? (
     extras.my_application ? (
@@ -235,7 +185,7 @@ function AnimalDetail() {
         <Heart size={18} /> Apply to adopt {data.name}
       </button>
     )
-  ) : !adopted ? (
+  ) : !leftCare ? (
     <button type="button" className="btn btn-amber btn-lg btn-block" onClick={() => (user ? setDialog("sponsor") : requireLogin())}>
       <HandCoins size={18} /> Sponsor {data.name}
     </button>
@@ -295,14 +245,15 @@ function AnimalDetail() {
             <h2>Meet {data.name}</h2>
             <p className="animal-about">{data.description || `The rescue team hasn't written about ${data.name} yet.`}</p>
             <div className="animal-facts">
-              {data.age !== null && data.age !== undefined ? <Fact tone="blue" icon={<Cake size={18} />} label="Age" value={`${data.age} ${data.age === 1 ? "year" : "years"}`} /> : null}
-              {data.gender ? <Fact tone="coral" icon={<VenusAndMars size={18} />} label="Gender" value={data.gender} /> : null}
-              {data.breed ? <Fact tone="green" icon={<PawPrint size={18} />} label="Breed" value={data.breed} /> : null}
-              {data.color ? <Fact tone="amber" icon={<Palette size={18} />} label="Colour" value={data.color} /> : null}
-              <Fact tone="emerald" icon={<Syringe size={18} />} label="Vaccinated" value={data.vaccinated ? "Yes" : "Not yet"} />
-              <Fact tone="blue" icon={<CalendarHeart size={18} />} label="In care for" value={`${daysSince(data.created_at)} days`} />
-              {data.microchip_id ? <Fact tone="navy" icon={<Cpu size={18} />} label="Microchip" value={data.microchip_id} /> : null}
-              {data.application_count ? <Fact tone="green" icon={<Users size={18} />} label="Applications" value={data.application_count} /> : null}
+              {age ? <AnimalFact tone="blue" icon={<Cake size={18} />} label="Age" value={age} /> : null}
+              {data.gender ? <AnimalFact tone="coral" icon={<VenusAndMars size={18} />} label="Gender" value={data.gender} /> : null}
+              {data.breed ? <AnimalFact tone="green" icon={<PawPrint size={18} />} label="Breed" value={data.breed} /> : null}
+              {data.color ? <AnimalFact tone="amber" icon={<Palette size={18} />} label="Colour" value={data.color} /> : null}
+              <AnimalFact tone="emerald" icon={<Syringe size={18} />} label="Vaccinated" value={data.vaccinated ? "Yes" : "Not yet"} />
+              <AnimalFact tone="purple" icon={<Scissors size={18} />} label="Spayed or neutered" value={data.sterilized ? "Yes" : "Not yet"} />
+              {!leftCare ? <AnimalFact tone="blue" icon={<CalendarHeart size={18} />} label="In care for" value={`${daysSince(data.created_at)} days`} /> : null}
+              {data.microchip_id ? <AnimalFact tone="navy" icon={<Cpu size={18} />} label="Microchip" value={data.microchip_id} /> : null}
+              {data.application_count ? <AnimalFact tone="green" icon={<Users size={18} />} label="Applications" value={data.application_count} /> : null}
             </div>
           </motion.section>
 
@@ -336,9 +287,9 @@ function AnimalDetail() {
                 <p className="muted">
                   {adoptable
                     ? `No one has applied to adopt ${data.name} yet. Applications show up here as soon as they arrive.`
-                    : adopted
-                      ? `${data.name} has been adopted.`
-                      : `${data.name} isn't open for adoption yet. Mark ${data.name} as adoptable in Animals to start receiving applications.`}
+                    : leftCare
+                      ? `${data.name} is no longer in your care.`
+                      : <>{data.name} isn't open for adoption yet. <Link className="link" to={`/animals/${data.id}/manage`}>Open adoption from {data.name}'s record</Link> to start receiving applications.</>}
                 </p>
               )}
             </motion.section>
@@ -366,7 +317,21 @@ function AnimalDetail() {
               {health ? <span className={`chip chip-${health.tone === "green" ? "green" : health.tone}`}>{health.label}</span> : null}
             </div>
             <p>{data.medical_info || "No medical notes shared yet."}</p>
-            <p className="small muted">{data.vaccinated ? "Vaccinated." : "Vaccinations are still to be done."} Medical details are kept up to date by the rescue team.</p>
+            <p className="small muted">
+              {data.vaccinated ? "Vaccinated." : "Vaccinations are still to be done."} {data.sterilized ? "Spayed or neutered." : ""} Medical details are kept up to date by the rescue team.
+            </p>
+            {sharedHistory.length ? (
+              <ol className="animal-medical-list" aria-label={`${data.name}'s medical history`}>
+                {sharedHistory.map((entry) => (
+                  <li key={entry.id}>
+                    <span className={`chip ${medicalKind(entry.kind).chip}`}>{entry.kind_label}</span>
+                    <span className="strong">{entry.title}</span>
+                    <span className="small muted">{formatDay(entry.date)}</span>
+                    {entry.notes ? <p className="small">{entry.notes}</p> : null}
+                  </li>
+                ))}
+              </ol>
+            ) : null}
           </motion.section>
 
           <motion.section id="story" className="profile-section card card-pad" {...reveal}>
@@ -394,7 +359,7 @@ function AnimalDetail() {
                 <li>
                   <span className="story-dot tone-green" aria-hidden="true" />
                   <div>
-                    <strong>{adopted ? "Adopted" : adoptable ? "Ready for a home" : "Recovering"}</strong>
+                    <strong>{leftCare ? statusLabel("animal", data.status) : adoptable ? "Ready for a home" : "Recovering"}</strong>
                     <span className="small muted">Now</span>
                   </div>
                 </li>
@@ -452,7 +417,11 @@ function AnimalDetail() {
             </Link>
           ) : null}
 
-          {!adopted ? (
+          {closedRecord ? (
+            <div className="alert alert-info">
+              {data.status === "deceased" ? `${data.name} passed away in the care of ${data.organization?.name ?? "the rescue team"}. Thank you to everyone who helped.` : `${data.name} has gone back home.`}
+            </div>
+          ) : !adopted ? (
             <div className="animal-funding">
               <FundingMeter raised={data.raised_pkr ?? 0} goal={data.funding_goal_pkr ?? 0} caption={`raised for ${data.name}'s care`} supporters={data.sponsor_count} />
               {ownAnimal ? (
@@ -476,7 +445,7 @@ function AnimalDetail() {
 
           {primary}
 
-          {canSupport && !ownAnimal ? (
+          {canSupport && !ownAnimal && !closedRecord ? (
             <div className="animal-secondary">
               {adoptable && !adopted ? (
                 extras.my_sponsorship?.status === "pending" ? (
@@ -496,9 +465,9 @@ function AnimalDetail() {
             </div>
           ) : null}
 
-          <p className="animal-trust">
+          {leftCare ? null : <p className="animal-trust">
             <ShieldCheck size={15} aria-hidden="true" /> Every gift goes straight to {data.organization?.name ?? "the rescue team"}, who confirm the receipt before it counts.
-          </p>
+          </p>}
         </aside>
       </div>
 

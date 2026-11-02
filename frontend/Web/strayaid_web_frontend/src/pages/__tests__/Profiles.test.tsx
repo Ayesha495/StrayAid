@@ -16,6 +16,7 @@ jest.mock("../landing/Carousels", () => ({
 jest.mock("../../services/platformService", () => ({
   getAnimal: jest.fn(),
   getAnimalPosts: jest.fn().mockResolvedValue([]),
+  getMedicalRecords: jest.fn().mockResolvedValue([]),
   updateAnimal: jest.fn(),
   getPublicOrganization: jest.fn(),
   getPublicOrganizationAnimals: jest.fn(),

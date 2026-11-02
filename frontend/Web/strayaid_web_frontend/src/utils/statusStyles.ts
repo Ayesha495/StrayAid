@@ -24,6 +24,8 @@ const ANIMAL_STATUS: Record<string, ChipStyle> = {
   recovering: { label: "Recovering", className: "chip-green" },
   adoptable: { label: "Adoptable", className: "chip-green chip-dot" },
   adopted: { label: "Adopted", className: "chip-slate" },
+  released: { label: "Released or returned", className: "chip-slate" },
+  deceased: { label: "Passed away", className: "chip-slate" },
 };
 
 const REVIEW_STATUS: Record<string, ChipStyle> = {

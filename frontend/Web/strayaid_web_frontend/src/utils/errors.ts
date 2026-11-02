@@ -1,5 +1,8 @@
 import { isAxiosError } from "axios";
 
+// Errors the API already words for people, so the field name isn't put in front.
+const WHOLE_SENTENCES = ["non_field_errors", "status", "status_note"];
+
 /** A readable message from a DRF error response ("detail", field errors or a list). */
 export function errorMessage(error: unknown, fallback = "Something went wrong. Please try again.") {
   if (isAxiosError(error)) {
@@ -12,7 +15,7 @@ export function errorMessage(error: unknown, fallback = "Something went wrong. P
       if (first) {
         const [field, value] = first;
         const text = Array.isArray(value) ? String(value[0]) : String(value);
-        return field === "non_field_errors" ? text : `${field.replace(/_/g, " ")}: ${text}`;
+        return WHOLE_SENTENCES.includes(field) ? text : `${field.replace(/_/g, " ")}: ${text}`;
       }
     }
   }

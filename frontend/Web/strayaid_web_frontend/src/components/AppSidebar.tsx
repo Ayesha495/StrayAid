@@ -25,7 +25,7 @@ const ORG_GROUPS: Group[] = [
     items: [
       { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
       { to: "/cases", label: "Rescue requests", icon: ClipboardList },
-      { to: "/animals", label: "Rescued animals", icon: PawPrint, end: true },
+      { to: "/animals", label: "Rescued animals", icon: PawPrint },
       { to: "/applications", label: "Applications", icon: FileText },
       { to: "/funds", label: "Funds", icon: Wallet },
     ],

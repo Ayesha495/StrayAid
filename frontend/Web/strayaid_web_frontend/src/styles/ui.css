@@ -766,6 +766,7 @@
 .tone-green { background: var(--green-50); color: var(--green-700); }
 .tone-amber { background: var(--amber-50); color: var(--amber-800); }
 .tone-emerald { background: var(--emerald-50); color: var(--emerald-700); }
+.tone-purple { background: #f1ecfd; color: #6a46c4; }
 .tone-navy { background: var(--navy-100); color: var(--navy-700); }
 
 /* Money is amber everywhere, so a funding bar in an amber tile is amber too. */

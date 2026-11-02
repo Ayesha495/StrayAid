@@ -22,6 +22,7 @@ const OrganizationRegistration = lazy(() => import("./pages/OrganizationRegistra
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const CaseDetail = lazy(() => import("./pages/CaseDetail"));
 const AnimalManagement = lazy(() => import("./pages/AnimalManagement"));
+const AnimalRecord = lazy(() => import("./pages/AnimalRecord"));
 const AnimalDetail = lazy(() => import("./pages/AnimalDetail"));
 const AnimalDirectory = lazy(() => import("./pages/AnimalDirectory"));
 const OrganizationPublicProfile = lazy(() => import("./pages/OrganizationPublicProfile"));
@@ -97,6 +98,7 @@ function App() {
                   <Route path="/animals" element={<AnimalManagement />} />
                   <Route path="/animals/manage" element={<AnimalManagement />} />
                   <Route element={<DsScope />}>
+                    <Route path="/animals/:animalId/manage" element={<AnimalRecord />} />
                     <Route path="/applications" element={<Applications />} />
                     <Route path="/funds" element={<Funds />} />
                   </Route>

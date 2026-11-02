@@ -13,6 +13,7 @@ import { EmptyState, ErrorState, LoadingRows, Skeleton } from "../ui/States";
 import { formatDate, formatPkr } from "../utils/format";
 import { formatRelativeTime } from "../utils/time";
 import { errorMessage } from "../utils/errors";
+import { isInCare } from "../utils/animals";
 import type { ShelterDonation, Sponsorship } from "../types/api";
 import "./Funds.css";
 
@@ -255,9 +256,9 @@ function Funds() {
           {animals.data ? (
             animals.data.length ? (
               <ul className="fund-goals">
-                {animals.data.filter((animal) => animal.status !== "adopted").map((animal) => (
+                {animals.data.filter(isInCare).map((animal) => (
                   <li key={animal.id}>
-                    <Link to={`/animals/${animal.id}`} className="strong">{animal.name}</Link>
+                    <Link to={`/animals/${animal.id}/manage`} className="strong">{animal.name}</Link>
                     <FundingMeter raised={animal.raised_pkr ?? raisedByAnimal.get(animal.id) ?? 0} goal={animal.funding_goal_pkr ?? 0} size="sm" supporters={animal.sponsor_count} />
                   </li>
                 ))}
