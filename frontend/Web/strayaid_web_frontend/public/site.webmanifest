@@ -1,0 +1,28 @@
+{
+  "name": "StrayAid",
+  "short_name": "StrayAid",
+  "description": "StrayAid connects people who spot injured stray animals with rescue organizations nearby.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FBF9F8",
+  "theme_color": "#17594A",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
