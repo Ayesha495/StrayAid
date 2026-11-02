@@ -6,10 +6,11 @@ from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from notifications.models import Notification
 from organizations.models import Organization
-from rescue.models import Case
+from rescue.models import Case, Report
 
-from .models import Animal
+from .models import AdoptionApplication, Animal, MedicalRecord
 
 
 User = get_user_model()
@@ -79,7 +80,7 @@ class AnimalApiTests(MediaEnabledAPITestCase):
             status="assigned",
         )
 
-    def test_organization_can_create_animal_for_own_case_and_case_moves_to_adoption(self):
+    def test_organization_can_create_animal_for_own_case_and_case_moves_to_rescued(self):
         self.client.force_authenticate(user=self.org_user)
 
         response = self.client.post(
@@ -87,15 +88,27 @@ class AnimalApiTests(MediaEnabledAPITestCase):
             {
                 "case": self.case.id,
                 "name": "Milo",
-                "status": Animal.STATUS_ADOPTABLE,
+                "status": Animal.STATUS_RECOVERING,
             },
             format="multipart",
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.case.refresh_from_db()
-        self.assertEqual(self.case.status, "adoption")
+        self.assertEqual(self.case.status, "rescued")
         self.assertEqual(Animal.objects.get().organization, self.organization)
+
+    def test_a_new_profile_cannot_start_past_being_in_care(self):
+        self.client.force_authenticate(user=self.org_user)
+
+        for starting_status in (Animal.STATUS_ADOPTABLE, Animal.STATUS_ADOPTED):
+            response = self.client.post(
+                "/api/animals/",
+                {"case": self.case.id, "name": "Milo", "status": starting_status},
+                format="multipart",
+            )
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+            self.assertIn("status", response.data)
 
     def test_organization_cannot_create_animal_for_another_organizations_case(self):
         self.client.force_authenticate(user=self.org_user)
@@ -192,12 +205,12 @@ class AnimalApiTests(MediaEnabledAPITestCase):
         self.assertIn("capacity", response.data)
 
     def test_organization_can_update_own_animal(self):
-        animal = Animal.objects.create(case=self.case, organization=self.organization, name="Milo")
+        animal = Animal.objects.create(case=self.case, organization=self.organization, name="Milo", status=Animal.STATUS_ADOPTABLE)
         self.client.force_authenticate(user=self.org_user)
 
         response = self.client.patch(
             f"/api/animals/{animal.id}/",
-            {"status": Animal.STATUS_ADOPTED, "medical_info": "Recovered"},
+            {"status": Animal.STATUS_ADOPTED, "status_note": "Adopted by a neighbour", "medical_info": "Recovered"},
             format="json",
         )
 
@@ -532,7 +545,11 @@ class AdoptedAnimalApplicationsTests(MediaEnabledAPITestCase):
 
     def test_marking_adopted_closes_pending_applications_and_hides_them(self):
         self.client.force_authenticate(user=self.org_user)
-        self.client.patch(f"/api/animals/{self.animal.id}/", {"status": Animal.STATUS_ADOPTED}, format="json")
+        self.client.patch(
+            f"/api/animals/{self.animal.id}/",
+            {"status": Animal.STATUS_ADOPTED, "status_note": "Adopted by a walk-in family"},
+            format="json",
+        )
         self.application.refresh_from_db()
         self.assertEqual(self.application.status, "rejected")
         self.assertEqual(self.client.get("/api/animals/applications/").data, [])
@@ -547,3 +564,227 @@ class AdoptedAnimalApplicationsTests(MediaEnabledAPITestCase):
         self.application.refresh_from_db()
         self.assertEqual(self.application.status, "approved")
         self.assertEqual(self.client.get("/api/animals/applications/").data, [])
+
+
+class AnimalLifecycleTests(MediaEnabledAPITestCase):
+    """Once a profile exists the animal moves one step at a time, and its case follows."""
+
+    def setUp(self):
+        self.org_user = User.objects.create_user(email="o@example.com", username="o", password="x", role="organization")
+        self.organization = Organization.objects.create(user=self.org_user, name="Safe Paws", city="Islamabad", capacity=1)
+        self.reporter = User.objects.create_user(email="r@example.com", username="r", password="x")
+        self.case = Case.objects.create(
+            description="Cat", latitude=33.7, longitude=73.0, reported_by=self.reporter, organization=self.organization, status="rescued"
+        )
+        self.animal = Animal.objects.create(
+            case=self.case, organization=self.organization, name="Luna", image=make_png("luna.png"), description="Gentle cat.", health="healthy"
+        )
+        self.client.force_authenticate(user=self.org_user)
+
+    def move(self, to, note="", **fields):
+        return self.client.patch(f"/api/animals/{self.animal.id}/", {"status": to, "status_note": note, **fields}, format="json")
+
+    def application(self):
+        applicant = User.objects.create_user(email="a@example.com", username="a", password="x")
+        return AdoptionApplication.objects.create(animal=self.animal, applicant=applicant, full_name="Hira", phone="1", home_type="house")
+
+    def test_steps_cannot_be_skipped(self):
+        response = self.move(Animal.STATUS_ADOPTED, "Skipping ahead")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("status", response.data)
+        self.animal.refresh_from_db()
+        self.assertEqual(self.animal.status, Animal.STATUS_RESCUED)
+
+    def test_listing_for_adoption_needs_the_required_checklist(self):
+        Animal.objects.filter(pk=self.animal.pk).update(health="under_treatment", description="")
+        response = self.move(Animal.STATUS_ADOPTABLE)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("public description written", response.data["status"])
+        self.assertIn("treatment finished", response.data["status"])
+
+        # Fixing what's missing in the same save is enough.
+        response = self.move(Animal.STATUS_ADOPTABLE, health="minor_issues", description="Gentle cat.")
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.case.refresh_from_db()
+        self.assertEqual(self.case.status, "adoption")
+
+    def test_editing_a_profile_leaves_the_case_alone(self):
+        Case.objects.filter(pk=self.case.pk).update(status="closed")
+        response = self.client.patch(f"/api/animals/{self.animal.id}/", {"age": 3, "name": "Luna Belle"}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.case.refresh_from_db()
+        self.assertEqual(self.case.status, "closed")
+        self.assertFalse(self.animal.status_changes.exists())
+
+    def test_age_cannot_be_negative(self):
+        response = self.client.patch(f"/api/animals/{self.animal.id}/", {"age": -1}, format="json")
+        self.assertIn("age", response.data)
+
+    def test_passing_away_needs_a_note_and_closes_everything(self):
+        Animal.objects.filter(pk=self.animal.pk).update(status=Animal.STATUS_ADOPTABLE)
+        application = self.application()
+
+        self.assertIn("status_note", self.move(Animal.STATUS_DECEASED).data)
+        response = self.move(Animal.STATUS_DECEASED, "Kidney failure despite treatment.")
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
+        self.case.refresh_from_db()
+        application.refresh_from_db()
+        self.assertEqual(self.case.status, "closed")
+        self.assertEqual(application.status, "rejected")
+        note = Notification.objects.get(user=application.applicant)
+        self.assertIn("no longer up for adoption", note.body)
+        self.assertNotIn("another family", note.body)
+
+    def test_animals_that_left_care_free_capacity_and_leave_the_public_lists(self):
+        self.move(Animal.STATUS_RELEASED, "Returned to her owner.")
+        other_case = Case.objects.create(description="Dog", latitude=33.7, longitude=73.0, reported_by=self.reporter, organization=self.organization)
+        created = self.client.post("/api/animals/", {"case": other_case.id, "name": "Max"}, format="multipart")
+        self.assertEqual(created.status_code, status.HTTP_201_CREATED, created.data)
+
+        listed = self.client.get("/api/animals/public/").data
+        self.assertEqual([animal["name"] for animal in listed], ["Max"])
+        on_profile = self.client.get(f"/api/organizations/{self.organization.id}/animals/").data
+        self.assertEqual([animal["name"] for animal in on_profile], ["Max"])
+        # A link someone followed still opens.
+        self.assertEqual(self.client.get(f"/api/animals/{self.animal.id}/").status_code, status.HTTP_200_OK)
+
+        self.organization.bank_account_number = "1234"
+        self.organization.save()
+        self.client.force_authenticate(user=self.reporter)
+        pledge = self.client.post(f"/api/animals/{self.animal.id}/sponsor/", {"amount_pkr": 1000, "receipt": make_png()}, format="multipart")
+        self.assertEqual(pledge.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("no longer in care", pledge.data["detail"])
+
+    def test_a_return_reopens_the_case_with_a_reason(self):
+        Animal.objects.filter(pk=self.animal.pk).update(status=Animal.STATUS_ADOPTED)
+        Case.objects.filter(pk=self.case.pk).update(status="closed")
+        self.assertIn("status_note", self.move(Animal.STATUS_RECOVERING).data)
+        response = self.move(Animal.STATUS_RECOVERING, "Family moved abroad.")
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.case.refresh_from_db()
+        self.assertEqual(self.case.status, "rescued")
+
+    def test_history_records_every_move_for_the_team_only(self):
+        self.move(Animal.STATUS_RECOVERING)
+        self.move(Animal.STATUS_ADOPTABLE)
+        application = self.application()
+        self.client.post(f"/api/animals/applications/{application.id}/decide/", {"status": "approved"})
+
+        history = self.client.get(f"/api/animals/{self.animal.id}/history/").data
+        self.assertEqual([change["to_status"] for change in history], ["adopted", "adoptable", "recovering"])
+        self.assertEqual(history[0]["note"], "Adopted by Hira.")
+
+        self.client.force_authenticate(user=self.reporter)
+        self.assertEqual(self.client.get(f"/api/animals/{self.animal.id}/history/").status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_an_application_on_hold_cannot_be_approved(self):
+        Animal.objects.filter(pk=self.animal.pk).update(status=Animal.STATUS_RECOVERING)
+        application = self.application()
+        response = self.client.post(f"/api/animals/applications/{application.id}/decide/", {"status": "approved"})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        application.refresh_from_db()
+        self.assertEqual(application.status, "pending")
+
+    def test_one_animals_applications_stay_findable_after_adoption(self):
+        Animal.objects.filter(pk=self.animal.pk).update(status=Animal.STATUS_ADOPTED)
+        self.application()
+        self.assertEqual(self.client.get("/api/animals/applications/").data, [])
+        found = self.client.get(f"/api/animals/applications/?animal={self.animal.id}").data
+        self.assertEqual([application["full_name"] for application in found], ["Hira"])
+
+    def test_the_case_follows_the_animal_once_there_is_a_profile(self):
+        response = self.client.patch(f"/api/cases/{self.case.id}/update-status/", {"status": "closed"}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Luna", response.data["detail"])
+        self.case.refresh_from_db()
+        self.assertEqual(self.case.status, "rescued")
+        data = self.client.get(f"/api/cases/{self.case.id}/").data
+        self.assertEqual(data["animal_profile"], {"id": self.animal.id, "name": "Luna", "status": "rescued"})
+
+    def test_a_case_needs_a_profile_before_adoption(self):
+        case = Case.objects.create(description="Dog", latitude=33.7, longitude=73.0, reported_by=self.reporter, organization=self.organization, status="rescued")
+        response = self.client.patch(f"/api/cases/{case.id}/update-status/", {"status": "adoption"}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class MedicalRecordTests(MediaEnabledAPITestCase):
+    def setUp(self):
+        self.org_user = User.objects.create_user(email="o@example.com", username="o", password="x", role="organization")
+        self.organization = Organization.objects.create(user=self.org_user, name="Safe Paws", city="Islamabad")
+        self.other_user = User.objects.create_user(email="p@example.com", username="p", password="x", role="organization")
+        Organization.objects.create(user=self.other_user, name="Second Chance", city="Lahore")
+        self.reporter = User.objects.create_user(email="r@example.com", username="r", password="x")
+        case = Case.objects.create(description="Cat", latitude=33.7, longitude=73.0, reported_by=self.reporter, organization=self.organization)
+        Report.objects.create(case=case, user=self.reporter, description="d", latitude=33.7, longitude=73.0)
+        self.animal = Animal.objects.create(case=case, organization=self.organization, name="Luna")
+        Notification.objects.all().delete()
+        self.client.force_authenticate(user=self.org_user)
+
+    def add(self, **fields):
+        data = {"animal": self.animal.id, "kind": "checkup", "title": "Intake exam", "date": "2026-10-01", **fields}
+        return self.client.post("/api/animals/medical-records/", data, format="json")
+
+    def test_team_adds_edits_and_removes_entries(self):
+        created = self.add(vet="Dr Sana", weight_kg="3.40", notes="Thin but alert.")
+        self.assertEqual(created.status_code, status.HTTP_201_CREATED, created.data)
+        url = f"/api/animals/medical-records/{created.data['id']}/"
+
+        edited = self.client.patch(url, {"notes": "Gaining weight."}, format="json")
+        self.assertEqual(edited.data["notes"], "Gaining weight.")
+        self.assertEqual(edited.data["kind_label"], "Check-up")
+
+        self.assertEqual(self.client.delete(url).status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(self.animal.medical_records.exists())
+
+    def test_dates_must_make_sense(self):
+        self.assertIn("date", self.add(date="2999-01-01").data)
+        self.assertIn("next_due", self.add(next_due="2026-09-01").data)
+
+    def test_vaccination_and_sterilization_update_the_profile(self):
+        self.add(kind="vaccination", title="Rabies")
+        self.add(kind="sterilization", title="Spay")
+        self.animal.refresh_from_db()
+        self.assertTrue(self.animal.vaccinated)
+        self.assertTrue(self.animal.sterilized)
+
+    def test_repeating_an_entry_settles_its_follow_up(self):
+        first = self.add(kind="vaccination", title="Rabies", next_due="2026-10-20")
+        self.assertEqual(self.client.get(f"/api/animals/{self.animal.id}/").data["next_care"]["title"], "Rabies")
+        self.add(kind="vaccination", title="rabies", date="2026-10-20")
+        self.assertIsNone(MedicalRecord.objects.get(pk=first.data["id"]).next_due)
+        self.assertIsNone(self.client.get(f"/api/animals/{self.animal.id}/").data["next_care"])
+
+    def test_people_only_see_shared_entries(self):
+        self.add(title="Shared exam")
+        self.add(title="Bite risk when handled", is_public=False)
+        url = f"/api/animals/medical-records/?animal={self.animal.id}"
+        self.assertEqual(len(self.client.get(url).data), 2)
+
+        self.client.force_authenticate(user=None)
+        self.assertEqual([entry["title"] for entry in self.client.get(url).data], ["Shared exam"])
+        self.assertEqual(self.client.get("/api/animals/medical-records/?animal=abc").status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_followers_hear_only_about_shared_entries(self):
+        self.add(title="Bite risk", is_public=False)
+        self.assertFalse(Notification.objects.filter(user=self.reporter).exists())
+        self.add(title="Eye check")
+        note = Notification.objects.get(user=self.reporter)
+        self.assertIn("medical history: Eye check", note.body)
+
+    def test_other_teams_cannot_touch_records(self):
+        entry = self.add().data
+        self.client.force_authenticate(user=self.other_user)
+        self.assertEqual(self.add().status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(self.client.patch(f"/api/animals/medical-records/{entry['id']}/", {"notes": "x"}, format="json").status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(self.client.delete(f"/api/animals/medical-records/{entry['id']}/").status_code, status.HTTP_404_NOT_FOUND)
+
+        self.client.force_authenticate(user=self.reporter)
+        self.assertEqual(self.add().status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_the_readiness_checklist_is_for_the_team(self):
+        self.assertIn("readiness", self.client.get(f"/api/animals/{self.animal.id}/").data)
+        self.client.force_authenticate(user=None)
+        data = self.client.get(f"/api/animals/{self.animal.id}/").data
+        self.assertNotIn("readiness", data)
+        self.assertNotIn("next_care", data)

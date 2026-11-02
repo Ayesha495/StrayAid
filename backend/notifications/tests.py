@@ -164,6 +164,9 @@ class AnimalUpdateNotificationTests(MediaEnabledAPITestCase):
         self.assertEqual(len(self.notes(self.reporter)), 1)
 
         # A status change is one notification, not one for the animal and one for the case.
+        from animals.models import Animal
+
+        Animal.objects.filter(pk=animal_id).update(image="animals/bruno.jpg", description="Friendly.", health="healthy")
         Notification.objects.all().delete()
         self.client.patch(f"/api/animals/{animal_id}/", {"status": "adoptable"})
         [note] = self.notes(self.reporter)
@@ -176,7 +179,8 @@ class AnimalUpdateNotificationTests(MediaEnabledAPITestCase):
     def test_approving_an_adoption_adopts_the_animal(self):
         from animals.models import AdoptionApplication, Animal
 
-        animal_id = self.create_animal(status="adoptable")
+        animal_id = self.create_animal()
+        Animal.objects.filter(pk=animal_id).update(status="adoptable")
         adopter = User.objects.create_user(email="a@example.com", username="a", password="x")
         other = User.objects.create_user(email="o@example.com", username="o", password="x")
         details = {"full_name": "Applicant", "phone": "0300", "home_type": "house"}

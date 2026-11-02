@@ -1,9 +1,10 @@
 from django.db.models import Sum
+from django.utils import timezone
 from rest_framework import serializers
 
 from core.media import media_url
 
-from .models import AdoptionApplication, Animal, Sponsorship
+from .models import AdoptionApplication, Animal, AnimalStatusChange, MedicalRecord, Sponsorship
 from organizations.serializers import OrganizationSerializer
 
 MIN_PUBLIC_SPONSORS = 3
@@ -27,6 +28,8 @@ class AnimalSerializer(serializers.ModelSerializer):
     my_sponsorship = serializers.SerializerMethodField()
     # Where it was found, for search results.
     area = serializers.CharField(source="case.area", read_only=True)
+    # Why the status is changing; kept in the animal's history, not on the animal.
+    status_note = serializers.CharField(write_only=True, required=False, allow_blank=True, max_length=500)
 
     class Meta:
         model = Animal
@@ -51,6 +54,8 @@ class AnimalSerializer(serializers.ModelSerializer):
             "image",
             "health",
             "vaccinated",
+            "sterilized",
+            "status_note",
             "photos",
             "sponsor_count",
             "application_count",
@@ -65,6 +70,7 @@ class AnimalSerializer(serializers.ModelSerializer):
             "created_at",
         ]
         read_only_fields = ["id", "organization", "case_id", "created_at"]
+        extra_kwargs = {"age": {"min_value": 0, "max_value": 40}}
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -74,6 +80,10 @@ class AnimalSerializer(serializers.ModelSerializer):
         data["microchipped"] = bool(instance.microchip_id)
         if not own:
             data.pop("microchip_id", None)
+            return data
+        data["readiness"] = instance.readiness()
+        soonest = instance.medical_records.filter(next_due__isnull=False).order_by("next_due").first()
+        data["next_care"] = {"title": soonest.title, "date": soonest.next_due} if soonest else None
         return data
 
     def get_photos(self, obj):
@@ -97,8 +107,8 @@ class AnimalSerializer(serializers.ModelSerializer):
         return obj.sponsorships.filter(status="confirmed").aggregate(total=Sum("amount_pkr"))["total"] or 0
 
     def get_application_count(self, obj):
-        # Once adopted, the applications are finished business and stop being shown.
-        if obj.status == Animal.STATUS_ADOPTED:
+        # Once the animal has left care, the applications are finished business and stop being shown.
+        if obj.status in Animal.LEFT_CARE:
             return 0
         return obj.adoption_applications.exclude(status="withdrawn").count()
 
@@ -170,6 +180,32 @@ class AnimalSerializer(serializers.ModelSerializer):
             "account_number": organization.bank_account_number,
         }
 
+
+class AnimalStatusChangeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AnimalStatusChange
+        fields = ["id", "from_status", "to_status", "note", "created_at"]
+
+
+class MedicalRecordSerializer(serializers.ModelSerializer):
+    kind_label = serializers.CharField(source="get_kind_display", read_only=True)
+
+    class Meta:
+        model = MedicalRecord
+        fields = ["id", "animal", "kind", "kind_label", "title", "date", "next_due", "vet", "weight_kg", "notes", "is_public", "created_at"]
+        read_only_fields = ["id", "created_at"]
+
+    def validate_title(self, value):
+        return " ".join(value.split())
+
+    def validate(self, attrs):
+        date = attrs.get("date", getattr(self.instance, "date", None))
+        next_due = attrs.get("next_due", getattr(self.instance, "next_due", None))
+        if date and date > timezone.localdate():
+            raise serializers.ValidationError({"date": "This can't be in the future. Use the follow-up date for planned care."})
+        if date and next_due and next_due <= date:
+            raise serializers.ValidationError({"next_due": "The follow-up has to come after this entry."})
+        return attrs
 
 
 class AdoptionApplicationSerializer(serializers.ModelSerializer):

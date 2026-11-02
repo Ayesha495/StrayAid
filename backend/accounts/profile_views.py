@@ -28,6 +28,8 @@ ANIMAL_LABELS = {
     "recovering": ("In treatment", "blue"),
     "adoptable": ("Ready for adoption", "green"),
     "adopted": ("Adopted", "grey"),
+    "released": ("Released or returned", "grey"),
+    "deceased": ("Passed away", "grey"),
 }
 
 

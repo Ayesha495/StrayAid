@@ -52,7 +52,7 @@ def impact_for(user):
     cases = report_cases(user)
     case_count = cases.count()
     resolved = cases.filter(status__in=RESOLVED_STATUSES).count()
-    in_care = Animal.objects.filter(case__in=cases).exclude(status=Animal.STATUS_ADOPTED).count()
+    in_care = Animal.objects.filter(case__in=cases).exclude(status__in=Animal.LEFT_CARE).count()
     pledged = Sponsorship.objects.filter(sponsor=user, status="confirmed").aggregate(total=Sum("amount_pkr"))["total"] or 0
     adoptions = AdoptionApplication.objects.filter(applicant=user, status="approved").count()
     comments = PostComment.objects.filter(user=user).count()

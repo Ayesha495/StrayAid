@@ -36,11 +36,17 @@ class CaseSerializer(serializers.ModelSerializer):
     # Report cards on the Profile screen: "In Progress", "3 team updates".
     status_label = serializers.CharField(source="get_status_display", read_only=True)
     update_count = serializers.SerializerMethodField()
+    # The animal's profile once there is one: from then on it leads the case.
+    animal_profile = serializers.SerializerMethodField()
 
     class Meta:
         model = Case
         fields = '__all__'
         read_only_fields = ["organization", "assigned_to", "resolved_at", "updated_at"]
+
+    def get_animal_profile(self, obj):
+        animal = getattr(obj, "animal", None)
+        return {"id": animal.id, "name": animal.name, "status": animal.status} if animal else None
 
     def get_update_count(self, obj):
         # Notes and status changes after the report itself.

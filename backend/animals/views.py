@@ -1,3 +1,5 @@
+from copy import copy
+
 from rest_framework import serializers, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -9,10 +11,12 @@ from accounts.audit import record
 from organizations.permissions import IsOrganizationUser
 from rescue.models import Case
 
-from .models import AdoptionApplication, Animal, Sponsorship
+from .models import AdoptionApplication, Animal, AnimalStatusChange, MedicalRecord, Sponsorship
 from .serializers import (
     AdoptionApplicationSerializer,
     AnimalSerializer,
+    AnimalStatusChangeSerializer,
+    MedicalRecordSerializer,
     MyApplicationSerializer,
     NewSponsorshipSerializer,
     SponsorshipSerializer,
@@ -24,14 +28,15 @@ def _person(user):
 
 
 def sync_case_with_animal(animal):
-    """Keep the rescue case's status in step with the animal's. The animal's own
-    notification already tells reporters what happened, so the case change stays quiet."""
+    """Keep the rescue case's status in step with the animal's: once a profile exists, the
+    animal leads and the case follows. The animal's own notification already tells reporters
+    what happened, so the case change stays quiet."""
     case = animal.case
     case._changed_by_animal = True
     if animal.status == Animal.STATUS_ADOPTABLE and case.status != "adoption":
         case.status = "adoption"
         case.save(update_fields=["status", "updated_at"])
-    elif animal.status == Animal.STATUS_ADOPTED and case.status != "closed":
+    elif animal.status in Animal.LEFT_CARE and case.status != "closed":
         case.status = "closed"
         case.resolved_at = timezone.now()
         case.save(update_fields=["status", "resolved_at", "updated_at"])
@@ -40,12 +45,38 @@ def sync_case_with_animal(animal):
         case.save(update_fields=["status", "updated_at"])
 
 
+def check_status_move(animal, current, new, note, changes):
+    """Refuse a lifecycle move that skips a step, leaves no reason, or lists an animal for
+    adoption before it's ready. `changes` are the edits arriving with the move."""
+    if new not in Animal.NEXT_STATUSES.get(current, []):
+        labels = dict(Animal.STATUS_CHOICES)
+        raise serializers.ValidationError({"status": f"{animal.name} can't go from {labels[current]} to {labels[new]}."})
+    if not note and (new in Animal.LEFT_CARE or current in Animal.LEFT_CARE):
+        raise serializers.ValidationError({"status_note": "Add a short note saying what happened."})
+    if new == Animal.STATUS_ADOPTABLE:
+        candidate = copy(animal)
+        for field, value in changes.items():
+            setattr(candidate, field, value)
+        missing = [item["label"].lower() for item in candidate.readiness() if item["required"] and not item["done"]]
+        if missing:
+            raise serializers.ValidationError({"status": f"Before {animal.name} can be listed: {', '.join(missing)}."})
+
+
+def log_status_change(animal, from_status, request, note=""):
+    AnimalStatusChange.objects.create(animal=animal, from_status=from_status, to_status=animal.status, note=note, changed_by=request.user)
+
+
 def close_open_applications(animal, keep=None):
-    """Once an animal is adopted, every other pending application is turned down and its
-    applicant told, so nothing is left waiting on an animal that already has a home."""
+    """Once an animal has left care, every other pending application is turned down and its
+    applicant told, so nothing is left waiting on an animal that can't be adopted."""
     from notifications.services import notify_users
 
     now = timezone.now()
+    body = (
+        f"**{animal.name}** is no longer up for adoption. Thank you for offering a home."
+        if animal.status in Animal.UNLISTED
+        else f"**{animal.name}** has found a home with another family. Thank you for offering yours."
+    )
     others = animal.adoption_applications.select_for_update().filter(status="pending")
     if keep is not None:
         others = others.exclude(pk=keep.pk)
@@ -56,7 +87,7 @@ def close_open_applications(animal, keep=None):
         notify_users(
             [other.applicant_id],
             title="Adoption",
-            body=f"**{animal.name}** has found a home with another family. Thank you for offering yours.",
+            body=body,
             data={"type": "adoption_decision", "application_id": other.id, "animal_id": animal.id, "status": "rejected"},
         )
 
@@ -104,10 +135,13 @@ class AnimalViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         organization = self.request.user.organization_profile
+        serializer.validated_data.pop("status_note", None)
         case = serializer.validated_data["case"]
         if case.organization_id != organization.id:
             raise serializers.ValidationError({"case": "You can only create animals for your own cases."})
-        active_animals = Animal.objects.filter(organization=organization).exclude(status=Animal.STATUS_ADOPTED).count()
+        if serializer.validated_data.get("status", Animal.STATUS_RESCUED) not in Animal.STARTING_STATUSES:
+            raise serializers.ValidationError({"status": "A new profile starts as rescued or recovering."})
+        active_animals = Animal.objects.filter(organization=organization).exclude(status__in=Animal.LEFT_CARE).count()
         if organization.capacity and active_animals >= organization.capacity:
             raise serializers.ValidationError({"capacity": "Organization animal capacity has been reached."})
         animal = serializer.save(organization=organization)
@@ -124,19 +158,24 @@ class AnimalViewSet(viewsets.ModelViewSet):
             # The same lock the adoption decision takes, so a status edit can't slip between
             # an approval's check and its write.
             previous_status = Animal.objects.select_for_update().values_list("status", flat=True).get(pk=serializer.instance.pk)
+            note = serializer.validated_data.pop("status_note", "").strip()
+            new_status = serializer.validated_data.get("status", previous_status)
+            if new_status != previous_status:
+                check_status_move(serializer.instance, previous_status, new_status, note, serializer.validated_data)
             animal = serializer.save(organization=self.request.user.organization_profile)
-            # Updating an animal can reopen or close the linked rescue workflow.
-            sync_case_with_animal(animal)
-            if animal.status == Animal.STATUS_ADOPTED:
-                close_open_applications(animal)
-            elif previous_status == Animal.STATUS_ADOPTED:
-                end_adoption(animal, self.request)
             if animal.status != previous_status:
+                # A status move can reopen or close the linked rescue workflow; plain edits don't touch it.
+                sync_case_with_animal(animal)
+                if animal.status in Animal.LEFT_CARE:
+                    close_open_applications(animal)
+                elif previous_status == Animal.STATUS_ADOPTED:
+                    end_adoption(animal, self.request)
+                log_status_change(animal, previous_status, self.request, note)
                 record("animal.status_changed", self.request, animal, status_from=previous_status, status_to=animal.status)
 
     @action(detail=False, methods=["get"], permission_classes=[AllowAny], url_path="public")
     def public(self, request):
-        queryset = super().get_queryset()
+        queryset = super().get_queryset().exclude(status__in=Animal.UNLISTED)
         # The public feed supports simple filter chips on the frontend.
         status_filter = request.query_params.get("status")
         organization_id = request.query_params.get("organization_id")
@@ -191,6 +230,8 @@ class AnimalViewSet(viewsets.ModelViewSet):
         organization = animal.organization
         if animal.status == Animal.STATUS_ADOPTED:
             return Response({"detail": f"{animal.name} has been adopted and doesn't need sponsors any more."}, status=400)
+        if animal.status in Animal.LEFT_CARE:
+            return Response({"detail": f"{animal.name} is no longer in care."}, status=400)
         if not organization or not organization.bank_account_number:
             return Response({"detail": "This organization hasn't added bank details yet."}, status=400)
         if organization.user_id == request.user.id:
@@ -225,6 +266,60 @@ class AnimalViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(self.get_queryset(), many=True)
         return Response(serializer.data)
 
+    @action(detail=True, methods=["get"], url_path="history")
+    def history(self, request, pk=None):
+        """The animal's moves through its lifecycle, newest first. For its own team only."""
+        changes = self.get_object().status_changes.all()
+        return Response(AnimalStatusChangeSerializer(changes, many=True).data)
+
+
+class MedicalRecordViewSet(viewsets.ModelViewSet):
+    """An animal's medical history. Anyone can read what the team shares; only the animal's
+    team sees team-only entries and changes anything."""
+
+    serializer_class = MedicalRecordSerializer
+    http_method_names = ["get", "post", "patch", "delete", "head", "options"]
+
+    def get_permissions(self):
+        if self.action == "list":
+            return [AllowAny()]
+        return [IsAuthenticated(), IsOrganizationUser()]
+
+    def get_queryset(self):
+        organization = getattr(self.request.user, "organization_profile", None)
+        return MedicalRecord.objects.filter(animal__organization=organization) if organization else MedicalRecord.objects.none()
+
+    def list(self, request):
+        animal_id = request.query_params.get("animal", "")
+        animal = Animal.objects.select_related("organization").filter(pk=animal_id).first() if animal_id.isdecimal() else None
+        if not animal:
+            return Response({"detail": "Unknown animal."}, status=404)
+        records = animal.medical_records.all()
+        own = bool(animal.organization and request.user.is_authenticated and animal.organization.user_id == request.user.id)
+        if not own:
+            records = records.filter(is_public=True)
+        return Response(self.get_serializer(records, many=True).data)
+
+    def perform_create(self, serializer):
+        animal = serializer.validated_data["animal"]
+        if animal.organization_id != self.request.user.organization_profile.id:
+            raise serializers.ValidationError({"animal": "You can only add records for your own animals."})
+        entry = serializer.save(created_by=self.request.user)
+        # Doing something again settles the follow-up the earlier entry was waiting for.
+        animal.medical_records.filter(kind=entry.kind, title__iexact=entry.title, date__lte=entry.date).exclude(pk=entry.pk).update(next_due=None)
+        # The profile's yes/no facts follow the history, and saving one tells followers itself.
+        fact = {"vaccination": "vaccinated", "sterilization": "sterilized"}.get(entry.kind)
+        if fact and not getattr(animal, fact):
+            setattr(animal, fact, True)
+            animal.save(update_fields=[fact, "updated_at"])
+        elif entry.is_public:
+            from notifications.signals import notify_medical_update
+
+            notify_medical_update(animal, entry.title)
+
+    def perform_update(self, serializer):
+        serializer.save(animal=serializer.instance.animal)
+
 
 class ApplicationViewSet(viewsets.GenericViewSet):
     """"My Applications" (Stitch 15). People see the applications they sent; organizations
@@ -242,10 +337,14 @@ class ApplicationViewSet(viewsets.GenericViewSet):
 
     def list(self, request):
         queryset = self.get_queryset()
-        if getattr(request.user, "organization_profile", None):
-            # A team's review list is about animals still looking for a home; adopted animals'
-            # applications are finished business (the adopter still sees theirs in My Applications).
-            queryset = queryset.exclude(animal__status=Animal.STATUS_ADOPTED)
+        animal_id = request.query_params.get("animal", "")
+        if animal_id.isdecimal():
+            # One animal's record keeps them all, so the team can still find who adopted it.
+            queryset = queryset.filter(animal_id=animal_id)
+        elif getattr(request.user, "organization_profile", None):
+            # A team's review list is about animals still looking for a home; finished animals'
+            # applications are done with (the adopter still sees theirs in My Applications).
+            queryset = queryset.exclude(animal__status__in=Animal.LEFT_CARE)
         if request.query_params.get("status") in dict(AdoptionApplication.STATUS_CHOICES):
             queryset = queryset.filter(status=request.query_params["status"])
         return Response(self.get_serializer(queryset, many=True).data)
@@ -301,6 +400,9 @@ class ApplicationViewSet(viewsets.GenericViewSet):
                     or locked_animal.adoption_applications.filter(status="approved").exists()
                 ):
                     return Response(taken, status=400)
+                # Taken off the adoption list (back in treatment, say): applications wait on hold.
+                if decision == "approved" and locked_animal.status != Animal.STATUS_ADOPTABLE:
+                    return Response({"detail": f"{animal.name} isn't open for adoption right now."}, status=400)
                 application.status = decision
                 application.decided_at = timezone.now()
                 application.save(update_fields=["status", "decided_at"])
@@ -312,6 +414,7 @@ class ApplicationViewSet(viewsets.GenericViewSet):
                     locked_animal._skip_notify_user_ids = {application.applicant_id}
                     locked_animal.save(update_fields=["status", "updated_at"])
                     sync_case_with_animal(locked_animal)
+                    log_status_change(locked_animal, Animal.STATUS_ADOPTABLE, request, f"Adopted by {application.full_name}.")
                 record(f"adoption.{decision}", request, application, animal_id=animal.id)
         except IntegrityError:
             return Response(taken, status=400)
