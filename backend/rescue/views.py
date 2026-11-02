@@ -47,7 +47,7 @@ def clean_area(value):
 def organization_capacity_is_full(organization):
     return (
         organization.capacity
-        and Animal.objects.filter(organization=organization).exclude(status=Animal.STATUS_ADOPTED).count() >= organization.capacity
+        and Animal.objects.filter(organization=organization).exclude(status__in=Animal.LEFT_CARE).count() >= organization.capacity
     )
 
 
@@ -439,6 +439,7 @@ class CaseViewSet(viewsets.ReadOnlyModelViewSet):
         "assigned_to",
         "organization",
         "organization__user",
+        "animal",
     ).prefetch_related("reports")
     serializer_class = CaseSerializer
     permission_classes = [IsAuthenticated, IsOrganizationUser]
@@ -577,6 +578,16 @@ class CaseViewSet(viewsets.ReadOnlyModelViewSet):
         valid_statuses = dict(Case.STATUS_CHOICES)
         if new_status not in valid_statuses:
             return Response({"detail": "Invalid status."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Once there is a profile the animal leads, so the two can't say different things.
+        animal = getattr(case, "animal", None)
+        if animal:
+            return Response(
+                {"detail": f"This case now follows {animal.name}'s record. Change the status there."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if new_status == "adoption":
+            return Response({"detail": "Create the animal's profile before opening adoption."}, status=status.HTTP_400_BAD_REQUEST)
 
         case.status = new_status
         # Resolved timestamps are only set when the workflow reaches an end state.

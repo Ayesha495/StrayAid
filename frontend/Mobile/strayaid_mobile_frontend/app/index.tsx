@@ -54,7 +54,7 @@ export default function SplashScreen() {
         </Svg>
 
         <View style={styles.logo}>
-          <LogoMark size={100} tone="light" />
+          <LogoMark size={120} tone="white" />
         </View>
         <Text style={styles.wordmark}>StrayAid</Text>
         <Text style={styles.tagline}>Every rescue starts with someone who cares.</Text>

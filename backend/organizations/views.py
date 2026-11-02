@@ -184,7 +184,7 @@ class OrganizationViewSet(
             "stats": {
                 "rescued": animals.count(),
                 "adopted": animals.filter(status=Animal.STATUS_ADOPTED).count(),
-                "in_care": animals.exclude(status=Animal.STATUS_ADOPTED).count(),
+                "in_care": animals.exclude(status__in=Animal.LEFT_CARE).count(),
                 "followers": OrganizationFollow.objects.filter(organization=organization).count(),
                 "active_cases": Case.objects.filter(organization=organization, status__in=["assigned", "in_progress"]).count(),
             },
@@ -231,6 +231,7 @@ class OrganizationViewSet(
         animals = (
             Animal.objects.select_related("case", "organization", "organization__user")
             .filter(organization=organization)
+            .exclude(status__in=Animal.UNLISTED)
         )
         serializer = AnimalSerializer(animals, many=True, context={"request": request})
         return Response(serializer.data)

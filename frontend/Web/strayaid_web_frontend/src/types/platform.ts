@@ -77,6 +77,8 @@ export interface Case {
   assigned_to?: number | null;
   update_count?: number;
   ai_feedback_count?: number;
+  // Once a case has an animal profile, the animal leads and the case follows it.
+  animal_profile?: { id: number; name: string; status: string } | null;
 }
 
 export interface Animal {
@@ -102,6 +104,7 @@ export interface Animal {
   created_at: string;
   health?: string;
   vaccinated?: boolean;
+  sterilized?: boolean;
   photos?: string[];
   sponsor_count?: number;
   sponsor_goal?: number;
@@ -111,7 +114,44 @@ export interface Animal {
   sponsor_initials?: string[];
   ai_verified?: boolean;
   area?: string;
+  // Only sent to the animal's own team.
+  readiness?: ReadinessItem[];
+  next_care?: { title: string; date: string } | null;
 }
+
+export type AnimalUpdate = Partial<Animal> & { status_note?: string };
+
+export interface ReadinessItem {
+  key: string;
+  label: string;
+  done: boolean;
+  required: boolean;
+}
+
+export interface AnimalStatusChange {
+  id: number;
+  from_status: string;
+  to_status: string;
+  note: string;
+  created_at: string;
+}
+
+export interface MedicalRecord {
+  id: number;
+  animal: number;
+  kind: string;
+  kind_label: string;
+  title: string;
+  date: string;
+  next_due: string | null;
+  vet: string;
+  weight_kg: string | null;
+  notes: string;
+  is_public: boolean;
+  created_at: string;
+}
+
+export type MedicalRecordInput = Omit<MedicalRecord, "id" | "kind_label" | "created_at">;
 
 export type PostCategory = "medical" | "adoption" | "sponsorship" | "foster" | "";
 

@@ -1,6 +1,9 @@
 import type { ReactNode } from "react";
+import { Link } from "react-router-dom";
 import { PawPrint } from "lucide-react";
 import type { Animal } from "../types/platform";
+import { HEALTH, dueChip, isInCare } from "../utils/animals";
+import { statusLabel } from "../utils/statusStyles";
 import "../styles/AnimalCard.css";
 
 // The status dot uses the workflow colours: amber while in care, purple when adoptable, green once home.
@@ -10,20 +13,6 @@ const STATUS_TONE: Record<string, string> = {
   adoptable: "purple",
   adopted: "green",
 };
-
-const LIFECYCLE_STEPS: { value: string; label: string }[] = [
-  { value: "recovering", label: "Recovering" },
-  { value: "adoptable", label: "Adoptable" },
-  { value: "adopted", label: "Adopted" },
-];
-
-function statusClass(status: string): string {
-  return `am-status am-status-${STATUS_TONE[status] ?? "gray"}`;
-}
-
-function formatStatusLabel(status: string): string {
-  return status ? status.charAt(0).toUpperCase() + status.slice(1) : status;
-}
 
 function daysInCare(createdAt: string): number {
   const created = new Date(createdAt).getTime();
@@ -35,58 +24,44 @@ function daysInCare(createdAt: string): number {
 
 type AnimalCardProps = {
   animal: Animal;
-  onStatusChange?: (animalId: number, status: string) => void;
-  footer: ReactNode;
+  footer?: ReactNode;
   compact?: boolean;
 };
 
-function AnimalCard({ animal, onStatusChange, footer, compact = false }: AnimalCardProps) {
+/** An animal in the team's grid. The photo and name open its record. */
+function AnimalCard({ animal, footer, compact = false }: AnimalCardProps) {
+  const record = `/animals/${animal.id}/manage`;
+  const inCare = isInCare(animal);
+  const health = animal.health ? HEALTH[animal.health] : null;
+  const due = inCare && animal.next_care ? dueChip(animal.next_care.date) : null;
   return (
     <article className="am-animal-card">
-      <div className="am-animal-media">
+      <Link to={record} className="am-animal-media" tabIndex={-1} aria-hidden="true">
         {animal.image ? (
-          <img src={animal.image} alt={animal.name} loading="lazy" />
+          <img src={animal.image} alt="" loading="lazy" />
         ) : (
           <div className="am-media-placeholder"><PawPrint size={28} /></div>
         )}
-      </div>
+      </Link>
       <div className="am-animal-body">
         <div className="am-animal-title">
-          <h3>{animal.name}</h3>
-          <span className={statusClass(animal.status)}>{formatStatusLabel(animal.status)}</span>
+          <h3><Link to={record} className="am-animal-link">{animal.name}</Link></h3>
+          <span className={`am-status am-status-${STATUS_TONE[animal.status] ?? "gray"}`}>{statusLabel("animal", animal.status)}</span>
         </div>
         <p className="am-animal-breed">
           {[
             animal.breed || animal.species || "Breed unknown",
-            `${daysInCare(animal.created_at)} days in care`,
+            inCare ? `${daysInCare(animal.created_at)} days in care` : null,
             animal.microchipped || animal.microchip_id ? "Microchipped" : null,
           ].filter(Boolean).join(" · ")}
         </p>
-        {compact ? null : <p className="am-animal-desc">{animal.description || "No public description yet."}</p>}
         {compact ? null : (
-          <div className="am-lifecycle-row">
-            {LIFECYCLE_STEPS.map((step) => {
-              const isActive = animal.status === step.value;
-              const className = `am-lifecycle-pill${isActive ? " is-active" : ""}`;
-
-              if (!onStatusChange) {
-                return <span key={step.value} className={className}>{step.label}</span>;
-              }
-
-              return (
-                <button
-                  key={step.value}
-                  type="button"
-                  className={className}
-                  onClick={() => onStatusChange(animal.id, step.value)}
-                  disabled={isActive}
-                >
-                  {step.label}
-                </button>
-              );
-            })}
+          <div className="am-animal-tags">
+            {inCare ? (health ? <span className={`chip chip-${health.tone}`}>{health.label}</span> : <span className="chip chip-outline">Health not recorded</span>) : null}
+            {due && animal.next_care ? <span className={`chip ${due.className}`}>{animal.next_care.title}: {due.label.toLowerCase()}</span> : null}
           </div>
         )}
+        {compact ? null : <p className="am-animal-desc">{animal.description || "No public description yet."}</p>}
         {footer}
       </div>
     </article>

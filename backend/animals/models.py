@@ -1,3 +1,6 @@
+from decimal import Decimal
+
+from django.core.validators import MinValueValidator
 from django.db import models
 
 from core.uploads import UniqueUploadPath, validate_image_size
@@ -9,13 +12,35 @@ class Animal(models.Model):
     STATUS_RECOVERING = "recovering"
     STATUS_ADOPTABLE = "adoptable"
     STATUS_ADOPTED = "adopted"
+    # The other ways an animal leaves a team's care: back to its owner or neighbourhood, or it dies.
+    STATUS_RELEASED = "released"
+    STATUS_DECEASED = "deceased"
 
     STATUS_CHOICES = [
         (STATUS_RESCUED, "Rescued"),
         (STATUS_RECOVERING, "Recovering"),
         (STATUS_ADOPTABLE, "Adoptable"),
         (STATUS_ADOPTED, "Adopted"),
+        (STATUS_RELEASED, "Released or returned"),
+        (STATUS_DECEASED, "Passed away"),
     ]
+
+    # No longer with the team: these don't use up capacity, take applications or ask for sponsors.
+    LEFT_CARE = [STATUS_ADOPTED, STATUS_RELEASED, STATUS_DECEASED]
+    # Sad or quiet endings stay reachable by link but leave the public lists; adoptions are celebrated.
+    UNLISTED = [STATUS_RELEASED, STATUS_DECEASED]
+    # A new profile starts in care. Everything after that goes through the moves below.
+    STARTING_STATUSES = [STATUS_RESCUED, STATUS_RECOVERING]
+    # The moves a team can make. Leaving care can be undone, because animals come back and
+    # people mistype; those moves need a note saying why.
+    NEXT_STATUSES = {
+        STATUS_RESCUED: [STATUS_RECOVERING, STATUS_ADOPTABLE, STATUS_RELEASED, STATUS_DECEASED],
+        STATUS_RECOVERING: [STATUS_ADOPTABLE, STATUS_RELEASED, STATUS_DECEASED],
+        STATUS_ADOPTABLE: [STATUS_RECOVERING, STATUS_ADOPTED, STATUS_RELEASED, STATUS_DECEASED],
+        STATUS_ADOPTED: [STATUS_RECOVERING, STATUS_ADOPTABLE],
+        STATUS_RELEASED: [STATUS_RECOVERING],
+        STATUS_DECEASED: [STATUS_RECOVERING],
+    }
 
     case = models.OneToOneField(
         "rescue.Case",
@@ -50,6 +75,7 @@ class Animal(models.Model):
     ]
     health = models.CharField(max_length=20, choices=HEALTH_CHOICES, blank=True)
     vaccinated = models.BooleanField(default=False)
+    sterilized = models.BooleanField(default=False)
     # How many sponsors the organization is looking for ("Pledged support 18 / 50", Stitch 16).
     sponsor_goal = models.PositiveSmallIntegerField(default=20)
     # What the animal's care costs (treatment, food, shelter), in PKR. Confirmed sponsorships
@@ -63,6 +89,75 @@ class Animal(models.Model):
 
     def __str__(self):
         return self.name
+
+    def readiness(self):
+        """The checklist before an animal is listed for adoption. Required items are enforced;
+        the others are shown to adopters as they are, so a team can still list without them."""
+        return [
+            {"key": "photo", "label": "Photo added", "done": bool(self.image), "required": True},
+            {"key": "description", "label": "Public description written", "done": bool(self.description.strip()), "required": True},
+            {
+                "key": "health",
+                "label": "Health recorded and treatment finished",
+                "done": bool(self.health) and self.health != "under_treatment",
+                "required": True,
+            },
+            {"key": "vaccinated", "label": "Vaccinated", "done": self.vaccinated, "required": False},
+            {"key": "sterilized", "label": "Spayed or neutered", "done": self.sterilized, "required": False},
+        ]
+
+
+class AnimalStatusChange(models.Model):
+    """One move through the animal's lifecycle, with the team's reason. Notes can name an
+    adopter, so this history is only shown to the animal's own team."""
+
+    animal = models.ForeignKey(Animal, on_delete=models.CASCADE, related_name="status_changes")
+    from_status = models.CharField(max_length=20, choices=Animal.STATUS_CHOICES)
+    to_status = models.CharField(max_length=20, choices=Animal.STATUS_CHOICES)
+    note = models.TextField(blank=True)
+    changed_by = models.ForeignKey("accounts.User", on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+
+    def __str__(self):
+        return f"{self.animal.name}: {self.from_status} to {self.to_status}"
+
+
+class MedicalRecord(models.Model):
+    """One entry in an animal's medical history: an exam, a vaccine, a surgery and so on.
+    `next_due` is when it needs doing again; repeating the same entry settles it."""
+
+    KIND_CHOICES = [
+        ("checkup", "Check-up"),
+        ("vaccination", "Vaccination"),
+        ("deworming", "Deworming"),
+        ("sterilization", "Spay or neuter"),
+        ("treatment", "Treatment"),
+        ("surgery", "Surgery"),
+        ("other", "Other"),
+    ]
+
+    animal = models.ForeignKey(Animal, on_delete=models.CASCADE, related_name="medical_records")
+    kind = models.CharField(max_length=20, choices=KIND_CHOICES)
+    title = models.CharField(max_length=150)
+    date = models.DateField()
+    next_due = models.DateField(null=True, blank=True)
+    vet = models.CharField(max_length=150, blank=True)
+    weight_kg = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(Decimal("0.01"))])
+    notes = models.TextField(blank=True)
+    # Shared on the public profile. Team-only entries are for things adopters don't need to read.
+    is_public = models.BooleanField(default=True)
+    created_by = models.ForeignKey("accounts.User", on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-date", "-id"]
+
+    def __str__(self):
+        return f"{self.title} for {self.animal.name} ({self.date})"
 
 
 class AdoptionApplication(models.Model):

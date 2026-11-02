@@ -5,6 +5,10 @@ import type { AdoptionApplication, OrganizationProfileStats, ShelterDonation, Sp
 export const getApplications = async (status?: string) =>
   (await API.get<AdoptionApplication[]>(`/api/animals/applications/${status ? `?status=${status}` : ""}`)).data;
 
+/** Every application for one animal, including after it has left care. */
+export const getAnimalApplications = async (animalId: string | number) =>
+  (await API.get<AdoptionApplication[]>(`/api/animals/applications/?animal=${animalId}`)).data;
+
 export const decideApplication = async (id: number, status: "approved" | "rejected") =>
   (await API.post<AdoptionApplication>(`/api/animals/applications/${id}/decide/`, { status })).data;
 

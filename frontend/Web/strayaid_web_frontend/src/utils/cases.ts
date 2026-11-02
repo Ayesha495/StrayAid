@@ -17,13 +17,15 @@ export const casePhoto = (item: Case) => item.reports?.find((report) => report.i
 /**
  * The only status changes an organization may make, in order. The backend accepts any
  * status, so the web enforces the rescue flow here:
- * reported → assigned → in_progress → rescued → adoption or closed.
+ * reported → assigned → in_progress → rescued → closed. Adoption isn't a step here: once a
+ * rescue has an animal profile, the animal's record moves the case (the backend refuses
+ * status changes on those cases).
  */
 export const NEXT_STATUSES: Record<CaseStatus, CaseStatus[]> = {
   reported: ["assigned"],
   assigned: ["in_progress", "closed"],
   in_progress: ["rescued", "closed"],
-  rescued: ["adoption", "closed"],
+  rescued: ["closed"],
   adoption: ["closed"],
   closed: [],
 };
@@ -34,7 +36,6 @@ export const NEXT_STATUS_ACTION: Record<string, string> = {
   assigned: "Assign responder",
   in_progress: "Start rescue",
   rescued: "Mark rescued",
-  adoption: "Open for adoption",
   closed: "Close case",
 };
 

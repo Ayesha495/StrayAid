@@ -206,7 +206,10 @@ class OneAdoptionPerAnimalTests(TestCase):
 
     def test_a_returned_animal_can_be_adopted_again(self):
         self.decide(apply(self.animal, self.first), "approved")
-        reply = self.team_client.patch(f"/api/animals/{self.animal.id}/", {"status": "adoptable"}, format="json")
+        Animal.objects.filter(pk=self.animal.pk).update(image="animals/bruno.jpg", description="Friendly.", health="healthy")
+        reply = self.team_client.patch(
+            f"/api/animals/{self.animal.id}/", {"status": "adoptable", "status_note": "The family moved abroad."}, format="json"
+        )
         self.assertEqual(reply.status_code, 200)
         self.assertEqual(self.animal.adoption_applications.filter(status="approved").count(), 0)
         self.assertEqual(self.decide(apply(self.animal, self.second), "approved").status_code, 200)

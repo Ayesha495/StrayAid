@@ -11,6 +11,7 @@ import { NEXT_STATUS_ACTION, nextStatuses } from "../utils/cases";
 import { errorMessage } from "../utils/errors";
 import { formatDateTime, initialsOf } from "../utils/format";
 import { formatRelativeTime } from "../utils/time";
+import StatusChip from "../ui/StatusChip";
 import ScoreBadge from "../ui/ScoreBadge";
 import ScoreBreakdown from "../components/ScoreBreakdown";
 import CaseProgress from "../components/CaseProgress";
@@ -23,7 +24,6 @@ const NEXT_HINT: Record<string, string> = {
   assigned: "Tell the reporter a responder is on it.",
   in_progress: "Your team is heading to the animal.",
   rescued: "The animal is safe. Next you'll create its profile.",
-  adoption: "Recovered and ready to meet families.",
   closed: "No further action. This can't be undone.",
 };
 
@@ -114,7 +114,9 @@ function CaseDetail() {
 
   // Only the next steps of the rescue are offered: reported → assigned → in progress → rescued → adoption / closed.
   const isMine = Boolean(organization && caseItem.organization?.id === organization.id);
-  const options = isMine ? nextStatuses(caseItem.status) : [];
+  // Once there's a profile the animal's record leads, so the case has no buttons of its own.
+  const profile = caseItem.animal_profile;
+  const options = isMine && !profile ? nextStatuses(caseItem.status) : [];
   const forward = options.filter((status) => status !== "closed");
   const canClose = options.includes("closed");
   const photos = caseItem.reports.filter((report) => report.image);
@@ -261,8 +263,14 @@ function CaseDetail() {
                 <p className="meta-line">{NEXT_HINT[status]}</p>
               </div>
             ))}
-            {isMine && caseItem.status === "rescued" ? (
-              <Link className="secondary-btn cd-next-btn" to={`/animals?caseId=${caseItem.id}`}><PawPrint size={14} /> Create animal profile</Link>
+            {isMine && profile ? (
+              <div className="cd-next">
+                <Link className="primary-btn cd-next-btn" to={`/animals/${profile.id}/manage`}><PawPrint size={14} /> Open {profile.name}'s record</Link>
+                <p className="meta-line">This rescue now follows {profile.name}'s record: <StatusChip kind="animal" value={profile.status} /></p>
+              </div>
+            ) : null}
+            {isMine && caseItem.status === "rescued" && !profile ? (
+              <Link className="primary-btn cd-next-btn" to={`/animals?caseId=${caseItem.id}`}><PawPrint size={14} /> Create animal profile</Link>
             ) : null}
             {canClose ? (
               <button type="button" className="cd-close" onClick={() => handleStatusChange("closed")}>Close case</button>

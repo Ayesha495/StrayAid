@@ -43,6 +43,8 @@ const STATUS_CHIP: Record<string, string> = {
   recovering: "Recovering",
   adoptable: "Rescued",
   adopted: "Adopted",
+  released: "Back home",
+  deceased: "Passed away",
 };
 
 const capitalize = (value?: string) => (value ? value[0].toUpperCase() + value.slice(1) : "");
@@ -169,6 +171,8 @@ export default function AnimalProfileScreen() {
   const photos = animal.photos?.length ? animal.photos : animal.image ? [animal.image] : [];
   const adoptable = animal.status === "adoptable";
   const adopted = animal.status === "adopted";
+  // Released or passed away: no longer in care, so nothing here asks for help.
+  const leftCare = adopted || animal.status === "released" || animal.status === "deceased";
   const attributes = [
     animal.health && HEALTH_LABELS[animal.health],
     animal.vaccinated && "Vaccinated",
@@ -182,8 +186,8 @@ export default function AnimalProfileScreen() {
     ? applied.status === "approved"
       ? "Approved"
       : "Application sent"
-    : adopted
-    ? "Adopted"
+    : leftCare
+    ? STATUS_CHIP[animal.status]
     : adoptable
     ? `Adopt ${animal.name}`
     : "In recovery";
@@ -268,7 +272,7 @@ export default function AnimalProfileScreen() {
 
           <View style={styles.chips}>
             {!!animal.species && <Text style={[styles.chip, styles.chipSpecies]}>{capitalize(animal.species)}</Text>}
-            <Text style={[styles.chip, adopted ? styles.chipAdopted : styles.chipStatus]}>
+            <Text style={[styles.chip, leftCare ? styles.chipAdopted : styles.chipStatus]}>
               {STATUS_CHIP[animal.status] ?? capitalize(animal.status)}
             </Text>
             {adoptable && (
@@ -359,7 +363,7 @@ export default function AnimalProfileScreen() {
                 <Text style={styles.statLabel}>{animal.sponsor_count === 1 ? "Sponsor" : "Sponsors"}</Text>
               </View>
             </View>
-            {!adopted && (
+            {!leftCare && (
               <View style={styles.stat}>
                 <View style={[styles.statIcon, { backgroundColor: "#ECFDF5" }]}>
                   <MaterialIcons name="description" size={20} color={colors.primary} />
@@ -424,10 +428,10 @@ export default function AnimalProfileScreen() {
         </Pressable>
         <Pressable
           accessibilityRole="button"
-          accessibilityState={{ disabled: adopted }}
-          disabled={adopted}
+          accessibilityState={{ disabled: leftCare }}
+          disabled={leftCare}
           onPress={sponsor}
-          style={({ pressed }) => [styles.sponsor, pressed && styles.sponsorPressed, adopted && styles.sponsorDisabled]}
+          style={({ pressed }) => [styles.sponsor, pressed && styles.sponsorPressed, leftCare && styles.sponsorDisabled]}
         >
           <MaterialIcons name="favorite" size={16} color={colors.primary} />
           <Text style={styles.sponsorText}>Sponsor</Text>

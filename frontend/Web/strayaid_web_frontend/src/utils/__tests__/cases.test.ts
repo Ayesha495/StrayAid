@@ -8,7 +8,7 @@ describe("case status flow", () => {
     expect(nextStatuses("reported")).toEqual(["assigned"]);
     expect(nextStatuses("assigned")).toEqual(["in_progress", "closed"]);
     expect(nextStatuses("in_progress")).toEqual(["rescued", "closed"]);
-    expect(nextStatuses("rescued")).toEqual(["adoption", "closed"]);
+    expect(nextStatuses("rescued")).toEqual(["closed"]);
     expect(nextStatuses("adoption")).toEqual(["closed"]);
     expect(nextStatuses("closed")).toEqual([]);
     expect(nextStatuses("something-else")).toEqual([]);

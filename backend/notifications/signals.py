@@ -82,6 +82,7 @@ ANIMAL_UPDATE_LABELS = {
     "image": "photo",
     "health": "health",
     "vaccinated": "vaccinations",
+    "sterilized": "spay or neuter status",
     "medical_info": "medical notes",
     "description": "story",
     "age": "age",
@@ -97,6 +98,8 @@ ANIMAL_STATUS_BODIES = {
     "recovering": "**{name}** is recovering with **{organization}**.",
     "adoptable": "**{name}** is ready for adoption at **{organization}**.",
     "adopted": "**{name}** has been adopted and is going to a new home. 🎉",
+    "released": "**{name}** has left the care of **{organization}** and gone back home.",
+    "deceased": "Sadly, **{name}** has passed away in the care of **{organization}**. Thank you for caring.",
 }
 # How the animal is doing when its profile is first made.
 ANIMAL_STATUS_PHRASES = {
@@ -132,10 +135,27 @@ def _describe_profile_changes(animal, changed):
             label = f"health (now {animal.get_health_display().lower()})"
         elif field == "vaccinated" and animal.vaccinated:
             label = "vaccinations (now vaccinated)"
+        elif field == "sterilized" and animal.sterilized:
+            label = "spay or neuter status (now done)"
         labels.append(label)
     listed = labels[0] if len(labels) == 1 else f"{', '.join(labels[:-1])} and {labels[-1]}"
     organization = animal.organization.name if animal.organization_id else "The rescue team"
     return f"**{organization}** updated **{animal.name}**'s {listed}."
+
+
+def notify_medical_update(animal, title):
+    """A new entry the team shared in the animal's medical history."""
+    from notifications.services import notify_users
+
+    reporter_ids, follower_ids = _animal_audience(animal)
+    organization = animal.organization.name if animal.organization_id else "The rescue team"
+    notify_users(
+        list(reporter_ids | follower_ids),
+        title=f"{animal.name} Update",
+        body=f"**{organization}** added to **{animal.name}**'s medical history: {title}.",
+        data={"type": "animal_update", "animal_id": animal.pk, "fields": ["medical_info"]},
+        group_key=f"animal-update-{animal.pk}",
+    )
 
 
 def _pre_save_animal(sender, instance, **kwargs):

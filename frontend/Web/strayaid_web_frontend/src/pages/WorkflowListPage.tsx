@@ -40,7 +40,7 @@ const animalRow = (animal: Animal): Row => ({
   id: animal.id,
   heading: animal.name,
   description: animal.description || "Animal profile ready for care updates.",
-  href: `/animals/${animal.id}`,
+  href: `/animals/${animal.id}/manage`,
   image: animal.image ?? null,
   meta: (
     <>

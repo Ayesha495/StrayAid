@@ -1,6 +1,6 @@
 import API, { PublicAPI } from "../api/axios";
 import { getStoredUser } from "./authService";
-import type { Animal, Case, DashboardData, Organization, Post } from "../types/platform";
+import type { Animal, AnimalStatusChange, AnimalUpdate, Case, DashboardData, MedicalRecord, MedicalRecordInput, Organization, Post } from "../types/platform";
 import { normalizeAnimal, normalizeCase, normalizeDashboard, normalizeOrganization, normalizePost } from "../utils/media";
 
 // These helpers keep component code focused on rendering instead of request details.
@@ -74,7 +74,7 @@ export const createAnimal = async (data: FormData) => {
   return normalizeAnimal(response.data);
 };
 
-export const updateAnimal = async (animalId: number, data: FormData | Partial<Animal>) => {
+export const updateAnimal = async (animalId: number, data: FormData | AnimalUpdate) => {
   const response = await API.patch<Animal>(`/api/animals/${animalId}/`, data, {
     headers: data instanceof FormData ? { "Content-Type": "multipart/form-data" } : undefined,
   });
@@ -108,6 +108,23 @@ export const getPublicAnimals = async (filters?: { organizationId?: string | num
 export const getAnimal = async (animalId: string) => {
   const response = await reader().get<Animal>(`/api/animals/${animalId}/`);
   return normalizeAnimal(response.data);
+};
+
+export const getAnimalHistory = async (animalId: string | number) =>
+  (await API.get<AnimalStatusChange[]>(`/api/animals/${animalId}/history/`)).data;
+
+// The medical history. Everyone reads what the team shares; the team also sees its own notes.
+export const getMedicalRecords = async (animalId: string | number) =>
+  (await reader().get<MedicalRecord[]>(`/api/animals/medical-records/?animal=${animalId}`)).data;
+
+export const createMedicalRecord = async (data: MedicalRecordInput) =>
+  (await API.post<MedicalRecord>("/api/animals/medical-records/", data)).data;
+
+export const updateMedicalRecord = async (recordId: number, data: Partial<MedicalRecordInput>) =>
+  (await API.patch<MedicalRecord>(`/api/animals/medical-records/${recordId}/`, data)).data;
+
+export const deleteMedicalRecord = async (recordId: number) => {
+  await API.delete(`/api/animals/medical-records/${recordId}/`);
 };
 
 export const createPost = async (data: FormData) => {

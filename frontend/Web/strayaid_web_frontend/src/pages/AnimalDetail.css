@@ -372,3 +372,8 @@
   .animal-app-row:hover { background: var(--mint); }
   .animal-app-row:hover .animal-app-chevron { transform: translateX(2px); color: var(--green-700); }
 }
+
+/* The medical history the team chose to share. */
+.animal-medical-list { display: flex; flex-direction: column; gap: 10px; margin: var(--space-4) 0 0; padding: 0; list-style: none; }
+.animal-medical-list li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px; padding-top: 10px; border-top: 1px solid var(--line); }
+.animal-medical-list li p { flex-basis: 100%; margin: 0; }

@@ -29,7 +29,7 @@ from django.db.models import FileField, OuterRef, Q, Subquery
 from django.utils import timezone
 
 from accounts.models import DEMO_EMAIL_DOMAIN, User
-from animals.models import AdoptionApplication, Animal, Sponsorship
+from animals.models import AdoptionApplication, Animal, AnimalStatusChange, MedicalRecord, Sponsorship
 from chat.models import Conversation, Message
 from notifications.models import AnimalFollow, CaseFollow, Notification, OrganizationFollow
 from organizations.models import Organization, ShelterDonation
@@ -74,6 +74,36 @@ def health_for(data):
     if data["status"] == Animal.STATUS_RECOVERING:
         return "under_treatment"
     return "minor_issues"
+
+
+def is_vaccinated(medical_info):
+    """The notes say a vaccine was given (not just that one is due)."""
+    text = medical_info.lower()
+    return "vaccin" in text and "vaccination due" not in text
+
+
+def is_sterilized(medical_info):
+    text = medical_info.lower()
+    return " and spayed" in text or " and neutered" in text
+
+
+# Fake but plausible clinics, one per organization.
+DEMO_VETS = ["Dr. Sana Malik, Paws Vet Clinic", "Dr. Omar Farooq, City Animal Hospital", "Dr. Rabia Aziz, Margalla Pet Care"]
+
+# How each status was reached, as fractions of the animal's time in care (1 = the day it arrived).
+STATUS_PATHS = {
+    Animal.STATUS_RESCUED: [],
+    Animal.STATUS_RECOVERING: [(Animal.STATUS_RESCUED, Animal.STATUS_RECOVERING, 0.9, "Started treatment after the intake check.")],
+    Animal.STATUS_ADOPTABLE: [
+        (Animal.STATUS_RESCUED, Animal.STATUS_RECOVERING, 0.9, "Started treatment after the intake check."),
+        (Animal.STATUS_RECOVERING, Animal.STATUS_ADOPTABLE, 0.3, "Vet cleared for adoption."),
+    ],
+    Animal.STATUS_ADOPTED: [
+        (Animal.STATUS_RESCUED, Animal.STATUS_RECOVERING, 0.9, "Started treatment after the intake check."),
+        (Animal.STATUS_RECOVERING, Animal.STATUS_ADOPTABLE, 0.5, "Vet cleared for adoption."),
+        (Animal.STATUS_ADOPTABLE, Animal.STATUS_ADOPTED, 0.15, "Adopted after a home visit."),
+    ],
+}
 
 
 def backdate(instance, **ago):
@@ -413,11 +443,13 @@ FUNDING_GOALS = {"Sunny": 30000, "Luna": 15000, "Max": 20000, "Milo": 25000, "Bu
 # The account to demo My Applications, Messages and Notifications with (Stitch 15, 18-20).
 SHOWCASE = "sara.ahmed"
 # (animal, status, hours ago applied, hours ago decided). Each status once, like the design.
+# Approving an application adopts the animal, so the approved one is for Bella, who went home
+# five days ago; the animals still up for adoption only get open or closed-off applications.
 SHOWCASE_APPLICATIONS = [
-    ("Max", "pending", 18, None),
-    ("Luna", "approved", 8, 1),
+    ("Luna", "pending", 8, None),
+    ("Bella", "approved", 9 * 24, 121),
     ("Pumpkin", "rejected", 70, 26),
-    ("Bella", "withdrawn", 10 * 24, 7 * 24),
+    ("Max", "withdrawn", 18, 10),
 ]
 
 # Chats, oldest message first: (who, minutes ago, text, photo). "member" is the person.
@@ -437,7 +469,7 @@ CHATS = [
         "messages": [
             ("member", 8 * 60, "Hi! I've just applied to adopt Luna. Is she okay around children?", None),
             ("org", 7 * 60 + 40, "Hi Sara! Luna is very gentle and has met our volunteers' kids. We'll review your application today.", None),
-            ("org", 60, "Good news: your application for Luna is approved! 🎉 When would you like to come and meet her?", None),
+            ("org", 60, "Thanks Sara! Your application looks lovely. We'll call you this week to arrange a home visit.", None),
         ],
     },
     {
@@ -1162,7 +1194,8 @@ class Command(BaseCommand):
                     "description": data["description"],
                     "medical_info": data["medical_info"],
                     "health": health_for(data),
-                    "vaccinated": "vaccinat" in data["medical_info"].lower(),
+                    "vaccinated": is_vaccinated(data["medical_info"]),
+                    "sterilized": is_sterilized(data["medical_info"]),
                     "donation_info": f"Support {data['name']}'s care through {organization.name}.",
                     "sponsor_goal": SPONSOR_GOALS.get(data["name"], 10),
                     "funding_goal_pkr": FUNDING_GOALS.get(data["name"], 15000),
@@ -1170,6 +1203,7 @@ class Command(BaseCommand):
             )
             attach_photo(animal, "image", data["image"])
             backdate(animal, hours=rescued_hours - 1)
+            self.seed_care_history(animal, (rescued_hours - 1) / 24)
 
             post, _ = Post.objects.update_or_create(
                 animal=animal,
@@ -1199,6 +1233,65 @@ class Command(BaseCommand):
             Post.objects.filter(animal=animal, title__startswith=f"{data['name']}: ").exclude(id__in=kept).delete()
         return posts
 
+    def seed_care_history(self, animal, days_in_care):
+        """A medical history and lifecycle timeline that agree with the animal's profile: an
+        intake check on arrival, deworming, the vaccine and spay its notes mention, treatment for
+        animals still recovering, and the status moves that led to where it is now. Every date
+        falls inside its time in care."""
+        today = timezone.localdate()
+        days = max(int(days_in_care), 0)
+        vet = DEMO_VETS[(animal.organization_id or 0) % len(DEMO_VETS)]
+        dog = (animal.species or "").lower() == "dog"
+        base_weight = (11.0 if dog else 2.8) + (len(animal.name) % 4) * (1.5 if dog else 0.3)
+
+        def day(fraction):
+            return today - timedelta(days=round(days * fraction))
+
+        entries = [
+            ("checkup", "Intake examination", day(1), None, base_weight, "First check on arrival: temperature, teeth, skin and coat."),
+            ("deworming", "Deworming tablet", day(0.95), day(0.95) + timedelta(days=90), None, ""),
+        ]
+        if is_vaccinated(animal.medical_info):
+            given = day(0.6)
+            entries.append(("vaccination", "Rabies vaccine", given, given + timedelta(days=365), None, ""))
+        if is_sterilized(animal.medical_info):
+            title = "Neuter surgery" if (animal.gender or "").lower() == "male" else "Spay surgery"
+            entries.append(("sterilization", title, day(0.4), None, None, "Healed well; stitches removed after ten days."))
+        if animal.status == Animal.STATUS_RECOVERING:
+            # The next check falls in the coming days, so the record shows what's due.
+            entries.append(("treatment", "Treatment and wound care", day(0.7), today + timedelta(days=2), None, animal.medical_info))
+        if days >= 7:
+            entries.append(("checkup", "Weight check", day(0.2), None, round(base_weight * 1.08, 2), "Eating well and gaining weight."))
+
+        for kind, title, when, next_due, weight, notes in entries:
+            MedicalRecord.objects.update_or_create(
+                animal=animal,
+                kind=kind,
+                title=title,
+                defaults={
+                    "date": when,
+                    "next_due": next_due,
+                    "vet": vet,
+                    "weight_kg": weight,
+                    "notes": notes,
+                    "is_public": True,
+                    "created_by": animal.organization.user if animal.organization_id else None,
+                },
+            )
+
+        moves = STATUS_PATHS.get(animal.status, [])
+        kept = []
+        for from_status, to_status, fraction, note in moves:
+            change, _ = AnimalStatusChange.objects.update_or_create(
+                animal=animal,
+                from_status=from_status,
+                to_status=to_status,
+                defaults={"note": note, "changed_by": animal.organization.user if animal.organization_id else None},
+            )
+            backdate(change, hours=max(days * fraction * 24, 0.5))
+            kept.append(change.id)
+        animal.status_changes.exclude(id__in=kept).delete()
+
     def seed_adoptions_and_sponsorships(self, reporters):
         """Adoption applications only for animals that can be (or were) adopted, and pledges
         for animals still in care, so the profile counts on Stitch 13 are believable."""
@@ -1217,9 +1310,12 @@ class Command(BaseCommand):
                 applicants = candidates[:1]
             else:
                 applicants = []
-            scripted = {name for name, _, _, _ in SHOWCASE_APPLICATIONS}
+            scripted = {name: status for name, status, _, _ in SHOWCASE_APPLICATIONS}
             if animal.name in scripted:
                 applicants = [person for person in applicants if person.email != f"{SHOWCASE}{DEMO_DOMAIN}"]
+                # The showcase account is this animal's adopter, and an animal has only one.
+                if scripted[animal.name] == "approved":
+                    applicants = []
             for offset, person in enumerate(applicants):
                 application, _ = AdoptionApplication.objects.update_or_create(
                     animal=animal,
@@ -1287,6 +1383,9 @@ class Command(BaseCommand):
         now = timezone.now()
         for name, status, applied_hours, decided_hours in SHOWCASE_APPLICATIONS:
             animal = Animal.objects.get(name=name, organization__user__email__endswith=DEMO_DOMAIN)
+            if status == "approved":
+                # Earlier runs may have approved someone else, and an animal has only one adopter.
+                animal.adoption_applications.filter(status="approved").exclude(applicant=person).delete()
             application, _ = AdoptionApplication.objects.update_or_create(
                 animal=animal,
                 applicant=person,
@@ -1550,7 +1649,8 @@ class Command(BaseCommand):
                     "description": data["description"],
                     "medical_info": data["medical_info"],
                     "health": health_for(data),
-                    "vaccinated": "vaccinat" in data["medical_info"].lower(),
+                    "vaccinated": is_vaccinated(data["medical_info"]),
+                    "sterilized": is_sterilized(data["medical_info"]),
                     "donation_info": f"Support {data['name']}'s care through {organization.name}.",
                     "sponsor_goal": 6,
                     "funding_goal_pkr": data["funding_goal"],
@@ -1559,6 +1659,7 @@ class Command(BaseCommand):
             if not animal.image:
                 animal.image.save(Path(data["image"]).name, self.real_photo(data["image"]), save=True)
             backdate(animal, hours=hours_in_care)
+            self.seed_care_history(animal, hours_in_care / 24)
 
             kept = []
             for index, (title, content, category, photo_kind, hours_ago) in enumerate(data["posts"]):
