@@ -8,7 +8,7 @@ import Svg, { Circle, Ellipse, G, Path } from "react-native-svg";
 
 type Props = {
   size?: number;
-  tone?: "color" | "light";
+  tone?: "color" | "light" | "cutout";
 };
 
 // The official artwork, traced from the design (assets/images/brand/strayaid-logo.svg).
@@ -27,6 +27,17 @@ export default function LogoMark({ size = 80, tone = "color" }: Props) {
       <Path d={PAW_AND_CROSS} fill="#FFFFFF" fillRule="evenodd" />
     </>
   );
+
+  if (tone === "cutout") {
+    // Only the pin, in white, with the paw and the cross cut out so the photo behind shows
+    // through. One even-odd path: the pin's outline wraps the paw's, which flips every shape
+    // the paw drew into a hole. No base discs, no circle behind it.
+    return (
+      <Svg width={size * 0.62} height={size} viewBox="102 0 307 476" accessibilityLabel="StrayAid logo">
+        <Path d={`${PIN} ${PAW_AND_CROSS}`} fill="#FFFFFF" fillRule="evenodd" />
+      </Svg>
+    );
+  }
 
   if (tone === "light") {
     return (
