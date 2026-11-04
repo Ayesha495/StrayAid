@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import type { LucideIcon } from "lucide-react";
-import { Archive, FileText, HeartHandshake, House, LayoutGrid, Megaphone, Plus, Search, Stethoscope } from "lucide-react";
+import { Archive, FileText, House, LayoutGrid, Megaphone, Plus, Search, Stethoscope } from "lucide-react";
 import AnimalCard from "../components/AnimalCard";
 import FundingMeter from "../components/FundingMeter";
 import { AnimalProfileForm } from "../components/AnimalForms";
@@ -11,18 +11,20 @@ import { useApi } from "../hooks/useApi";
 import { useToast } from "../ui/Toast";
 import { ErrorState } from "../ui/States";
 import { errorMessage } from "../utils/errors";
+import { LEFT_CARE } from "../utils/animals";
 import type { Animal } from "../types/platform";
 import "../styles/Portal.css";
 import "../styles/AnimalManagement.css";
 
-type Filter = "all" | "care" | "adoptable" | "adopted" | "closed";
+type Filter = "all" | "care" | "adoptable" | "archive";
 
+// Animals that have left care (adopted, back home, passed away) live in the archive: kept for the
+// team's records, out of the working list and out of every public list.
 const FILTERS: { key: Filter; label: string; hint: string; icon: LucideIcon; tint: string; test: (animal: Animal) => boolean }[] = [
-  { key: "all", label: "All animals", hint: "every record", icon: LayoutGrid, tint: "blue", test: () => true },
+  { key: "all", label: "With the team", hint: "every animal in care", icon: LayoutGrid, tint: "blue", test: (animal) => !LEFT_CARE.includes(animal.status) },
   { key: "care", label: "In care", hint: "rescued or recovering", icon: Stethoscope, tint: "coral", test: (animal) => animal.status === "rescued" || animal.status === "recovering" },
   { key: "adoptable", label: "Adoptable", hint: "ready for a home", icon: House, tint: "purple", test: (animal) => animal.status === "adoptable" },
-  { key: "adopted", label: "Adopted", hint: "happy endings", icon: HeartHandshake, tint: "green", test: (animal) => animal.status === "adopted" },
-  { key: "closed", label: "Other outcomes", hint: "back home or passed away", icon: Archive, tint: "amber", test: (animal) => animal.status === "released" || animal.status === "deceased" },
+  { key: "archive", label: "Archive", hint: "adopted, back home or passed away", icon: Archive, tint: "green", test: (animal) => LEFT_CARE.includes(animal.status) },
 ];
 
 /** Every animal the team has rescued. Each card opens the animal's record, where it is managed. */

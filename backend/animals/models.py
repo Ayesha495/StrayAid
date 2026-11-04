@@ -27,8 +27,9 @@ class Animal(models.Model):
 
     # No longer with the team: these don't use up capacity, take applications or ask for sponsors.
     LEFT_CARE = [STATUS_ADOPTED, STATUS_RELEASED, STATUS_DECEASED]
-    # Sad or quiet endings stay reachable by link but leave the public lists; adoptions are celebrated.
-    UNLISTED = [STATUS_RELEASED, STATUS_DECEASED]
+    # Every animal that has left care moves to the team's archive: still reachable by link (old posts,
+    # notifications) and kept in the team's records, but gone from the public lists.
+    UNLISTED = [STATUS_ADOPTED, STATUS_RELEASED, STATUS_DECEASED]
     # A new profile starts in care. Everything after that goes through the moves below.
     STARTING_STATUSES = [STATUS_RESCUED, STATUS_RECOVERING]
     # The moves a team can make. Leaving care can be undone, because animals come back and

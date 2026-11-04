@@ -56,7 +56,7 @@ const C = {
   urgent: "#A23E32",
 };
 
-type Filter = "all" | "adoptable" | "treatment" | "adopted";
+type Filter = "all" | "adoptable" | "treatment";
 const STATUS_BADGE: Record<string, { label: string; dot: string }> = {
   adoptable: { label: "Adoptable", dot: C.fixed },
   recovering: { label: "Recovering", dot: "#FF8A80" },
@@ -161,14 +161,12 @@ export default function OrganizationScreen() {
     );
   }
 
+  // Adopted animals live in the team's archive and aren't listed here; the filter guards older servers.
   const inCare = animals.filter((animal) => animal.status !== "adopted");
-  const adopted = animals.filter((animal) => animal.status === "adopted");
   const groups: Record<Filter, MobileAnimal[]> = {
-    // Everyone the team has helped, with those who found a home after the ones still here.
-    all: [...inCare, ...adopted],
+    all: inCare,
     adoptable: animals.filter((animal) => animal.status === "adoptable"),
     treatment: animals.filter((animal) => animal.status === "recovering" || animal.status === "rescued"),
-    adopted,
   };
   const shown = showAll ? groups[filter] : groups[filter].slice(0, PREVIEW);
   const hasLocation = organization.latitude != null && organization.longitude != null;
@@ -399,7 +397,7 @@ export default function OrganizationScreen() {
           <View>
             <Text style={styles.sectionTitle}>Our Animals</Text>
             <Text style={styles.careSub}>
-              {inCare.length} in care • {adopted.length} adopted
+              {inCare.length} in care • {profile.stats.adopted} adopted
             </Text>
           </View>
           {groups[filter].length > PREVIEW && (
@@ -415,7 +413,6 @@ export default function OrganizationScreen() {
               ["all", `All (${groups.all.length})`],
               ["adoptable", `Ready for Adoption (${groups.adoptable.length})`],
               ["treatment", `In Treatment (${groups.treatment.length})`],
-              ["adopted", `Adopted (${groups.adopted.length})`],
             ] as [Filter, string][]
           ).map(([key, label]) => (
             <Pressable
@@ -436,18 +433,17 @@ export default function OrganizationScreen() {
           const detail = info(animal);
           const cta = action(animal);
           const following = followedAnimals.includes(animal.id);
-          const isAdopted = animal.status === "adopted";
           return (
             <Pressable
               key={animal.id}
               accessibilityRole="button"
               accessibilityLabel={`${animal.name}, ${badge.label}`}
               onPress={() => router.push(`/animals/${animal.id}` as Href)}
-              style={({ pressed }) => [styles.animal, isAdopted && styles.animalAdopted, pressed && styles.pressed]}
+              style={({ pressed }) => [styles.animal, pressed && styles.pressed]}
             >
               <View style={styles.animalImage}>
                 {animal.image ? (
-                  <Image source={{ uri: animal.image }} style={[StyleSheet.absoluteFill, isAdopted && styles.photoAdopted]} contentFit="cover" />
+                  <Image source={{ uri: animal.image }} style={StyleSheet.absoluteFill} contentFit="cover" />
                 ) : (
                   <MaterialIcons name="pets" size={28} color="#BEC9C3" />
                 )}
@@ -723,8 +719,6 @@ const styles = StyleSheet.create({
     gap: 14,
     ...cardShadow,
   },
-  animalAdopted: { backgroundColor: "#ECEEF1" },
-  photoAdopted: { opacity: 0.55, filter: [{ grayscale: 1 }] },
   infoGrey: { backgroundColor: "#DDE1E6" },
   animalImage: { width: 96, height: 96, borderRadius: 8, overflow: "hidden", backgroundColor: C.container, alignItems: "center", justifyContent: "center" },
   animalBadge: {

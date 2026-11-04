@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { ArrowLeft, HandCoins, Heart, Home, PawPrint, Search } from "lucide-react";
+import { ArrowLeft, HandCoins, Home, PawPrint, Search } from "lucide-react";
 import AnimalTile from "../components/AnimalTile";
 import FilterTiles from "../ui/FilterTiles";
 import { EmptyState, LoadingRows } from "../ui/States";
@@ -12,11 +12,10 @@ import "./AnimalDirectory.css";
 
 const PAGE_SIZE = 12;
 
-type Need = "home" | "sponsor" | "adopted" | "all";
+type Need = "home" | "sponsor" | "all";
 const NEEDS: Record<Need, (animal: Animal) => boolean> = {
   home: (animal) => animal.status === "adoptable",
   sponsor: (animal) => animal.status === "rescued" || animal.status === "recovering",
-  adopted: (animal) => animal.status === "adopted",
   all: () => true,
 };
 
@@ -38,7 +37,8 @@ function AnimalDirectory() {
   const [visible, setVisible] = useState(PAGE_SIZE);
 
   const organizationId = params.get("organizationId") ?? "";
-  const need = (params.get("need") as Need) || "all";
+  const asked = params.get("need") as Need;
+  const need: Need = asked in NEEDS ? asked : "all";   // an old link (such as need=adopted) falls back to everyone
   const species = params.get("species") ?? "";
   const sort = params.get("sort") ?? "need";
   const query = params.get("q") ?? "";
@@ -119,7 +119,6 @@ function AnimalDirectory() {
         tiles={[
           { key: "home", label: "Looking for a home", hint: "ready to adopt", count: count("home"), icon: <Home size={16} />, tint: "purple" },
           { key: "sponsor", label: "Needs sponsors", hint: "still recovering", count: count("sponsor"), icon: <HandCoins size={16} />, tint: "amber" },
-          { key: "adopted", label: "Adopted", hint: "happy endings", count: count("adopted"), icon: <Heart size={16} />, tint: "green" },
           { key: "all", label: "Everyone", hint: "all animals", count: bySpecies.length, icon: <PawPrint size={16} />, tint: "blue" },
         ]}
       />

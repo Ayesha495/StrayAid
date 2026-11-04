@@ -49,7 +49,6 @@ const FILTERS = [
   { key: "all", label: "All" },
   { key: "adoptable", label: "Ready for a home" },
   { key: "recovering", label: "Recovering" },
-  { key: "adopted", label: "Adopted" },
 ];
 
 const reveal = {
