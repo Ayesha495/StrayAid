@@ -23,6 +23,7 @@ import {
 import { deleteMedicalRecord, getAnimal, getAnimalHistory, getAnimalPosts, getMedicalRecords, updateAnimal } from "../services/platformService";
 import { getAnimalApplications } from "../services/fundingService";
 import { useApi } from "../hooks/useApi";
+import { useShell } from "../layout/ShellContext";
 import { useToast } from "../ui/Toast";
 import Avatar from "../ui/Avatar";
 import StatusChip from "../ui/StatusChip";
@@ -108,6 +109,7 @@ function AnimalRecord() {
   const applications = useApi(() => getAnimalApplications(animalId), animalId);
   const posts = useApi(() => getAnimalPosts(animalId), animalId);
   const [dialog, setDialog] = useState<Dialog>(null);
+  const { organization: myOrganization } = useShell();
 
   const data = animal.data;
   if (animal.error && !data) {
@@ -116,8 +118,10 @@ function AnimalRecord() {
   if (!data) {
     return <div className="page"><Skeleton height={120} /><Skeleton height={420} /></div>;
   }
-  // Only the animal's own team gets the checklist, so its absence means another team's animal.
-  if (!data.readiness) {
+  // The server only sends the checklist to the animal's own team; the team id is checked too, so a
+  // server that doesn't send it yet never locks a team out of an animal it just created.
+  const own = Boolean(data.readiness) || Boolean(myOrganization && data.organization?.id === myOrganization.id);
+  if (!own) {
     return (
       <div className="page">
         <EmptyState
@@ -131,7 +135,14 @@ function AnimalRecord() {
   }
 
   const finished = LEFT_CARE.includes(data.status);
-  const readiness = data.readiness;
+  const readiness = data.readiness ?? [
+    // The same checklist the server builds (animals/models.py Animal.readiness)
+    { key: "photo", label: "Photo added", done: Boolean(data.image), required: true },
+    { key: "description", label: "Public description written", done: Boolean(data.description?.trim()), required: true },
+    { key: "health", label: "Health recorded and treatment finished", done: Boolean(data.health) && data.health !== "under_treatment", required: true },
+    { key: "vaccinated", label: "Vaccinated", done: Boolean(data.vaccinated), required: false },
+    { key: "sterilized", label: "Spayed or neutered", done: Boolean(data.sterilized), required: false },
+  ];
   const blockers = readiness.filter((item) => item.required && !item.done);
   const entries = records.data ?? [];
   const followUps = entries.filter((entry) => entry.next_due).sort((a, b) => (a.next_due ?? "").localeCompare(b.next_due ?? ""));

@@ -96,11 +96,20 @@ describe("Animal record", () => {
   });
 
   it("tells another team's visitors to use the public profile", async () => {
-    p.getAnimal.mockResolvedValue(animal({ readiness: undefined }));
+    p.getAnimal.mockResolvedValue(animal({ readiness: undefined, organization: { ...ORGANIZATION, id: ORGANIZATION.id + 1, name: "Another Rescue" } }));
     p.getMedicalRecords.mockResolvedValue([]);
     open();
 
     expect(await screen.findByRole("heading", { name: /cared for by another team/ })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Open public profile" })).toHaveAttribute("href", "/animals/15");
+  });
+
+  it("lets the team manage its own animal even when the server leaves out the checklist", async () => {
+    p.getAnimal.mockResolvedValue(animal({ readiness: undefined }));
+    p.getMedicalRecords.mockResolvedValue([]);
+    open();
+
+    expect(await screen.findByRole("heading", { name: "Ready for adoption?" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /cared for by another team/ })).not.toBeInTheDocument();
   });
 });
