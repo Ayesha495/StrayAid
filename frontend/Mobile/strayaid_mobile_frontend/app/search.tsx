@@ -9,7 +9,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { BrandTitle } from "../components/brand/BrandHeader";
 import NearbyCaseCarousel from "../components/case/NearbyCaseCarousel";
-import DemoNotice from "../components/DemoNotice";
 import { useSession } from "../hooks/useSession";
 import { getMapCases, searchCases, TrendingCase } from "../services/homeService";
 import { getCurrentLocation, hasLocationPermission } from "../services/locationService";
@@ -275,7 +274,6 @@ export default function SearchScreen() {
   return (
     <SafeAreaView style={styles.screen} edges={["top"]}>
       <StatusBar style="dark" />
-      <DemoNotice />
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <Pressable accessibilityRole="button" accessibilityLabel="Go back" onPress={goBack} style={styles.back}>

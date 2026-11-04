@@ -1,6 +1,5 @@
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
-import DemoNotice from "./components/DemoNotice";
 import { lazy, Suspense } from "react";
 import { BrowserRouter, Navigate, Routes, Route } from "react-router-dom";
 import { MotionConfig } from "motion/react";
@@ -49,7 +48,6 @@ function App() {
     <BrowserRouter>
       <ToastProvider>
         <ShellProvider>
-          <DemoNotice />
           <Analytics />
           <SpeedInsights />
           <Suspense fallback={<div className="page-loading"><Spinner label="Loading page" /></div>}>
