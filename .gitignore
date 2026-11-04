@@ -53,3 +53,6 @@ testing/node_modules/
 backend/test-reports/
 frontend/*/*/test-reports/
 testing/load/load-report.html
+
+# Report documents, videos and video sources (kept locally, not in git)
+additional content/

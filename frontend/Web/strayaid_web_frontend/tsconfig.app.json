@@ -25,7 +25,6 @@
     "noUncheckedSideEffectImports": true,
 
     /* "@/..." imports (used by the UI library components) */
-    "baseUrl": ".",
     "paths": { "@/*": ["./src/*"] }
   },
   "include": ["src"],
