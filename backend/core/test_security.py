@@ -196,13 +196,13 @@ class OneAdoptionPerAnimalTests(TestCase):
         reply = client_for(self.second).post(f"/api/animals/{self.animal.id}/apply/", {}, format="json")
         self.assertEqual(reply.status_code, 400)
 
-    def test_an_adopted_animal_shows_no_applications_but_stays_on_the_profile(self):
+    def test_an_adopted_animal_moves_to_the_archive_but_its_profile_still_opens(self):
         self.decide(apply(self.animal, self.first), "approved")
-        animals = client_for().get(f"/api/organizations/{self.organization.id}/animals/").data
-        self.assertEqual(
-            [(animal["id"], animal["status"], animal["application_count"]) for animal in animals],
-            [(self.animal.id, "adopted", 0)],
-        )
+        # Off the team's public list (it lives in the team's archive now)...
+        self.assertEqual(client_for().get(f"/api/organizations/{self.organization.id}/animals/").data, [])
+        # ...but old links still open its profile, with no applications left on it.
+        profile = client_for().get(f"/api/animals/{self.animal.id}/").data
+        self.assertEqual((profile["status"], profile["application_count"]), ("adopted", 0))
 
     def test_a_returned_animal_can_be_adopted_again(self):
         self.decide(apply(self.animal, self.first), "approved")

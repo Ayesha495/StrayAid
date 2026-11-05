@@ -74,7 +74,7 @@ def close_open_applications(animal, keep=None):
     now = timezone.now()
     body = (
         f"**{animal.name}** is no longer up for adoption. Thank you for offering a home."
-        if animal.status != Animal.STATUS_ADOPTED
+        if animal.status in (Animal.STATUS_RELEASED, Animal.STATUS_DECEASED)
         else f"**{animal.name}** has found a home with another family. Thank you for offering yours."
     )
     others = animal.adoption_applications.select_for_update().filter(status="pending")
