@@ -164,7 +164,24 @@ STORAGES = {
         else "whitenoise.storage.CompressedManifestStaticFilesStorage"
     },
 }
+# Uploads in production: the free host has no permanent disk, so with MEDIA_BUCKET set they go to
+# Neon Object Storage (core/storage.py). The AWS_* variables are the ones Neon gives for the bucket.
+MEDIA_BUCKET = os.getenv("MEDIA_BUCKET", "")
+# All four must be set, so a half-configured server keeps the old behaviour instead of breaking links.
+if MEDIA_BUCKET and os.getenv("AWS_ENDPOINT_URL_S3") and os.getenv("AWS_ACCESS_KEY_ID") and os.getenv("AWS_SECRET_ACCESS_KEY"):
+    STORAGES["default"] = {"BACKEND": "core.storage.MediaStorage"}
+    AWS_STORAGE_BUCKET_NAME = MEDIA_BUCKET
+    AWS_S3_ENDPOINT_URL = os.getenv("AWS_ENDPOINT_URL_S3")
+    AWS_S3_REGION_NAME = os.getenv("AWS_REGION", "us-east-2")
+    AWS_S3_ADDRESSING_STYLE = "path"  # Neon only supports path-style addressing
+    AWS_S3_SIGNATURE_VERSION = "s3v4"
+    AWS_DEFAULT_ACL = None
+    AWS_S3_FILE_OVERWRITE = False
+    # The bucket is private: every link is signed, and lasts as long as the receipt and chat links did.
+    AWS_QUERYSTRING_AUTH = True
+    AWS_QUERYSTRING_EXPIRE = 6 * 60 * 60
 # Django serves uploads itself while developing, or on a host without a separate file server.
+# With a bucket it still serves the demo photos, which ship inside the server image.
 SERVE_MEDIA = env_bool("SERVE_MEDIA", DEBUG)
 
 MAX_UPLOAD_BYTES = int(os.getenv("MAX_UPLOAD_BYTES", 10 * 1024 * 1024))

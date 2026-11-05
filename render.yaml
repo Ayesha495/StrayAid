@@ -43,6 +43,18 @@ services:
         sync: false
       - key: SERVE_MEDIA
         value: "1"
+      # Uploads go to the Neon bucket "media" (neon.ts). Fill these in from `neon env pull`;
+      # until all four are set, uploads stay on the server's disk (wiped on every restart).
+      - key: MEDIA_BUCKET
+        sync: false
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_ENDPOINT_URL_S3
+        sync: false
+      - key: AWS_REGION
+        value: us-east-2
       # Requests per minute, per client, on the public case search.
       - key: THROTTLE_SEARCH
         value: 60/minute

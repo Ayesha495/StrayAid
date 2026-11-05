@@ -3,7 +3,7 @@ receipts or private chat pictures. Those two folders only open with a signed, ex
 that the API hands to the people allowed to see them."""
 
 import posixpath
-from urllib.parse import quote
+from urllib.parse import quote, urlsplit
 
 from django.conf import settings
 from django.core.signing import BadSignature, TimestampSigner
@@ -29,7 +29,8 @@ def media_url(request, file):
     if not file:
         return None
     url = file.url
-    if is_protected(file.name):
+    # A bucket link already comes signed and expiring; only files served by Django need our signature.
+    if is_protected(file.name) and not urlsplit(url).query:
         url = f"{url}?sig={quote(signer.sign(_clean(file.name)))}"
     return request.build_absolute_uri(url) if request else url
 

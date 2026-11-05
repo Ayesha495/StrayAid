@@ -112,5 +112,19 @@ audit log's retention job.
 - [ ] Turn on GitHub secret scanning and Dependabot alerts in the repository settings.
 
 Render's free plan sleeps after 15 idle minutes (the first request then takes ~30–50 s) and
-has no permanent disk, so uploaded photos are lost on each redeploy until file storage is
-moved to an object store.
+has no permanent disk, so uploads are kept in Neon Object Storage instead (below).
+
+### Photo storage (Neon Object Storage, free up to 5 GB)
+
+Uploads (animal, report, post and story photos, avatars, receipts, chat pictures) go to the
+private bucket `media` declared in `neon.ts`; the API hands out signed links that last 6 hours.
+The demo photos still ship inside the server image and are served from it.
+
+1. Create the bucket on the production branch: `neon link` (pick the StrayAid project), then
+   `neon checkout production` and `neon deploy`.
+2. `neon env pull` writes the bucket's `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and
+   `AWS_ENDPOINT_URL_S3` into `.env`/`.env.local`.
+3. Render → strayaid-api → Environment: set those three, plus `MEDIA_BUCKET=media`, then redeploy.
+   Until all four are set the server keeps uploads on its own disk.
+
+Photos uploaded before this was set up are gone and need uploading again.
