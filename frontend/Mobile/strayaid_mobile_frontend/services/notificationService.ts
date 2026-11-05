@@ -37,9 +37,14 @@ export async function registerForPushNotifications(): Promise<string | null> {
       });
     }
 
-    const token = await Notifications.getExpoPushTokenAsync();
+    // The project id ties the token to this app on Expo's push service (app.json extra.eas).
+    const Constants = require("expo-constants").default;
+    const projectId = Constants?.expoConfig?.extra?.eas?.projectId ?? Constants?.easConfig?.projectId;
+    const token = await Notifications.getExpoPushTokenAsync(projectId ? { projectId } : undefined);
     return token.data;
-  } catch {
+  } catch (error) {
+    // Without a token the server can't send pop-ups (the in-app inbox still works), so say why.
+    console.warn("Push notifications are off on this device:", error);
     return null;
   }
 }
