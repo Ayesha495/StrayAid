@@ -223,7 +223,7 @@ function OrganizationPublicProfile() {
                   <button type="button" className="btn btn-secondary" onClick={message} disabled={busy}><MessageSquare size={16} /> Message</button>
                 ) : null}
                 {org.phone_number ? (
-                  <a className="btn btn-coral-outline" href={`tel:${org.phone_number}`}><PhoneCall size={16} /> Emergency call</a>
+                  <a className="btn btn-coral-outline" href={`tel:${org.phone_number}`}><PhoneCall size={16} /> Call</a>
                 ) : null}
                 <button type="button" className="sa-icon-btn org-share" onClick={share} aria-label={`Share ${org.name}'s page`}><Share2 size={18} /></button>
               </>

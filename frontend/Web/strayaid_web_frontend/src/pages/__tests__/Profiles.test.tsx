@@ -119,7 +119,7 @@ describe("Organization profile", () => {
     expect(names).toEqual(["Sunny", "Luna"]); // the adopted animal isn't asking for help
     expect(screen.getByText("October medical supplies")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Give to supplies/ })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Emergency call/ })).toHaveAttribute("href", "tel:+92 300 0000101");
+    expect(screen.getByRole("link", { name: /^Call$/ })).toHaveAttribute("href", "tel:+92 300 0000101");
   });
 });
 

@@ -351,7 +351,7 @@ export default function OrganizationScreen() {
               </Pressable>
               <Pressable accessibilityRole="button" onPress={call} style={({ pressed }) => [styles.callButton, pressed && styles.pressed]}>
                 <MaterialIcons name="call" size={18} color={C.primary} />
-                <Text style={styles.callText}>Emergency Call</Text>
+                <Text style={styles.callText}>Call</Text>
               </Pressable>
             </View>
           </View>
