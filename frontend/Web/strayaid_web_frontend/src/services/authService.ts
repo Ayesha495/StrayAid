@@ -72,6 +72,9 @@ const GOOGLE_POPUP_ERRORS: Record<string, string> = {
 };
 
 export const loginWithGoogle = async () => {
+  if (!GOOGLE_CLIENT_ID) {
+    throw new Error("Google sign-in isn't set up on this site yet. Please use your email and password.");
+  }
   try {
     await loadGoogleScript();
   } catch {
