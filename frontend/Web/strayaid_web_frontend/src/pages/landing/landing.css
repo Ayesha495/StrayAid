@@ -213,21 +213,21 @@
   list-style: none;
 }
 
-/* The rail: a quiet track with a green fill up to the chapter being read. */
+/* The rail: a quiet track between the first and last dot, with a green fill that follows the
+   scroll position pixel by pixel (the three --rail-* values are set from Journey.tsx). */
 .journey-steps::before,
 .journey-steps::after {
   content: "";
   position: absolute;
-  top: 12vh;
+  top: var(--rail-top, 12vh);
   left: 7px;
   width: 2px;
   border-radius: 2px;
 }
-.journey-steps::before { bottom: 12vh; background: var(--line-strong); }
+.journey-steps::before { height: var(--rail-len, calc(100% - 24vh)); background: var(--line-strong); }
 .journey-steps::after {
-  height: calc((100% - 24vh) * var(--journey-progress, 0.25));
+  height: var(--rail-fill, 0px);
   background: var(--green-700);
-  transition: height 0.5s var(--ease-out, ease-out);
 }
 
 .journey-step {
@@ -309,8 +309,7 @@
 @media (prefers-reduced-motion: reduce) {
   .journey-frame img,
   .journey-step,
-  .journey-dot,
-  .journey-steps::after { transition: none; }
+  .journey-dot { transition: none; }
   .journey-frame img { transform: none; }
 }
 
@@ -513,9 +512,6 @@
   .journey { grid-template-columns: minmax(0, 1fr); }
   .journey-media { display: none; }
   .journey-steps { padding-left: 28px; }
-  .journey-steps::before, .journey-steps::after { top: 0; }
-  .journey-steps::before { bottom: 0; }
-  .journey-steps::after { height: calc(100% * var(--journey-progress, 0.25)); }
   .journey-step, .journey-step:first-child, .journey-step:last-child { min-height: 0; padding: 0 0 40px; opacity: 1; }
   .journey-dot { top: 0; left: -28px; margin-top: 0; }
   .journey-step-photo { display: block; width: 100%; height: 200px; margin-bottom: 4px; border-radius: 16px; object-fit: cover; }

@@ -39,31 +39,67 @@ const CHAPTERS = [
  * "From the curb to a couch" as a scroll story: the four chapters scroll by on one side
  * while a single photo frame stays put on the other and cross-fades to the chapter you're
  * reading. Nothing slides over anything else, and the section ends cleanly before the next.
- * A rail beside the chapters fills as you go. On narrow screens each chapter simply shows
+ * A rail beside the chapters fills continuously as you scroll. On narrow screens each chapter simply shows
  * its own photo above the text.
  */
 function Journey() {
   const [active, setActive] = useState(0);
+  const list = useRef<HTMLOListElement | null>(null);
   const chapters = useRef<Array<HTMLLIElement | null>>([]);
 
   useEffect(() => {
-    if (typeof IntersectionObserver === "undefined") return;
-    // A chapter becomes active when it reaches the middle band of the screen.
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) setActive(Number((entry.target as HTMLElement).dataset.index));
-        });
-      },
-      { rootMargin: "-45% 0px -45% 0px" },
-    );
-    chapters.current.forEach((element) => element && observer.observe(element));
-    return () => observer.disconnect();
+    const element = list.current;
+    if (!element) return;
+    let frame = 0;
+
+    // The rail follows the scroll position itself: its fill ends exactly at the middle of the
+    // screen (the "reading line"), measured between the first and last dot, so it moves with
+    // every pixel scrolled instead of jumping when the next chapter becomes active.
+    const update = () => {
+      frame = 0;
+      const box = element.getBoundingClientRect();
+      const dots = element.querySelectorAll<HTMLElement>(".journey-dot");
+      if (dots.length < 2) return;
+      const center = (dot: HTMLElement) => {
+        const r = dot.getBoundingClientRect();
+        return r.top + r.height / 2 - box.top;
+      };
+      const start = center(dots[0]);
+      const length = Math.max(center(dots[dots.length - 1]) - start, 1);
+      const reading = window.innerHeight / 2 - box.top;
+      const fill = Math.min(Math.max(reading - start, 0), length);
+      element.style.setProperty("--rail-top", `${start}px`);
+      element.style.setProperty("--rail-len", `${length}px`);
+      element.style.setProperty("--rail-fill", `${fill}px`);
+
+      // The chapter under the reading line is the active one.
+      let current = 0;
+      chapters.current.forEach((chapter, i) => {
+        if (chapter && chapter.getBoundingClientRect().top - box.top <= reading) current = i;
+      });
+      setActive(current);
+    };
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+
+    update();
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    // Photos load lazily and change the heights, so measure again once the layout settles.
+    const observer = typeof ResizeObserver !== "undefined" ? new ResizeObserver(schedule) : null;
+    observer?.observe(element);
+    return () => {
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+      observer?.disconnect();
+      if (frame) cancelAnimationFrame(frame);
+    };
   }, []);
 
   return (
-    <div className="journey" style={{ "--journey-progress": (active + 1) / CHAPTERS.length } as React.CSSProperties}>
-      <ol className="journey-steps">
+    <div className="journey">
+      <ol className="journey-steps" ref={list}>
         {CHAPTERS.map((item, i) => (
           <li
             key={item.key}
