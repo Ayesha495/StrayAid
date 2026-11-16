@@ -304,9 +304,19 @@ a.card, .card.is-interactive { transition: opacity 0.15s var(--ease-out); }
   .filter-tile:hover { background: var(--navy-50); }
 }
 
+/* Two columns on phones. The 1px gaps between tiles ARE the lines (the container paints them),
+   so every tile gets exactly the same outline instead of some having a side line and some not.
+   An odd last tile spans the full width rather than sitting alone with no neighbour. */
 @media (max-width: 760px) {
-  .filter-tile:nth-child(odd) { box-shadow: none !important; }
-  .filter-tile:nth-child(n + 3) { border-top: 1px solid var(--line); }
+  .filter-tiles { gap: 1px !important; background: var(--line); }
+  .filter-tiles > .filter-tile,
+  .filter-tiles > .filter-tile + .filter-tile,
+  .filter-tiles > .filter-tile[aria-pressed="true"] {
+    background: var(--color-canvas, #fff);
+    box-shadow: none !important;
+    border: 0;
+  }
+  .filter-tiles > .filter-tile:last-child:nth-child(odd) { grid-column: 1 / -1; }
 }
 
 /* ---------- Tables ---------- */
