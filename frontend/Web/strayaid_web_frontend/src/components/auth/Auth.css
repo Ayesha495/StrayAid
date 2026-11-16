@@ -265,3 +265,18 @@
 .auth-terms a,
 .auth-legal a { color: var(--green-800); text-decoration: underline; text-underline-offset: 2px; }
 .auth-legal { margin: 10px 0 0; color: var(--color-ink-muted); font-size: 13px; line-height: 1.5; text-align: center; }
+
+/* Phones: the form is a raised card that overlaps the photo, and the Log in / Sign up switch floats
+   inside it with space on every side instead of touching the photo or the card's edge. */
+@media (max-width: 860px) {
+  .auth-main { margin-top: -28px; padding: 0 16px 40px; position: relative; z-index: 1; }
+  .auth-card {
+    max-width: 440px;
+    padding: 20px 20px 24px;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    background: #fff;
+    box-shadow: var(--elev-3);
+  }
+  .auth-switch { margin: 0 0 4px; }
+}
