@@ -115,7 +115,8 @@ function OrganizationPublicProfile() {
     () => allAnimals.filter((animal) => animal.status !== "adopted" && fundingGap(animal) > 0).sort((a, b) => fundingGap(b) - fundingGap(a)).slice(0, 3),
     [allAnimals],
   );
-  const coverPhotos = useMemo(() => allAnimals.map((animal) => animal.image).filter(Boolean).slice(0, 3) as string[], [allAnimals]);
+  // Up to four different photos in equal-width slices: 2 → 50/50, 3 → thirds, 4 → quarters.
+  const coverPhotos = useMemo(() => [...new Set(allAnimals.map((animal) => animal.image).filter(Boolean))].slice(0, 4) as string[], [allAnimals]);
   const posts = useMemo(() => (feed.data ?? []).filter((post) => String(post.organization?.id) === organizationId).slice(0, 9), [feed.data, organizationId]);
 
   const org = profile.data;

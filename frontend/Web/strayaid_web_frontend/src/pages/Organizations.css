@@ -28,13 +28,12 @@
 /* A cover made from the team's own animals, like their profile page. */
 .org-card-cover {
   display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: 1fr;
+  grid-template-columns: repeat(var(--covers, 1), minmax(0, 1fr));
   height: 96px;
   background: var(--green-800);
 }
 
-.org-card-cover img { width: 100%; height: 96px; object-fit: cover; }
+.org-card-cover img { display: block; width: 100%; min-width: 0; height: 96px; object-fit: cover; }
 .org-card-body { position: relative; display: flex; flex-direction: column; gap: 8px; padding: 0 var(--space-4) var(--space-4); }
 .org-card-logo { margin-top: -28px; width: fit-content; border: 3px solid #fff; border-radius: 12px; background: #fff; }
 

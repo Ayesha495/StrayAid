@@ -17,11 +17,12 @@ import "./Organizations.css";
 const ISLAMABAD: [number, number] = [33.6844, 73.0479];
 
 function OrgCard({ item, animals }: { item: DirectoryOrganization; animals: Animal[] }) {
-  const photos = animals.filter((animal) => animal.image).slice(0, 3);
+  // Up to four different photos, always shown in equal-width slices (2 → 50/50, 3 → thirds, 4 → quarters).
+  const photos = animals.filter((animal, index, all) => animal.image && all.findIndex((other) => other.image === animal.image) === index).slice(0, 4);
   const inCare = animals.filter((animal) => animal.status !== "adopted").length;
   return (
     <article className="card org-card">
-      <Link to={`/organizations/${item.id}`} className="org-card-cover" aria-hidden="true" tabIndex={-1}>
+      <Link to={`/organizations/${item.id}`} className="org-card-cover" style={{ "--covers": Math.max(photos.length, 1) } as React.CSSProperties} aria-hidden="true" tabIndex={-1}>
         {photos.length ? photos.map((animal) => <img key={animal.id} src={animal.image ?? ""} alt="" loading="lazy" />) : <span className="org-card-cover-empty" />}
       </Link>
       <div className="org-card-body">
