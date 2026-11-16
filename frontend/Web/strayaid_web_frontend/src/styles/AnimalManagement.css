@@ -455,3 +455,58 @@
 .am-search:focus-within { box-shadow: inset 0 0 0 1px var(--green-700), 0 0 0 3px rgba(28, 58, 46, 0.12); }
 .am-search input { flex: 1; min-width: 0; height: 36px; border: 0; background: transparent; font: inherit; color: var(--navy-900); }
 .am-search input:focus { outline: none; }
+
+/* ---------- Alignment pass: even tiles, centred icons, cards whose rows line up across a row of cards ---------- */
+
+/* Four status tiles in four equal columns (it was five columns for four tiles). */
+.am-tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+/* The icon sits in the middle of its tinted square, not in the corner. */
+.am-tile-icon { place-items: center; }
+.am-tile-icon svg { display: block; flex: none; }
+
+/* Phones: two columns, the 1px gaps between tiles are the lines so every tile is outlined the same way. */
+@media (max-width: 900px) {
+  .am-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: var(--line); }
+  .am-tiles > .am-tile,
+  .am-tiles > .am-tile + .am-tile,
+  .am-tiles > .am-tile:nth-child(odd),
+  .am-tiles > .am-tile:nth-child(n + 3) { padding: 14px 16px; border: 0; box-shadow: none; background: var(--color-canvas, #fff); }
+  .am-tile::after { left: 16px; right: 16px; }
+  .am-tile:first-child::after, .am-tile:nth-child(odd)::after { left: 16px; }
+}
+
+/* Cards in a row share their rows (photo, name, details, tags, description, funding, links), so
+   the funding bars and links line up no matter how long each description or tag list is. */
+@supports (grid-template-rows: subgrid) {
+  .am-animal-grid { align-items: stretch; row-gap: 40px; }
+
+  .am-animal-grid > .am-animal-card {
+    display: grid;
+    grid-row: span 7;
+    grid-template-rows: subgrid;
+    gap: 0;
+    height: auto;
+  }
+
+  .am-animal-grid .am-animal-body {
+    display: grid;
+    grid-row: 2 / span 6;
+    grid-template-rows: subgrid;
+    row-gap: 8px;
+    align-content: start;
+    margin-top: 12px;
+  }
+
+  .am-animal-grid .am-animal-title { grid-row: 1; align-items: center; }
+  .am-animal-grid .am-animal-breed { grid-row: 2; }
+  .am-animal-grid .am-animal-tags { grid-row: 3; align-content: flex-start; }
+  .am-animal-grid .am-animal-tags:empty { display: block; }
+  .am-animal-grid .am-animal-desc { grid-row: 4; display: -webkit-box; flex: none; }
+  .am-animal-grid .am-animal-body .funding { grid-row: 5; align-self: end; margin-top: 0; }
+  .am-animal-grid .am-animal-body .am-card-links { grid-row: 6; align-self: end; }
+}
+
+/* Name and status share one line, centred on each other. */
+.am-animal-title { align-items: center; min-height: 24px; }
+.am-status { line-height: 1; }

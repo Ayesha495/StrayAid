@@ -24,7 +24,7 @@ const FILTERS: { key: Filter; label: string; hint: string; icon: LucideIcon; tin
   { key: "all", label: "With the team", hint: "every animal in care", icon: LayoutGrid, tint: "blue", test: (animal) => !LEFT_CARE.includes(animal.status) },
   { key: "care", label: "In care", hint: "rescued or recovering", icon: Stethoscope, tint: "coral", test: (animal) => animal.status === "rescued" || animal.status === "recovering" },
   { key: "adoptable", label: "Adoptable", hint: "ready for a home", icon: House, tint: "purple", test: (animal) => animal.status === "adoptable" },
-  { key: "archive", label: "Archive", hint: "adopted, back home or passed away", icon: Archive, tint: "green", test: (animal) => LEFT_CARE.includes(animal.status) },
+  { key: "archive", label: "Archive", hint: "no longer in care", icon: Archive, tint: "green", test: (animal) => LEFT_CARE.includes(animal.status) },
 ];
 
 /** Every animal the team has rescued. Each card opens the animal's record, where it is managed. */
