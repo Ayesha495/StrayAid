@@ -13,6 +13,7 @@ import NotFound from "./pages/NotFound";
 import DsScope from "./layout/DsScope";
 import { AdaptiveLayout, ShellLayout } from "./layout/PublicLayout";
 import { ShellProvider } from "./layout/ShellContext";
+import ScrollToTop from "./layout/ScrollToTop";
 import { ToastProvider } from "./ui/Toast";
 import { Spinner } from "./ui/States";
 
@@ -46,6 +47,7 @@ function App() {
     // Animations follow the person's "reduce motion" system setting.
     <MotionConfig reducedMotion="user">
     <BrowserRouter>
+      <ScrollToTop />
       <ToastProvider>
         <ShellProvider>
           <Analytics />
