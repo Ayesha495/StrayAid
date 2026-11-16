@@ -243,8 +243,9 @@
 
 .post-head {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
+  gap: 8px 10px;
   padding: 14px;
 }
 
@@ -267,14 +268,17 @@
 
 .post-head-text {
   display: flex;
-  flex: 1;
+  flex: 1 1 140px;
   flex-direction: column;
   min-width: 0;
 }
 
 .post-org { overflow: hidden; color: var(--navy-900); font-size: 14px; font-weight: 700; line-height: 18px; text-overflow: ellipsis; white-space: nowrap; }
 .post-org:hover { color: var(--green-700); }
-.post-meta { margin-top: 2px; color: var(--navy-500); font-size: 12px; line-height: 15px; white-space: pre; }
+/* The address, time and category wrap onto a second line instead of running under the animal chip. */
+.post-meta { display: flex; flex-wrap: wrap; gap: 0 8px; margin-top: 2px; color: var(--navy-500); font-size: 12px; line-height: 16px; }
+.post-meta > span { min-width: 0; overflow-wrap: anywhere; }
+.post-meta > span + span::before { content: "•"; margin-right: 8px; color: var(--navy-500); }
 
 .post-animal-chip {
   display: inline-flex;
@@ -292,6 +296,12 @@
 }
 
 .post-animal-chip:hover { background: var(--green-100); }
+
+/* Phones: the animal chip sits on its own row under the name, so nothing is squeezed or overlaps. */
+@media (max-width: 560px) {
+  .post-head-text { flex-basis: calc(100% - 60px); }
+  .post-animal-chip { order: 3; margin-left: 50px; }
+}
 
 .post-body { padding: 0 14px 12px; }
 .post-title { font-size: var(--text-lg); }

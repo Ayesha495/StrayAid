@@ -107,7 +107,7 @@ function PostCard({ post, initiallyOpen = false, onEdit, onDeleted }: PostCardPr
           <span className="post-meta">
             {[post.organization.city, formatRelativeTime(post.created_at), post.category ? POST_CATEGORY_LABEL[post.category] ?? post.category : null]
               .filter(Boolean)
-              .join("  •  ")}
+              .map((part, index) => <span key={index}>{part}</span>)}
           </span>
         </div>
         {post.animal ? (
