@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import RescueBoard from "../components/RescueBoard";
 import { getCases, getOrganizationAnimals, getOrganizationProfile } from "../services/platformService";
@@ -15,15 +15,16 @@ function Cases() {
     getOrganizationProfile().then(setOrganization).catch(() => setOrganization(null));
   }, []);
 
+  const load = useCallback(() => {
+    getCases().then(setCases).catch(() => setCases([]));
+    getOrganizationAnimals().then(setAnimals).catch(() => setAnimals([]));
+  }, []);
+
   useEffect(() => {
-    const load = () => {
-      getCases().then(setCases).catch(() => setCases([]));
-      getOrganizationAnimals().then(setAnimals).catch(() => setAnimals([]));
-    };
     load();
     const interval = setInterval(load, 30_000);
     return () => clearInterval(interval);
-  }, []);
+  }, [load]);
 
   const filteredCases = useMemo(() => {
     if (!query) {
@@ -44,6 +45,7 @@ function Cases() {
       cases={filteredCases}
       animals={filteredAnimals}
       organization={organization}
+      onChange={load}
       heading="Cases"
       copy={query ? `Showing results for "${query}".` : "Claim new reports and follow every rescue through to adoption."}
     />

@@ -45,3 +45,61 @@
 }
 
 .status-card .chip { justify-self: start; }
+
+/* ---------- Rescue workflow board: outlined green cards you can drag between columns ---------- */
+.workflow-hint {
+  margin: -4px 0 14px;
+  color: var(--navy-500);
+  font-size: 13px;
+}
+
+.workflow-grid { gap: 12px; }
+
+/* Each column is a soft lane with even padding, so a highlighted drop target looks the same in every column. */
+.workflow-grid > .category-panel,
+.workflow-grid > .category-panel:first-child,
+.workflow-grid > .category-panel:last-child,
+.workflow-grid > .category-panel:nth-child(odd),
+.workflow-grid > .category-panel:nth-child(even) {
+  gap: 10px;
+  padding: 14px 12px 16px;
+  border-radius: 14px;
+  box-shadow: none;
+  transition: background-color 0.15s var(--ease-out), box-shadow 0.15s var(--ease-out);
+}
+
+.workflow-grid .category-header { margin-bottom: 2px; padding-bottom: 10px; }
+
+.workflow-grid .status-card {
+  padding: 12px 14px;
+  border: 1.5px solid var(--green-700);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(18, 37, 29, 0.05);
+  cursor: grab;
+  transition: box-shadow 0.15s var(--ease-out), transform 0.15s var(--ease-out), opacity 0.15s var(--ease-out), background-color 0.15s var(--ease-out);
+}
+
+.workflow-grid .status-card:last-of-type { border-bottom: 1.5px solid var(--green-700); }
+.workflow-grid .status-card:active { cursor: grabbing; }
+
+@media (hover: hover) and (pointer: fine) {
+  .workflow-grid .status-card:hover { background: var(--green-50); box-shadow: 0 4px 12px rgba(23, 89, 74, 0.14); }
+}
+
+.workflow-grid .status-card:focus-visible { outline: 3px solid var(--color-focus, var(--green-700)); outline-offset: 2px; }
+
+/* The card being dragged fades in place; the column it would land in lights up. */
+.workflow-grid .status-card.is-dragged { opacity: 0.4; transform: scale(0.98); }
+
+.workflow-grid .category-panel.is-dragging-over-board { background: var(--navy-50); }
+.workflow-grid .category-panel.is-drop-target {
+  background: var(--green-50);
+  box-shadow: inset 0 0 0 2px var(--green-700);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .workflow-grid .status-card,
+  .workflow-grid > .category-panel { transition: none; }
+  .workflow-grid .status-card.is-dragged { transform: none; }
+}
