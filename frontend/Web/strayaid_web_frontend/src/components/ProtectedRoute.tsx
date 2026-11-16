@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
-import { clearSession, syncCurrentUser, useCurrentUser } from "../services/authService";
+import { clearSession, syncCurrentUser, useCurrentUser, wasSignedOutOnPurpose } from "../services/authService";
 import { Spinner } from "../ui/States";
 
 export function FullPageLoading({ label }: { label: string }) {
@@ -28,7 +28,8 @@ function ProtectedRoute() {
   }, [token, user]);
 
   if (!token || failed) {
-    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+    // After "Log out" there is nothing to go back to; an expired or missing session remembers the page.
+    return <Navigate to="/login" replace state={wasSignedOutOnPurpose() ? null : { from: location.pathname }} />;
   }
   if (!user) {
     return <FullPageLoading label="Loading your account…" />;

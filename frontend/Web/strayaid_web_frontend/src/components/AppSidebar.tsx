@@ -4,7 +4,7 @@ import {
   LayoutDashboard, ClipboardList, PawPrint, Newspaper, LogOut, FileText, Wallet, MessageSquare,
   Building2, Heart, HandHeart, Settings, ArrowRight,
 } from "lucide-react";
-import { clearSession, useCurrentUser } from "../services/authService";
+import { signOut, useCurrentUser } from "../services/authService";
 import { useShell } from "../layout/ShellContext";
 import { LogoMark } from "../ui/Logo";
 import { ScrollArea } from "@/components/vendor/scroll-area";
@@ -80,8 +80,8 @@ function AppSidebar({ isCollapsed, isMobile, onToggle }: AppSidebarProps) {
 
   const handleLogout = () => {
     if (!window.confirm("Are you sure you want to log out?")) return;
-    clearSession();
-    navigate("/login");
+    signOut();
+    navigate("/login", { replace: true });
   };
 
   const handleLinkClick = () => {

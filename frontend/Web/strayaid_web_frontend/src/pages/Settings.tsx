@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Building2, Camera, LogOut, Trash2 } from "lucide-react";
 import { changePassword, getMyProfile, updateMyProfile } from "../services/accountService";
-import { clearSession, syncCurrentUser } from "../services/authService";
+import { clearSession, signOut, syncCurrentUser } from "../services/authService";
 import { useApi } from "../hooks/useApi";
 import { useShell } from "../layout/ShellContext";
 import { useToast } from "../ui/Toast";
@@ -139,7 +139,7 @@ function AccountSettings() {
 
       <div className="card card-pad row" style={{ justifyContent: "space-between", flexWrap: "wrap" }}>
         <span><strong>Log out</strong><span className="small muted" style={{ display: "block" }}>Sign out of StrayAid on this browser.</span></span>
-        <button type="button" className="btn btn-danger-outline" onClick={() => { clearSession(); navigate("/login"); }}>
+        <button type="button" className="btn btn-danger-outline" onClick={() => { signOut(); navigate("/login", { replace: true }); }}>
           <LogOut size={16} aria-hidden="true" /> Log out
         </button>
       </div>

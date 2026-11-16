@@ -147,7 +147,13 @@ const emitAuthChange = () => {
   window.dispatchEvent(new Event(AUTH_CHANGE_EVENT));
 };
 
+// True from the moment someone presses "Log out" until the next login. While it is set, the login page
+// must not send the next person (maybe a different profile) back to the page the last one was on.
+let signedOutOnPurpose = false;
+export const wasSignedOutOnPurpose = () => signedOutOnPurpose;
+
 export const storeSession = (session: TokenResponse, user: CurrentUser) => {
+  signedOutOnPurpose = false;
   localStorage.setItem("access", session.access);
   localStorage.setItem("refresh", session.refresh);
   localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
@@ -167,6 +173,12 @@ export const getStoredUser = () => {
     emitAuthChange();
     return null;
   }
+};
+
+/** The Log out buttons: ends the session and forgets where the person was, so the next login starts at that account's home. */
+export const signOut = () => {
+  signedOutOnPurpose = true;
+  clearSession();
 };
 
 export const clearSession = () => {
